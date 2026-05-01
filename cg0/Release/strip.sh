@@ -1,0 +1,1 @@
+strip --strip-all ./cg0
