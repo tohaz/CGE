@@ -26,7 +26,14 @@
 #include "AWindow.h"
 #include "defaults.h"
 
+
 namespace aui {
+  INT32 SafeINT32(UINT32 val);
+  INT16 SafeINT16(UINT32 val);
+  UINT16 SafeUINT16(UINT32 val);
+  INT16 SafeINT16(UINT16 val);
+
+
   class AWidget;
   class AWindow;
   UINT32 HLColor(UINT32 ci);
@@ -68,5 +75,7 @@ namespace aui {
       ~AUI();
   };
 }
+
+
 
 #endif

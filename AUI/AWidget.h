@@ -20,7 +20,7 @@ namespace aui {
       AUI* mAUI = 0;
       std::string mTitle = "set title plz", mText = "set me";
       AUIWidgetType mType = AUIWidgetType::unset;
-      INT64 mX = 10, mY = 10;
+      UINT64 mX = 10, mY = 10;
       UINT64 mSzX = 10, mSzY = 10;
       RGBAColor mBGColor = {0};
       std::map<Window, AWidget*> mWidg;
@@ -59,6 +59,8 @@ namespace aui {
       void SetBGColor(UINT32 newBGColor);
       INT64 X();
       INT64 Y();
+      UINT32 SizeXUI32();
+      UINT32 SizeYUI32();
       UINT64 SizeX();
       UINT64 SizeY();
       UINT32 BGColor();
@@ -97,8 +99,6 @@ namespace aui {
       void PrintDimensions();
       Pixmap BB();
       void SetBB(Pixmap backBuffer);
-
-
   };
 }
 

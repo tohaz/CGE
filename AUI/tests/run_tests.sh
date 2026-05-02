@@ -4,6 +4,8 @@ NC='\033[0m' # No Color
 
 make
 
+rm -rf ./*.lst
+
 valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t1_button
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}+++Test 1 Success+++${NC}"

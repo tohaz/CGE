@@ -1,6 +1,10 @@
 # --- Compiler Settings ---
 CXX = g++
-CXXFLAGS = -Wall -Wextra -g -std=c++20
+
+#-std=c++26 -O0 -g3 -Wall -c -fmessage-length=0
+#CXXFLAGS = -Wall -Wextra -g -std=c++26
+CXXFLAGS = -Wall -Wextra -g -std=c++26 -O0 -g3 -fmessage-length=0
+
 INCLUDE_PATH = ../
 CPPFLAGS = -I$(INCLUDE_PATH)
 LDFLAGS = -Llib -L../Custom/

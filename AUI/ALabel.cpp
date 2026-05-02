@@ -37,10 +37,9 @@ namespace aui {
     XFontStruct *f = Font();
     XClearWindow(d, wi);
     XSetWindowBorderWidth(d, wi, BorderSz());
-    int totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
-    int fontHeight = f->ascent + f->descent;
-    int drawX = 0;
-    int drawY = 0;
+    INT32 totalW = XTextWidth(f, Text().c_str(), (INT32) Text().size());
+    INT32 drawX = 0;
+    INT32 drawY = 0;
     switch (HAlign()) {
       case AUIHAlign::left:
         drawX = 5;

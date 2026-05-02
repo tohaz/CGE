@@ -51,12 +51,10 @@ namespace aui {
       std::map<INT64, std::pair<INT64, std::string> > mRowH;
       std::map<INT64, std::pair<INT64, std::string> > mColumnW;
       //
-//      Pixmap mBuffer = None;
       INT64 mHOffset = 10;
       INT64 mVOffset = 0;
-      UINT64 mColumnHeaderHeight = 20;
-      UINT64 mRowHeaderWidth = 50;
-      // Add to private/protected members
+      UINT32 mColumnHeaderHeight = 20;
+      UINT32 mRowHeaderWidth = 50;
       INT64 mCursorRow = 0;
       INT64 mCursorCol = 0;
       bool mIsDragging = false;
@@ -109,6 +107,8 @@ namespace aui {
       std::string ColumnName(INT64 colIdx);
       void SetAutoWiden(bool enable);
       void UpdateColumnWidthToFit(INT64 colIdx);
+      void AddColumns(UINT32 number);
+      void AddRows(UINT32 number);
       void OnButtonPress(XEvent *ev);
       void OnButtonRelease(XEvent *ev);
       void OnMouseMove(XEvent *ev);

@@ -3,7 +3,36 @@
 #include "AWidget.h"
 #include "AWindow.h"
 
+
 namespace aui {
+  INT32 SafeINT32(UINT32 val) {
+    if(val > 0x7FFFFFFF) {
+      E("UINT32 to INT32 conversion error")
+    }
+    return val;
+  }
+
+  INT16 SafeINT16(UINT16 val) {
+    if(val >= 0x8000) {
+      E("UINT16 to INT16 conversion error")
+    }
+    return val;
+  }
+
+  INT16 SafeINT16(UINT32 val) {
+    if(val >= 0x8000) {
+      E("UINT16 to INT16 conversion error")
+    }
+    return val;
+  }
+
+  UINT16 SafeUINT16(UINT32 val) {
+    if(val >= 0x10000) {
+      E("UINT32 to UINT16 conversion error")
+    }
+    return val;
+  }
+
   UINT32 HLColor(UINT32 ci) {
     RGBAColor c;
     c.value = ci;
@@ -70,7 +99,6 @@ namespace aui {
 
   void AUI::ProcessMessages() {
       XEvent event;
-      Window w;
       while(!mShouldExit) {
           XNextEvent(mDisplay, &event);
           // 1. Используем универсальное поле для получения ID окна для любого типа события

@@ -7,6 +7,7 @@ int main() {
   au->ProcessMessages();
 
   delete au;
+  au = 0; // i know
   return 0;
 }
 

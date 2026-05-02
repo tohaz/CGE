@@ -87,6 +87,20 @@ namespace aui {
     return mSzY;
   }
 
+  UINT32 AWidget::SizeXUI32() {
+    if(mSzX > 0xFFFFFFFF) {
+      E("SizeX overflow")
+    }
+    return (UINT32)mSzX;
+  }
+
+  UINT32 AWidget::SizeYUI32() {
+    if(mSzY > 0xFFFFFFFF) {
+      E("SizeY overflow")
+    }
+    return (UINT32)mSzY;
+  }
+
   void AWidget::SetSizeXY(UINT64 newSzX, UINT64 newSzY) {
     mSzX = newSzX;
     mSzY = newSzY;

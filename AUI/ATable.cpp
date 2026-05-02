@@ -122,24 +122,24 @@ namespace aui {
     Display *d = AUIPtr()->Disp();
     GC gc = GCPtr();
     XFontStruct *font_info = Font();
-    INT64 y_pos = (INT64) mColumnHeaderHeight - rowStartData.offset;
+    UINT64 y_pos = (INT64) mColumnHeaderHeight - rowStartData.offset;
     for (INT64 i = rowStartData.cell; i <= rowEndData.cell; i++) {
-      INT64 currentH = GetRowHeight(i);
+      UINT64 currentH = GetRowHeight(i);
       if(currentH > 0 && y_pos + currentH > mColumnHeaderHeight
           && y_pos < SizeY()) {
         XSetForeground(d, gc, 0xCCCCCC);
-        XFillRectangle(d, dest, gc, 0, (INT32) y_pos, (UINT32) mRowHeaderWidth,
+        XFillRectangle(d, dest, gc, 0, (INT32)y_pos, (UINT32)mRowHeaderWidth,
             (UINT32) currentH);
         XSetForeground(d, gc, 0x000000);
-        XDrawRectangle(d, dest, gc, 0, (INT32) y_pos, (UINT32) mRowHeaderWidth,
+        XDrawRectangle(d, dest, gc, 0, (INT32)y_pos, (UINT32)mRowHeaderWidth,
             (UINT32) currentH);
         std::string label = mRowH[i].second;
         int text_w =
             font_info ?
                 XTextWidth(font_info, label.c_str(), label.length()) :
                 (INT32) label.length() * 6;
-        XDrawString(d, dest, gc, (INT32) (mRowHeaderWidth - text_w - 4),
-            (INT32) (y_pos + (currentH / 2) + 4), label.c_str(),
+        XDrawString(d, dest, gc, (INT32)(mRowHeaderWidth - text_w - 4),
+            (INT32)(y_pos + (currentH / 2) + 4), label.c_str(),
             label.length());
       }
       y_pos += currentH;
@@ -148,28 +148,6 @@ namespace aui {
     }
   }
 
-  void ATable::AddColumn() {
-    UINT64 lastK = 0;
-    if(mColumns.size() > 0) lastK = mColumns.rbegin()->first + 1;
-    mColumns[lastK];
-    AUI *cg = AUIPtr();
-    if(!mColumnW.contains(lastK)) {
-      std::string name = cg->NumberToBaseString(lastK);
-      mColumnW[lastK] = { AUI_TABLE_CELL_W, name };
-      mTotalContentWidth += AUI_TABLE_CELL_W;
-      if(mAutoWiden) {
-        XFontStruct *font_info = Font();
-        int textW = font_info ? XTextWidth(font_info, name.c_str(), (int)name.length()) : (int)name.length() * 7;
-        if((INT64)textW + 20 > AUI_TABLE_CELL_W) {
-          INT64 newW = (INT64)textW + 20;
-          mTotalContentWidth += (newW - AUI_TABLE_CELL_W);
-          mColumnW[lastK].first = newW;
-        }
-      }
-    } else {
-      E("Column width info integrity error")
-    }
-  }
   void ATable::AddRow() {
     UINT64 lastK = 0;
     if(mRows.size() > 0)
@@ -258,102 +236,78 @@ namespace aui {
     return (it != mRowH.end()) ? it->second.first : 0;
   }
 
-  void ATable::DrawCells(Drawable dest, ATableRangeData2 *rowRange,
-      ATableRangeData2 *colRange) {
+  void ATable::DrawCells(Drawable dest, ATableRangeData2* rowRange, ATableRangeData2* colRange) {
     AUI *au = AUIPtr();
     Display *d = au->Disp();
     GC gc = GCPtr();
     XFontStruct *font_info = Font();
-    // 1. Bulk fill base background
+    // 1. Prepare Background and Clipping
     XSetForeground(d, gc, 0xFFFFFF);
-    XFillRectangle(d, dest, gc, mRowHeaderWidth, mColumnHeaderHeight,
-        (UINT32) (SizeX() - mRowHeaderWidth),
-        (UINT32) (SizeY() - mColumnHeaderHeight));
-    INT64 y_pos = (INT64) mColumnHeaderHeight - rowRange->offset;
+    XFillRectangle(d, dest, gc, (INT32)mRowHeaderWidth, (INT32)mColumnHeaderHeight, (UINT32)(SizeX() - mRowHeaderWidth), (UINT32)(SizeY() - mColumnHeaderHeight));
+    XRectangle globalClip = {
+        SafeINT16(mRowHeaderWidth),
+        SafeINT16(mColumnHeaderHeight),
+        SafeUINT16(SizeXUI32() - mRowHeaderWidth),
+        SafeUINT16(SizeYUI32() - mColumnHeaderHeight)
+    };
+    // Apply clip once for all cell operations
+    XSetClipRectangles(d, gc, 0, 0, &globalClip, 1, Unsorted);
+    INT64 y_pos = (INT64)mColumnHeaderHeight - rowRange->offset;
     for (INT64 r = rowRange->cell; r <= rowRange->cell2; ++r) {
       INT64 currentH = GetRowHeight(r);
-      if(currentH <= 0 || y_pos >= SizeY()) {
-        y_pos += currentH;
-        continue;
+      if (currentH <= 0) continue;
+      if (y_pos >= (INT64)SizeY()) break;
+      // 2. Row Selection Highlight
+      if (mRowSelectMode && r == mSelectedRow) {
+        XSetForeground(d, gc, 0xE8F2FF);
+        XFillRectangle(d, dest, gc, (INT32)mRowHeaderWidth, (INT32)y_pos, (UINT32)(SizeX() - mRowHeaderWidth), (UINT32)currentH);
       }
-      // 2. Row Highlight Mode
-      if(mRowSelectMode && r == mSelectedRow) {
-        XSetForeground(d, gc, 0xE8F2FF); // Light Selection Blue
-        XFillRectangle(d, dest, gc, mRowHeaderWidth, (INT32) y_pos,
-            (UINT32) (SizeX() - mRowHeaderWidth), (UINT32) currentH);
-      }
-      INT64 x_pos = (INT64) mRowHeaderWidth - colRange->offset;
+      INT64 x_pos = (INT64)mRowHeaderWidth - colRange->offset;
       for (INT64 c = colRange->cell; c <= colRange->cell2; ++c) {
         INT64 currentW = GetColumnWidth(c);
-        if(currentW > 0 && x_pos < SizeX()
-            && x_pos + currentW > mRowHeaderWidth) {
-          // 3. Grid Lines
+        if (currentW <= 0) {
+          x_pos += currentW;
+          continue;
+        }
+        if (x_pos >= (INT64)SizeX()) break;
+        // 3. Drawing Logic for Visible Overlap
+        if (x_pos + currentW > (INT64)mRowHeaderWidth && y_pos + currentH > (INT64)mColumnHeaderHeight) {
+          // Grid Lines
           XSetForeground(d, gc, 0xDDDDDD);
-          XDrawLine(d, dest, gc, (INT32) (x_pos + currentW - 1), (INT32) y_pos,
-              (INT32) (x_pos + currentW - 1), (INT32) (y_pos + currentH - 1));
-          XDrawLine(d, dest, gc, (INT32) x_pos, (INT32) (y_pos + currentH - 1),
-              (INT32) (x_pos + currentW - 1), (INT32) (y_pos + currentH - 1));
-          // 4. Content Alignment
+          XDrawLine(d, dest, gc, (INT32)(x_pos + currentW - 1), (INT32)y_pos, (INT32)(x_pos + currentW - 1), (INT32)(y_pos + currentH - 1));
+          XDrawLine(d, dest, gc, (INT32)x_pos, (INT32)(y_pos + currentH - 1), (INT32)(x_pos + currentW - 1), (INT32)(y_pos + currentH - 1));
+          // Cell Content Lookup
           auto itRow = mRows.find(r);
-          if(itRow != mRows.end()) {
+          if (itRow != mRows.end()) {
             auto itCol = itRow->second.find(c);
-            if(itCol != itRow->second.end()) {
+            if (itCol != itRow->second.end()) {
               AUICellData &cell = itCol->second;
-              if(!cell.data.empty()) {
-                INT32 textW =
-                    font_info ?
-                        XTextWidth(font_info, cell.data.c_str(),
-                            (INT32) cell.data.length()) :
-                        (INT32) cell.data.length() * 7;
+              if (!cell.data.empty()) {
+                INT32 textW = font_info ? XTextWidth(font_info, cell.data.c_str(), (INT32)cell.data.length()) : (INT32)cell.data.length() * 7;
                 INT32 fontAscent = font_info ? font_info->ascent : 12;
-                INT32 fontDescent = font_info ? font_info->descent : 3;
-                INT32 textH = fontAscent + fontDescent;
-                INT32 tx = (INT32) (x_pos + 4);
-                if(cell.hal == AUIHAlign::center)
-                  tx = (INT32) (x_pos + (currentW - textW) / 2);
-                else if(cell.hal == AUIHAlign::right)
-                  tx = (INT32) (x_pos + currentW - textW - 4);
-                INT32 ty = (INT32) (y_pos + fontAscent + 2);
-                if(cell.val == AUIVAlign::center)
-                  ty = (INT32) (y_pos + (currentH - textH) / 2 + fontAscent);
-                else if(cell.val == AUIVAlign::bottom)
-                  ty = (INT32) (y_pos + currentH - fontDescent - 2);
-                INT32 clipX = (INT32) std::max((INT64) mRowHeaderWidth, x_pos);
-                XRectangle clip = { clipX, (INT32) y_pos, (UINT32) (x_pos
-                    + currentW - clipX), (UINT32) currentH };
-                XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
+                INT32 tx = (INT32)(x_pos + 4);
+                if (cell.hal == AUIHAlign::center) tx = (INT32)(x_pos + (currentW - textW) / 2);
+                else if (cell.hal == AUIHAlign::right) tx = (INT32)(x_pos + currentW - textW - 4);
+                INT32 ty = (INT32)(y_pos + fontAscent + 2);
                 XSetForeground(d, gc, 0x000000);
-                XDrawString(d, dest, gc, tx, ty, cell.data.c_str(),
-                    (INT32) cell.data.length());
-                XSetClipMask(d, gc, None);
+                XDrawString(d, dest, gc, tx, ty, cell.data.c_str(), (INT32)cell.data.length());
               }
             }
           }
-          // 5. Cursor with logic to prevent disappearing on left overlap
-          if(r == mCursorRow && c == mCursorCol) {
+          // Focus Cursor
+          if (r == mCursorRow && c == mCursorCol) {
             XSetForeground(d, gc, 0x3399FF);
             XSetLineAttributes(d, gc, 2, LineSolid, CapButt, JoinMiter);
-            INT32 clipX = (INT32) std::max((INT64) mRowHeaderWidth, x_pos);
-            INT32 clipY = (INT32) std::max((INT64) mColumnHeaderHeight, y_pos);
-            UINT32 clipW = (UINT32) (x_pos + currentW - clipX);
-            UINT32 clipH = (UINT32) (y_pos + currentH - clipY);
-            if(x_pos + currentW > mRowHeaderWidth
-                && y_pos + currentH > mColumnHeaderHeight) {
-              XRectangle clip = { clipX, clipY, clipW, clipH };
-              XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
-              XDrawRectangle(d, dest, gc, (INT32) x_pos, (INT32) y_pos,
-                  (UINT32) currentW - 1, (UINT32) currentH - 1);
-              XSetClipMask(d, gc, None);
-            }
+            XDrawRectangle(d, dest, gc, (INT32)x_pos, (INT32)y_pos, (UINT32)currentW - 1, (UINT32)currentH - 1);
             XSetLineAttributes(d, gc, 1, LineSolid, CapButt, JoinMiter);
           }
         }
         x_pos += currentW;
       }
       y_pos += currentH;
-      if(y_pos >= SizeY())
-        break;
     }
+    // 4. Cleanup
+    XSetClipMask(d, gc, None);
   }
 
   void ATable::OnButtonPress(XEvent *ev) {
@@ -363,7 +317,7 @@ namespace aui {
     if(button == Button4) { ScrollUpPx(60); return; }
     if(button == Button5) { ScrollDownPx(60); return; }
     if(button == Button1) {
-      if(x >= SizeX() - AUI_TABLE_SCROLL_THICK && y > mColumnHeaderHeight) {
+      if((UINT64)x >= SizeX() - (UINT64)AUI_TABLE_SCROLL_THICK && (UINT64)y > (UINT64)mColumnHeaderHeight) {
         double viewH = (double) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
         if(mTotalContentHeight > viewH) {
           mCurrentScrollMode = AUIScrollMode::AUIVertical;
@@ -377,7 +331,7 @@ namespace aui {
         }
         return;
       }
-      if(y >= SizeY() - AUI_TABLE_SCROLL_THICK && x > mRowHeaderWidth) {
+      if((UINT64)y >= SizeY() - (UINT64)AUI_TABLE_SCROLL_THICK && (UINT64)x > (UINT64)mRowHeaderWidth) {
         double viewW = (double) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
         if(mTotalContentWidth > viewW) {
           mCurrentScrollMode = AUIScrollMode::AUIHorizontal;
@@ -397,7 +351,7 @@ namespace aui {
         mResizeBaseSize = mRowHeaderWidth;
         return;
       }
-      if(mAllowColumnResize && y < mColumnHeaderHeight && x > mRowHeaderWidth) {
+      if(mAllowColumnResize && ((UINT32) y < mColumnHeaderHeight) && ((UINT32)x > mRowHeaderWidth)) {
         ATableRangeData1 colStart = Offset2Column(mHOffset);
         INT64 currX = (INT64) mRowHeaderWidth - colStart.offset;
         for (INT64 i = colStart.cell; i <= Offset2ColumnRange(colStart, SizeX()).cell; i++) {
@@ -411,7 +365,7 @@ namespace aui {
           }
         }
       }
-      if(mAllowRowResize && x < mRowHeaderWidth && y > mColumnHeaderHeight) {
+      if(mAllowRowResize && x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
         ATableRangeData1 rowStart = Offset2Row(mVOffset);
         INT64 currY = (INT64) mColumnHeaderHeight - rowStart.offset;
         for (INT64 i = rowStart.cell; i <= Offset2RowRange(rowStart, SizeY()).cell; i++) {
@@ -503,11 +457,11 @@ namespace aui {
   void ATable::OnMouseMove(XEvent *ev) {
     Display *d = AUIPtr()->Disp();
     Window w = Wnd();
-    int x = ev->xmotion.x;
-    int y = ev->xmotion.y;
+    INT32 x = ev->xmotion.x;
+    INT32 y = ev->xmotion.y;
     // 1. ACTIVE RESIZING
     if(mResizeMode == AUIResizeMode::AUIColumn) {
-      int delta = x - mResizeBasePos;
+      INT32 delta = x - mResizeBasePos;
       INT64 newW = std::max((INT64) 30, mResizeBaseSize + delta);
       mTotalContentWidth += (newW - mColumnW[mResizeId].first);
       mColumnW[mResizeId].first = newW;
@@ -574,9 +528,9 @@ namespace aui {
 
     // 3. HOVER CURSORS
     bool cursorSet = false;
-    if(y < mColumnHeaderHeight && x > mRowHeaderWidth) {
+    if(y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
       ATableRangeData1 colStart = Offset2Column(mHOffset);
-      INT64 currX = (INT64) mRowHeaderWidth - colStart.offset;
+      UINT64 currX = (UINT64) mRowHeaderWidth - colStart.offset;
       for (auto const& [id, data] : mColumnW) {
         if(id < colStart.cell)
           continue;
@@ -589,9 +543,9 @@ namespace aui {
         if(currX > SizeX())
           break;
       }
-    } else if(x < mRowHeaderWidth && y > mColumnHeaderHeight) {
+    } else if(x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
       ATableRangeData1 rowStart = Offset2Row(mVOffset);
-      INT64 currY = (INT64) mColumnHeaderHeight - rowStart.offset;
+      UINT64 currY = (INT64) mColumnHeaderHeight - rowStart.offset;
       for (auto const& [id, data] : mRowH) {
         if(id < rowStart.cell)
           continue;
@@ -688,7 +642,7 @@ namespace aui {
 
   void ATable::PrintDebugState() {
     D1("ATable Debug State");
-    D1("Widget Size: %dx%d", SizeX(), SizeY());
+    D1("Widget Size: %lux%lu", SizeX(), SizeY());
     D1("Content Size: TotalW=%ld, TotalH=%ld", mTotalContentWidth,
         mTotalContentHeight);
     D1("Offsets: HOffset=%ld, VOffset=%ld", mHOffset, mVOffset);
@@ -730,7 +684,7 @@ namespace aui {
     if(it != mRowH.end()) {
       it->second.second = name;
       XFontStruct *font_info = Font();
-      int text_width =
+      UINT32 text_width =
           font_info ?
               XTextWidth(font_info, name.c_str(), (int) name.length()) :
               (int) name.length() * 7;
@@ -834,7 +788,8 @@ namespace aui {
     INT64 x_pos = (INT64)mRowHeaderWidth - colStartData.offset;
     // This clipping is the most important part.
     // It forces X11 to ignore anything that slides under the intersection box.
-    XRectangle clip = {(INT32)mRowHeaderWidth, 0, (UINT32)(SizeX() - mRowHeaderWidth), (UINT32)mColumnHeaderHeight};
+    XRectangle clip = {SafeINT16(mRowHeaderWidth), 0, SafeUINT16(SizeXUI32() - mRowHeaderWidth),
+        SafeUINT16(mColumnHeaderHeight)};
     XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
     for (INT64 i = colStartData.cell; i <= colEndData.cell; i++) {
       INT64 currentW = GetColumnWidth(i);
@@ -879,6 +834,55 @@ namespace aui {
     // If scrolled to the very end
     auto lastIt = mColumnW.rbegin();
     return {lastIt->first, lastIt->second.first};
+  }
+
+  void ATable::AddRows(UINT32 number) {
+    if (number == 0) return;
+    INT64 startIdx = (INT64)mRowH.size();
+    INT64 currentIdx = 0;
+    for (UINT32 i = 0; i < number; ++i) {
+      currentIdx = startIdx + i;
+      mRowH[currentIdx] = {AUI_TABLE_CELL_H, std::to_string(currentIdx)};
+      mTotalContentHeight += AUI_TABLE_CELL_H;
+    }
+    Draw();
+  }
+
+  void ATable::AddColumn() {
+    UINT64 lastK = 0;
+    if(mColumns.size() > 0) lastK = mColumns.rbegin()->first + 1;
+    mColumns[lastK];
+    AUI *au = AUIPtr();
+    if(!mColumnW.contains(lastK)) {
+      std::string name = au->NumberToBaseString(lastK);
+      mColumnW[lastK] = { AUI_TABLE_CELL_W, name };
+      mTotalContentWidth += AUI_TABLE_CELL_W;
+      if(mAutoWiden) {
+        XFontStruct *font_info = Font();
+        int textW = font_info ? XTextWidth(font_info, name.c_str(), (int)name.length()) : (int)name.length() * 7;
+        if((INT64)textW + 20 > AUI_TABLE_CELL_W) {
+          INT64 newW = (INT64)textW + 20;
+          mTotalContentWidth += (newW - AUI_TABLE_CELL_W);
+          mColumnW[lastK].first = newW;
+        }
+      }
+    } else {
+      E("Column width info integrity error")
+    }
+  }
+
+  void ATable::AddColumns(UINT32 number) {
+    if (number == 0) return;
+    AUI *au = AUIPtr();
+    std::string name = "";
+    INT64 startIdx = (INT64)mColumnW.size();
+    for (UINT32 i = 0; i < number; ++i) {
+      INT64 currentIdx = startIdx + i;
+      name = au->NumberToBaseString(currentIdx);
+      mColumnW[currentIdx] = {AUI_TABLE_CELL_W, name};
+      mTotalContentWidth += AUI_TABLE_CELL_W;
+    }
+    Draw();
   }
 
   ATable::~ATable() {
