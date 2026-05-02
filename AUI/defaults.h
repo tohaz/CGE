@@ -3,6 +3,14 @@
 
 #define DEBUG_LEVEL 1
 
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  #error "Not tested on Big-endian system"
+#elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+//  #error "Little-endian"
+#else
+  #error "Unknown Endianness"
+#endif
+
 static_assert(sizeof(char) == 1, "char must be 1 bytes");
 static_assert(sizeof(short) == 2, "short must be 2 bytes");
 static_assert(sizeof(int) == 4, "integer must be 4 bytes");
@@ -16,6 +24,11 @@ static_assert(sizeof(long) == 8, "long must be 8 bytes");
 #define UINT64 unsigned long
 #define INT64 long
 
+//#pragma GCC diagnostic push
+//#pragma GCC diagnostic ignored "-Wpedantic"
+
+// RGBAColor red(255, 0, 0);
+// RGBAColor hexColor = 0xFF55AA00;
 union RGBAColor {
     UINT32 value;
     struct {
@@ -23,8 +36,26 @@ union RGBAColor {
         UCHAR8 g;
         UCHAR8 r;
         UCHAR8 a;
-    };
+    } rgba;
+    RGBAColor() :
+        value(0xFF000000) {
+    }
+    RGBAColor(UINT32 val) :
+        value(val) {
+    }
+    RGBAColor(UCHAR8 red, UCHAR8 green, UCHAR8 blue, UCHAR8 alpha = 255) {
+      rgba.r = red;
+      rgba.g = green;
+      rgba.b = blue;
+      rgba.a = alpha;
+    }
+    UCHAR8 getLuminance() const {
+        return (UCHAR8)((rgba.r + rgba.g + rgba.b) / 3);
+    }
+    operator UINT32() const { return value; }
+    void Clear() { value = 0; }
 };
+//#pragma GCC diagnostic pop
 
 // CGWindow
 #define AUI_DEFAULT_WINDOW_TITLE "aui dummy title, set me plz"

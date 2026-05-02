@@ -36,23 +36,23 @@ namespace aui {
   UINT32 HLColor(UINT32 ci) {
     RGBAColor c;
     c.value = ci;
-    UINT32 overall = c.r + c.g + c.b;
+    UINT32 overall = c.rgba.r + c.rgba.g + c.rgba.b;
     // 0x80 * 3 = 384
     if(overall > 384) {
-      if(c.r > AUI_HL_SHIFT) c.r -= AUI_HL_SHIFT;
-      else c.r = 0;
-      if(c.g > AUI_HL_SHIFT) c.g -= AUI_HL_SHIFT;
-      else c.g = 0;
-      if(c.b > AUI_HL_SHIFT) c.b -= AUI_HL_SHIFT;
-      else c.b = 0;
+      if(c.rgba.r > AUI_HL_SHIFT) c.rgba.r -= AUI_HL_SHIFT;
+      else c.rgba.r = 0;
+      if(c.rgba.g > AUI_HL_SHIFT) c.rgba.g -= AUI_HL_SHIFT;
+      else c.rgba.g = 0;
+      if(c.rgba.b > AUI_HL_SHIFT) c.rgba.b -= AUI_HL_SHIFT;
+      else c.rgba.b = 0;
     }
     else {
-      if(c.r < 255) c.r += AUI_HL_SHIFT;
-      else c.r = 255;
-      if(c.g < 255) c.g += AUI_HL_SHIFT;
-      else c.g = 255;
-      if(c.b < 255) c.b += AUI_HL_SHIFT;
-      else c.b = 255;
+      if(c.rgba.r < 255) c.rgba.r += AUI_HL_SHIFT;
+      else c.rgba.r = 255;
+      if(c.rgba.g < 255) c.rgba.g += AUI_HL_SHIFT;
+      else c.rgba.g = 255;
+      if(c.rgba.b < 255) c.rgba.b += AUI_HL_SHIFT;
+      else c.rgba.b = 255;
     }
     return c.value;
   }
