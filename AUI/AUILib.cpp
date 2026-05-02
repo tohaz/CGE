@@ -67,7 +67,7 @@ namespace aui {
     CreateMainWindow();
     D1("init finished, widget size %lu, short size %lu, int %lu, long %lu, float %lu, double %lu, ptr %lu",
         sizeof(AWidget),
-        sizeof(short), sizeof(long), sizeof(long int),
+        sizeof(short), sizeof(int), sizeof(long),
         sizeof(float), sizeof(double), sizeof(void*))
   }
 
