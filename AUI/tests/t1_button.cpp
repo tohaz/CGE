@@ -27,6 +27,7 @@ int main() {
 
   AButton* bnt = AButton::AttachTo(w, "Test");
   bnt->Move(100, 10);
+  bnt->Resize(100, 30);
   bnt->SetOnButtonReleaseCB(ButtonTestHandler, nullptr);
 
   auto handle = std::async(std::launch::async, [=]() {

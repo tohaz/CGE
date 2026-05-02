@@ -2,6 +2,8 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
+make
+
 valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t1_button
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}+++Test 1 Success+++${NC}"

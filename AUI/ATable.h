@@ -51,7 +51,7 @@ namespace aui {
       std::map<INT64, std::pair<INT64, std::string> > mRowH;
       std::map<INT64, std::pair<INT64, std::string> > mColumnW;
       //
-      Pixmap mBuffer = None;
+//      Pixmap mBuffer = None;
       INT64 mHOffset = 10;
       INT64 mVOffset = 0;
       UINT64 mColumnHeaderHeight = 20;
@@ -105,8 +105,8 @@ namespace aui {
       void SetRowName(INT64 rowIdx, const std::string &name);
       void Clear();
       void SetColumnWidth(INT64 colIdx, INT64 width);
-      std::string GetRowName(INT64 rowIdx);
-      std::string GetColumnName(INT64 colIdx);
+      std::string RowName(INT64 rowIdx);
+      std::string ColumnName(INT64 colIdx);
       void SetAutoWiden(bool enable);
       void UpdateColumnWidthToFit(INT64 colIdx);
       void OnButtonPress(XEvent *ev);

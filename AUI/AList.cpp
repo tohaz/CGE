@@ -311,7 +311,6 @@ namespace aui {
     Draw();
   }
 
-
   AList::~AList() {
     mData.clear();
     mTag.clear();

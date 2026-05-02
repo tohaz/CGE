@@ -190,17 +190,6 @@ namespace aui {
     XFree(hints);
   }
 
-  void AWidget::Resize(UINT32 szx, UINT32 szy) {
-    if(mResizeEnabled) {
-      mSzX = szx;
-      mSzY = szy;
-      XResizeWindow(mAUI->Disp(), mWindow, szx, szy);
-    }
-    else {
-      DS()
-      D("resize is disabled for widget, call EnableResize() if needed")
-    }
-  }
 
   void AWidget::Move(unsigned int x, unsigned int y) {
     mX = x;
@@ -228,11 +217,7 @@ namespace aui {
         mBorderSz = borderSz; // Сохраняем для инициализации
         return;
     }
-
-    // Если в классе уже записано это значение — выходим.
-    // Это предотвратит лишние запросы к X-серверу при вызове из конструктора.
     if (mBorderSz == borderSz) return;
-
     mBorderSz = borderSz;
     Display* d = mAUI->Disp();
 
@@ -292,7 +277,6 @@ namespace aui {
       D3("CB is set")
       OnMouseMoveCB(ev, this, mUserDataMouseMove);
     }
-
   }
 
   void AWidget::OnSubmit() {
@@ -322,6 +306,61 @@ namespace aui {
     mVAlign = vAlign;
   }
 
+  void AWidget::PrintDimensions() {
+    D("x=%ld,y=%ld,szX=%lu,szY=%lu", mX, mY, mSzX, mSzY)
+  }
+
+  Pixmap AWidget::BB() {
+    return mBackBuffer;
+  }
+
+  void AWidget::SetBB(Pixmap backBuffer) {
+    mBackBuffer = backBuffer;
+  }
+
+  void AWidget::UpdateBuffer() {
+    AUI *aui = AUIPtr();
+    if(!aui || Wnd() == 0)
+      return;
+    Display *d = aui->Disp();
+    if(mBackBuffer) {
+      XFreePixmap(d, mBackBuffer);
+      mBackBuffer = 0;
+    }
+    XWindowAttributes watt;
+    XGetWindowAttributes(d, Wnd(), &watt);
+    if(SizeX() > 0 && SizeY() > 0) {
+      mBackBuffer = XCreatePixmap(d, Wnd(), SizeX(), SizeY(), watt.depth);
+    }
+  }
+
+  void AWidget::Resize(UINT32 szx, UINT32 szy) {
+    if(szx == mSzX && szy == mSzY) {
+      D3()
+      return;
+    }
+    if(mResizeEnabled) {
+      mSzX = szx;
+      mSzY = szy;
+      XResizeWindow(mAUI->Disp(), mWindow, szx, szy);
+      UpdateBuffer();
+    }
+    else {
+      DS()
+      D("resize is disabled for widget, call EnableResize() if needed")
+    }
+    Draw();
+  }
+
+  void AWidget::ResizeX(UINT32 szx) {
+    AWidget::Resize(szx, mSzY);
+    D3("v")
+  }
+
+  void AWidget::ResizeY(UINT32 szy) {
+    AWidget::Resize(mSzX, szy);
+    D3("v")
+  }
 
   AWidget::~AWidget() {
     D3("widget '%s' destructor active", mTitle.c_str())
@@ -342,6 +381,13 @@ namespace aui {
     else {
       D2("not freeing GC")
     }
+
+    if(mBackBuffer) {
+      D2()
+      XFreePixmap(AUIPtr()->Disp(), mBackBuffer);
+      mBackBuffer = 0;
+    }
+
     if(mWindow != 0) {
        D2("destroying window")
        XDestroyWindow(d, mWindow);

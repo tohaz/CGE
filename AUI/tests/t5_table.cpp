@@ -5,6 +5,8 @@
 //
 #include "AUILib.h"
 
+bool need_delay_exit = true;
+
 using namespace aui;
 
 int main() {
@@ -18,15 +20,22 @@ int main() {
   for(int i = 0; i < 10; i++) {
     ta->AddColumn();
   }
-  auto handle = std::async(std::launch::async, [=]() {
-    std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
-    au->ExitAUI();
-  });
+  
+  std::future<void> handle;
+  if(need_delay_exit) {
+    handle = std::async(std::launch::async, [=]() {
+      std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
+      au->ExitAUI();
+    });
+  }
 
   au->ProcessMessages();
 
   delete au;
-  handle.get();
+  
+  if(need_delay_exit) {
+    handle.get();
+  }
 
   return 0;
 }

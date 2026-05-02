@@ -29,20 +29,24 @@ namespace aui {
   }
 
   AUI::AUI() {
-    XInitThreads();
     D3("AUI sizeof %lu", sizeof(AUI))
     mDisplay = XOpenDisplay(NULL);
+    XInitThreads();
     if (mDisplay == NULL) E("Cannot open default display")
     D2("opened display %lu", mDisplay)
     mScreen = DefaultScreen(mDisplay);
     CreateMainWindow();
-    D2("init finished, widget size %lu", sizeof(AWidget))
+    D1("init finished, widget size %lu, short size %lu, int %lu, long %lu, float %lu, double %lu, ptr %lu",
+        sizeof(AWidget),
+        sizeof(short), sizeof(long), sizeof(long int),
+        sizeof(float), sizeof(double), sizeof(void*))
   }
 
   AUI::AUI(std::string newWindowTitle) : AUI() {
     mWindowTitle = newWindowTitle;
     mMainWnd->SetTitle(newWindowTitle.c_str());
     XStoreName(mDisplay, mMainWnd->Wnd(), mWindowTitle.c_str());
+    D3()
   }
 
   void AUI::CreateMainWindow() {
@@ -67,7 +71,6 @@ namespace aui {
   void AUI::ProcessMessages() {
       XEvent event;
       Window w;
-
       while(!mShouldExit) {
           XNextEvent(mDisplay, &event);
           // 1. Используем универсальное поле для получения ID окна для любого типа события

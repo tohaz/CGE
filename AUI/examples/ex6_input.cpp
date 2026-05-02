@@ -13,6 +13,9 @@ int main() {
   D3("starting main()")
   AUI* au = AUI::Create("ex6");
   AWindow* w = au->MainWnd();
+  w->EnableResize();
+  w->Resize(380, 160);
+  w->DisableResize();
 
   ALabel* lb = ALabel::AttachTo(w, "Helloworld, but with input box.");
   lb->Resize(350, 20);

@@ -36,20 +36,27 @@ namespace aui {
 
   void AButton::Draw() {
     AUI *cg = AUIPtr();
-    if(!cg || Wnd() == 0 || GCPtr() == 0)
+    if(!cg || Wnd() == 0 || GCPtr() == 0) {
+      D3("x")
       return;
+    }
     Display *d = cg->Disp();
     Window wi = Wnd();
-    if(!mBackBuffer)
-      UpdateBuffer();
-    if(!mBackBuffer)
+    if(!BB()) {
+      D3("x")
+      AWidget::UpdateBuffer();
+    }
+    Pixmap bb = BB();
+    if(!bb) {
+      D3("x")
       return;
+    }
     XFontStruct *f = Font();
     XSetForeground(d, GCPtr(), IsHL() ? HLColor(BGColor()) : BGColor());
-    XFillRectangle(d, mBackBuffer, GCPtr(), 0, 0, SizeX(), SizeY());
-    int totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
-    int drawX = 0;
-    int drawY = 0;
+    XFillRectangle(d, bb, GCPtr(), 0, 0, SizeX(), SizeY());
+    INT32 totalW = XTextWidth(f, Text().c_str(), (INT32) Text().size());
+    INT32 drawX = 0;
+    INT32 drawY = 0;
     switch (HAlign()) {
       case AUIHAlign::left:
         drawX = 5;
@@ -73,10 +80,10 @@ namespace aui {
         break;
     }
     XSetForeground(d, GCPtr(), BlackPixel(d, cg->Scr()));
-    XDrawString(d, mBackBuffer, GCPtr(), drawX, drawY, TextPtr(),
+    XDrawString(d, bb, GCPtr(), drawX, drawY, TextPtr(),
         Text().length());
     XSetWindowBorder(d, wi, BlackPixel(d, cg->Scr()));
-    XCopyArea(d, mBackBuffer, wi, GCPtr(), 0, 0, SizeX(), SizeY(), 0, 0);
+    XCopyArea(d, bb, wi, GCPtr(), 0, 0, SizeX(), SizeY(), 0, 0);
     XFlush(d);
   }
 
@@ -117,37 +124,10 @@ namespace aui {
     return new AButton(inText, w);
   }
 
-  void AButton::UpdateBuffer() {
-    AUI *aui = AUIPtr();
-    if(!aui || Wnd() == 0)
-      return;
-    Display *d = aui->Disp();
-    if(mBackBuffer) {
-      XFreePixmap(d, mBackBuffer);
-      mBackBuffer = 0;
-    }
-    XWindowAttributes watt;
-    XGetWindowAttributes(d, Wnd(), &watt);
-    if(SizeX() > 0 && SizeY() > 0) {
-      mBackBuffer = XCreatePixmap(d, Wnd(), SizeX(), SizeY(), watt.depth);
-    }
-  }
 
-  void AButton::Resize(UINT32 szx, UINT32 szy) {
-    if(szx == SizeX() && szy == SizeY())
-      return;
-    AWidget::Resize(szx, szy);
-    if(SizeX() == szx && SizeY() == szy) {
-      UpdateBuffer();
-      Draw();
-    }
-  }
 
   AButton::~AButton() {
-    if(mBackBuffer) {
-      XFreePixmap(AUIPtr()->Disp(), mBackBuffer);
-      mBackBuffer = 0;
-    }
+    D3("v")
   }
 
 }

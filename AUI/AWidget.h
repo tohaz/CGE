@@ -37,11 +37,13 @@ namespace aui {
       void* mUserDataButtonRelease = nullptr;
       void* mUserDataMouseMove = nullptr;
       void* mUserDataSubmit = nullptr;
+      Pixmap mBackBuffer = None;
 
     protected:
       void InitWidgetProps(Window w);
       void SetAUIPtr(AUI* p);
       void SetWndParent(AWidget* wParent);
+      void UpdateBuffer();
 
     public:
       AWidget();
@@ -79,6 +81,8 @@ namespace aui {
       void EnableResize();
       void DisableResize();
       void Resize(UINT32 szx, UINT32 szy);
+      void ResizeY(UINT32 szy);
+      void ResizeX(UINT32 szx);
       void Move(UINT32 x, UINT32 y);
       void UnregisterChild(AWidget *w);
       UINT32 BorderSz();
@@ -90,6 +94,10 @@ namespace aui {
       void SetHAlign(AUIHAlign mHAlign);
       AUIVAlign VAlign() const;
       void SetVAlign(AUIVAlign mVAlign);
+      void PrintDimensions();
+      Pixmap BB();
+      void SetBB(Pixmap backBuffer);
+
 
   };
 }

@@ -16,6 +16,7 @@ namespace aui {
     SetSizeXY(AUI_TABLE_SZX, AUI_TABLE_SZY);
     SetAUIPtr(cg);
     SetWndParent(wParent);
+    SetBB(None);
     InitWidgetProps(
         XCreateSimpleWindow(d, wParent->Wnd(), X(), Y(), SizeX(), SizeY(), 1,
             BlackPixel(d, scr), BGColor()));
@@ -46,13 +47,14 @@ namespace aui {
     Window w = Wnd();
     GC gc = GCPtr();
     // Optimization: Only recreate pixmap if size changed or it doesn't exist
-    if(mBuffer == None) {
-      mBuffer = XCreatePixmap(d, w, (UINT32) SizeX(), (UINT32) SizeY(),
-          DefaultDepth(d, au->Scr()));
+    if(BB() == None) {
+      SetBB(XCreatePixmap(d, w, (UINT32) SizeX(), (UINT32) SizeY(),
+          DefaultDepth(d, au->Scr())));
     }
+    Pixmap bb = BB();
     // Clear the background of the buffer
     XSetForeground(d, gc, BGColor());
-    XFillRectangle(d, mBuffer, gc, 0, 0, (UINT32) SizeX(), (UINT32) SizeY());
+    XFillRectangle(d, bb, gc, 0, 0, (UINT32) SizeX(), (UINT32) SizeY());
     ATableRangeData1 rowStart = Offset2Row(mVOffset);
     ATableRangeData1 rowEnd = Offset2RowRange(rowStart, SizeY());
     ATableRangeData1 colStart = Offset2Column(mHOffset);
@@ -62,13 +64,13 @@ namespace aui {
     ATableRangeData2 rCol = { colStart.cell, colStart.offset, colEnd.cell,
         colEnd.offset };
     // Draw everything to the cached buffer
-    DrawCells(mBuffer, &rRow, &rCol);
-    DrawRowHeader(mBuffer, rowStart, rowEnd);
-    DrawColumnHeader(mBuffer, colStart, colEnd);
-    DrawIntersectionBox(mBuffer);
-    DrawScrollbars(mBuffer);
+    DrawCells(bb, &rRow, &rCol);
+    DrawRowHeader(bb, rowStart, rowEnd);
+    DrawColumnHeader(bb, colStart, colEnd);
+    DrawIntersectionBox(bb);
+    DrawScrollbars(bb);
     // Copy to screen
-    XCopyArea(d, mBuffer, w, gc, 0, 0, (UINT32) SizeX(), (UINT32) SizeY(), 0,
+    XCopyArea(d, bb, w, gc, 0, 0, (UINT32) SizeX(), (UINT32) SizeY(), 0,
         0);
     XFlush(d);
   }
@@ -86,23 +88,6 @@ namespace aui {
     XDrawRectangle(d, dest, gc, 0, 0, mRowHeaderWidth, mColumnHeaderHeight);
   }
 
-  ATableRangeData1 ATable::Offset2Column(INT64 offset) {
-    if(mColumnW.empty())
-      return {-1, -1};
-    auto lastIt = mColumnW.rbegin();
-    // We iterate through the map to find which column covers the pixel offset
-    for (const auto& [id, data] : mColumnW) {
-      if(offset >= data.first) {
-        offset -= data.first;
-      } else {
-        // Return the column ID and the internal pixel offset within that column
-        return {id, offset};
-      }
-    }
-    // Fallback to the last column if the offset exceeds total width
-    return {lastIt->first, lastIt->second.first};
-  }
-
   ATableRangeData1 ATable::Offset2Row(INT64 offset) {
     if(mRowH.empty())
       return {-1, -1};
@@ -115,31 +100,6 @@ namespace aui {
       internalOffset = AUI_TABLE_CELL_H;
     }
     return {(INT64)rowIdx, internalOffset};
-  }
-
-  ATableRangeData1 ATable::Offset2ColumnRange(ATableRangeData1 startColumn,
-  INT64 width) {
-    ATableRangeData1 endc = startColumn;
-    auto it = mColumnW.find(startColumn.cell);
-    if(it != mColumnW.end()) {
-      // Pixel width remaining to be filled in the widget area
-      INT64 remainingWidth = width - mRowHeaderWidth;
-      // Subtract pixels already covered by the partial first visible cell
-      INT64 firstCellVisibleW = it->second.first - startColumn.offset;
-      remainingWidth -= firstCellVisibleW;
-      // Move to the next cell to begin the filling loop
-      ++it;
-      // Keep adding columns to the visible range until the widget width is covered
-      while (it != mColumnW.end() && remainingWidth > 0) {
-        endc.cell = it->first;
-        remainingWidth -= it->second.first;
-        ++it;
-      }
-      // Clamp: Ensure the range is at least the start cell
-      if(endc.cell < startColumn.cell)
-        endc.cell = startColumn.cell;
-    }
-    return endc;
   }
 
   ATableRangeData1 ATable::Offset2RowRange(ATableRangeData1 startRow,
@@ -156,49 +116,6 @@ namespace aui {
     return endr;
   }
 
-  void ATable::DrawColumnHeader(Drawable dest, ATableRangeData1 colStartData,
-      ATableRangeData1 colEndData) {
-    Display *d = AUIPtr()->Disp();
-    GC gc = GCPtr();
-    XFontStruct *font_info = Font();
-    INT64 x_pos = (INT64) mRowHeaderWidth - colStartData.offset;
-    // Iterate up to endData.cell + 1 to ensure we don't truncate the last visible column
-    for (INT64 i = colStartData.cell; i <= colEndData.cell; i++) {
-      INT64 currentW = GetColumnWidth(i);
-      // Change: Draw if any part of the column is within [mRowHeaderWidth, SizeX()]
-      if(currentW > 0 && x_pos < SizeX()
-          && x_pos + currentW > mRowHeaderWidth) {
-        // Header BG
-        XSetForeground(d, gc, 0xCCCCCC);
-        XFillRectangle(d, dest, gc, (INT32) x_pos, 0, (UINT32) currentW,
-            (UINT32) mColumnHeaderHeight);
-        // Border
-        XSetForeground(d, gc, 0x000000);
-        XDrawRectangle(d, dest, gc, (INT32) x_pos, 0, (UINT32) currentW,
-            (UINT32) mColumnHeaderHeight);
-        // Text with clipping to prevent spill-over
-        std::string label = mColumnW[i].second;
-        int text_width =
-            font_info ?
-                XTextWidth(font_info, label.c_str(), (INT32) label.length()) :
-                (INT32) label.length() * 6;
-        INT32 text_x = (INT32) (x_pos + (currentW - text_width) / 2);
-        if(x_pos + currentW > mRowHeaderWidth) {
-          XRectangle clip = { (INT32) std::max((INT64) mRowHeaderWidth, x_pos),
-              0, (UINT32) currentW, (UINT32) mColumnHeaderHeight };
-          XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
-          XDrawString(d, dest, gc, text_x,
-              (INT32) ((mColumnHeaderHeight / 2) + 4), label.c_str(),
-              (INT32) label.length());
-          XSetClipMask(d, gc, None);
-        }
-      }
-      x_pos += currentW;
-      // Safety break ONLY if we are significantly past the edge
-      if(x_pos > SizeX() + 100)
-        break;
-    }
-  }
 
   void ATable::DrawRowHeader(Drawable dest, ATableRangeData1 rowStartData,
       ATableRangeData1 rowEndData) {
@@ -298,17 +215,6 @@ namespace aui {
     mHOffset -= px;
     if(mHOffset < 0)
       mHOffset = 0;
-    Draw();
-  }
-
-  void ATable::ScrollRightPx(INT64 px) {
-    // Prevent scrolling beyond the last column
-    INT64 maxScroll = mTotalContentWidth - (SizeX() - mRowHeaderWidth);
-    if(maxScroll < 0)
-      maxScroll = 0;
-    mHOffset += px;
-    if(mHOffset > maxScroll)
-      mHOffset = maxScroll;
     Draw();
   }
 
@@ -451,9 +357,9 @@ namespace aui {
   }
 
   void ATable::OnButtonPress(XEvent *ev) {
-    int x = ev->xbutton.x;
-    int y = ev->xbutton.y;
-    unsigned int button = ev->xbutton.button;
+    INT32 x = ev->xbutton.x;
+    INT32 y = ev->xbutton.y;
+    UINT32 button = ev->xbutton.button;
     if(button == Button4) { ScrollUpPx(60); return; }
     if(button == Button5) { ScrollDownPx(60); return; }
     if(button == Button1) {
@@ -464,7 +370,7 @@ namespace aui {
           double thumbH = std::max(20.0, (viewH / (double) mTotalContentHeight) * viewH);
           double maxScroll = (double) mTotalContentHeight - viewH;
           double travelTrack = viewH - thumbH;
-          int vPos = mColumnHeaderHeight + (int) (((double) mVOffset / maxScroll) * travelTrack);
+          INT32 vPos = mColumnHeaderHeight + (int) (((double) mVOffset / maxScroll) * travelTrack);
           if(y >= vPos && y <= vPos + thumbH) mScrollGrabOffset = y - vPos;
           else mScrollGrabOffset = (int) (thumbH / 2.0);
           OnMouseMove(ev);
@@ -867,41 +773,18 @@ namespace aui {
     }
   }
 
-  std::string ATable::GetRowName(INT64 rowIdx) {
+  std::string ATable::RowName(INT64 rowIdx) {
     auto it = mRowH.find(rowIdx);
     if(it != mRowH.end())
       return it->second.second;
     return "";
   }
 
-  std::string ATable::GetColumnName(INT64 colIdx) {
+  std::string ATable::ColumnName(INT64 colIdx) {
     auto it = mColumnW.find(colIdx);
     if(it != mColumnW.end())
       return it->second.second;
     return "";
-  }
-
-  ATable::~ATable() {
-    AUI *au = AUIPtr();
-    Display *d = au->Disp();
-    // Cleanup X11 Pixmap
-    if(mBuffer != None) {
-      XFreePixmap(d, mBuffer);
-      mBuffer = None;
-    }
-    // XCB CURSOR CLEANUP
-    // We must use xcb_free_cursor with the XCB connection
-    xcb_connection_t *conn = XGetXCBConnection(d);
-    if(mHorizCursor != 0) {
-      D2("freeing horizontal cursor via xcb")
-      xcb_free_cursor(conn, (xcb_cursor_t) mHorizCursor);
-      mHorizCursor = 0;
-    }
-    if(mVertCursor != 0) {
-      D2("freeing vertical cursor via xcb")
-      xcb_free_cursor(conn, (xcb_cursor_t) mVertCursor);
-      mVertCursor = 0;
-    }
   }
 
   void ATable::UpdateColumnWidthToFit(INT64 colIdx) {
@@ -928,4 +811,91 @@ namespace aui {
     mAutoWiden = enable;
   }
 
+  ATableRangeData1 ATable::Offset2ColumnRange(ATableRangeData1 startColumn, INT64 width) {
+    ATableRangeData1 endc = startColumn;
+    auto it = mColumnW.find(startColumn.cell);
+    if (it != mColumnW.end()) {
+      INT64 remainingWidth = width - (INT64)mRowHeaderWidth;
+      INT64 firstCellVisibleW = it->second.first - startColumn.offset;
+      remainingWidth -= firstCellVisibleW;
+      while (++it != mColumnW.end() && remainingWidth > 0) {
+        endc.cell = it->first;
+        remainingWidth -= it->second.first;
+      }
+    }
+    return endc;
+  }
+
+  void ATable::DrawColumnHeader(Drawable dest, ATableRangeData1 colStartData, ATableRangeData1 colEndData) {
+    Display *d = AUIPtr()->Disp();
+    GC gc = GCPtr();
+    XFontStruct *font_info = Font();
+    // Start drawing at mRowHeaderWidth, adjusted back by the internal cell offset
+    INT64 x_pos = (INT64)mRowHeaderWidth - colStartData.offset;
+    // This clipping is the most important part.
+    // It forces X11 to ignore anything that slides under the intersection box.
+    XRectangle clip = {(INT32)mRowHeaderWidth, 0, (UINT32)(SizeX() - mRowHeaderWidth), (UINT32)mColumnHeaderHeight};
+    XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
+    for (INT64 i = colStartData.cell; i <= colEndData.cell; i++) {
+      INT64 currentW = GetColumnWidth(i);
+      if (currentW > 0 && x_pos < (INT64)SizeX()) {
+        XSetForeground(d, gc, 0xCCCCCC);
+        XFillRectangle(d, dest, gc, (INT32)x_pos, 0, (UINT32)currentW, (UINT32)mColumnHeaderHeight);
+        XSetForeground(d, gc, 0x000000);
+        XDrawRectangle(d, dest, gc, (INT32)x_pos, 0, (UINT32)currentW, (UINT32)mColumnHeaderHeight);
+        std::string label = mColumnW[i].second;
+        int text_width = font_info ? XTextWidth(font_info, label.c_str(), (INT32)label.length()) : (INT32)label.length() * 6;
+        INT32 text_x = (INT32)(x_pos + (currentW - text_width) / 2);
+        XDrawString(d, dest, gc, text_x, (INT32)((mColumnHeaderHeight / 2) + 4), label.c_str(), (INT32)label.length());
+      }
+      x_pos += currentW;
+      if (x_pos > (INT64)SizeX()) break;
+    }
+    XSetClipMask(d, gc, None);
+  }
+
+  void ATable::ScrollRightPx(INT64 px) {
+    // The 'Viewport' for data is the window width minus the row header.
+    // If the scrollbar takes physical space inside the window, subtract that too.
+    INT64 visibleDataArea = (INT64)SizeX() - (INT64)mRowHeaderWidth - (INT64)AUI_TABLE_SCROLL_THICK;
+    INT64 maxScroll = mTotalContentWidth - visibleDataArea;
+    if (maxScroll < 0) maxScroll = 0;
+    mHOffset += px;
+    if (mHOffset > maxScroll) mHOffset = maxScroll;
+    Draw();
+  }
+
+  ATableRangeData1 ATable::Offset2Column(INT64 offset) {
+    if (mColumnW.empty()) return {-1, -1};
+    INT64 accumulated = 0;
+    for (const auto& [id, data] : mColumnW) {
+      INT64 colW = data.first;
+      // If the scroll offset falls within this column's span
+      if (offset < accumulated + colW) {
+        return {id, offset - accumulated};
+      }
+      accumulated += colW;
+    }
+    // If scrolled to the very end
+    auto lastIt = mColumnW.rbegin();
+    return {lastIt->first, lastIt->second.first};
+  }
+
+  ATable::~ATable() {
+    AUI *au = AUIPtr();
+    Display *d = au->Disp();
+    // XCB CURSOR CLEANUP
+    // We must use xcb_free_cursor with the XCB connection
+    xcb_connection_t *conn = XGetXCBConnection(d);
+    if(mHorizCursor != 0) {
+      D2("freeing horizontal cursor via xcb")
+      xcb_free_cursor(conn, (xcb_cursor_t) mHorizCursor);
+      mHorizCursor = 0;
+    }
+    if(mVertCursor != 0) {
+      D2("freeing vertical cursor via xcb")
+      xcb_free_cursor(conn, (xcb_cursor_t) mVertCursor);
+      mVertCursor = 0;
+    }
+  }
 }
