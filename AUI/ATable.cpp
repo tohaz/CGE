@@ -389,7 +389,7 @@ namespace aui {
     }
   }
 
-  void ATable::OnButtonRelease(XEvent *ev) {
+  void ATable::OnButtonRelease([[maybe_unused]] XEvent *ev) {
     mCurrentScrollMode = AUIScrollMode::AUINone;
     mResizeMode = AUIResizeMode::AUINone;
     mResizeId = -1;

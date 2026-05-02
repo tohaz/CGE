@@ -305,7 +305,7 @@ namespace aui {
   }
 
   std::string AUI::NumberToBaseString(UINT64 n) {
-    //D3("entering with '%lu', alphabet len '%lu'", n, mAlphabetLen)
+    D3("entering with '%lu', alphabet len '%lu'", n, mAlphabetLen)
     std::string result = "";
     do {
       result += BaseAlphabet[n % mAlphabetLen];

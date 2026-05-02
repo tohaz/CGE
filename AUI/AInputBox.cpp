@@ -32,8 +32,7 @@ namespace aui {
           std::this_thread::sleep_for(std::chrono::milliseconds(500));
           mCursorVisible = !mCursorVisible;
           Display* d = AUIPtr()->Disp();
-          // Zero-initialize the entire structure to satisfy Valgrind/X11
-          XExposeEvent ev = {0};
+          XExposeEvent ev;
           ev.type = Expose;
           ev.display = d;
           ev.window = Wnd();

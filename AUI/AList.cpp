@@ -182,9 +182,9 @@ namespace aui {
     XDrawLine(d, wi, gc, sizeX - mArwSz2 / 2 - mArwSz2 / 5, mArwSz1 + draw_start,
         sizeX - mArwSz2 / 2 - mArwSz2 / 5, mArwSz1 + draw_start + draw_size);
   }
-  void AList::OnButtonRelease(XEvent *ev) {
+  void AList::OnButtonRelease([[maybe_unused]]XEvent *ev) {
     // TODO: List in Examples also lack this
-    D3("OnButtonRelease Unimplemented")
+    D("OnButtonRelease Unimplemented")
   }
 
   void AList::OnButtonPress(XEvent *ev) {
