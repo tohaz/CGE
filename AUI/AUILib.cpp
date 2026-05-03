@@ -201,6 +201,7 @@ namespace aui {
     }
     else {
       D2("not freeing display")
+      DS()
     }
   }
 

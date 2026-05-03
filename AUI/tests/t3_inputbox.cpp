@@ -15,7 +15,7 @@ int main() {
   AUI* au = AUI::Create("inputbox");
   AWindow* w = au->MainWnd();
 
-  AInputBox* ib = AInputBox::AttachTo(w, "testing");
+  AInputBox* ib = AInputBox::AttachTo(w, (char *)"testing");
   ib->Resize(100, 25);
 
   auto handle = std::async(std::launch::async, [=]() {

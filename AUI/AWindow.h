@@ -16,7 +16,7 @@ namespace aui {
 
     public:
       static AWindow* AttachTo(AUI* au, std::string title);
-      static AWindow* AttachTo(AWidget* parent, std::string title);
+      AWindow* AttachTo(AWidget* parent, std::string title);
       void OnKeyPress(XEvent *ev);
 
       void Draw();

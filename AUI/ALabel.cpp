@@ -50,6 +50,9 @@ namespace aui {
       case AUIHAlign::right:
         drawX = SizeX() - totalW - 5;
         break;
+      default:
+        E("halign junk")
+        break;
     }
     switch (VAlign()) {
       case AUIVAlign::top:
@@ -60,6 +63,9 @@ namespace aui {
         break;
       case AUIVAlign::bottom:
         drawY = SizeY() - f->descent - 5;
+        break;
+      default:
+        E("valign junk")
         break;
     }
     XDrawString(d, wi, GCPtr(), drawX, drawY, Text().c_str(),

@@ -1,4 +1,4 @@
-# --- Paths (Relative) ---
+# --- Paths ---
 SRC_DIR := .
 OBJ_DIR := Custom/obj
 LIB_DIR := Custom
@@ -6,8 +6,11 @@ LIB_DIR := Custom
 # --- Compiler Settings ---
 CXX := g++
 AR := ar
-CXXFLAGS := -Wall -Wextra -MMD -MP -I. -std=c++26 -O0 -g3 -fmessage-length=0 -pedantic -pedantic-errors -Werror
 
+# -Wold-style-cast -Weffc++ 
+# -Wconversion -Wsign-conversion 
+#CXXFLAGS := -Wall -Wextra -MMD -MP -I. -std=c++26 -O0 -g3 -pedantic-errors -Werror -Wshadow -Wfloat-equal -Wswitch-default -Wcast-align
+CXXFLAGS := -std=c++26 -O0 -g3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wcast-align -Wcast-qual -Wdisabled-optimization -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-null-sentinel -Wswitch-default -Wundef -Wfloat-equal -c -fmessage-length=0
 # --- Files ---
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))

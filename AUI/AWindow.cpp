@@ -48,7 +48,6 @@ namespace aui {
     mWMDeleteMessage = XInternAtom(d, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(d, Wnd(), &mWMDeleteMessage, 1);
     XFlush(d);
-
   }
 
   AWindow* AWindow::AttachTo(AUI *cg, std::string newTitle) {

@@ -31,10 +31,10 @@ namespace aui {
         while (!mStopBlink) {
           std::this_thread::sleep_for(std::chrono::milliseconds(500));
           mCursorVisible = !mCursorVisible;
-          Display* d = AUIPtr()->Disp();
+          Display* d1 = AUIPtr()->Disp();
           XExposeEvent ev;
           ev.type = Expose;
-          ev.display = d;
+          ev.display = d1;
           ev.window = Wnd();
           ev.count = 0;
           // These fields are technically required for an Expose event
@@ -42,10 +42,10 @@ namespace aui {
           ev.y = 0;
           ev.width = SizeX();
           ev.height = SizeY();
-          XLockDisplay(d);
-          XSendEvent(d, Wnd(), False, ExposureMask, (XEvent*)&ev);
-          XFlush(d);
-          XUnlockDisplay(d);
+          XLockDisplay(d1);
+          XSendEvent(d1, Wnd(), False, ExposureMask, (XEvent*)&ev);
+          XFlush(d1);
+          XUnlockDisplay(d1);
         }
       });
     }
@@ -54,9 +54,9 @@ namespace aui {
     return new AInputBox(wParent);
   }
 
-  AInputBox* AInputBox::AttachTo(AWidget* wParent, const char* val) {
+  AInputBox* AInputBox::AttachTo(AWidget* wParent, char* val) {
     AInputBox* ib = AttachTo(wParent);
-    ib->SetText((char *)val);
+    ib->SetText(val);
     return ib;
   }
 
@@ -81,6 +81,9 @@ namespace aui {
           case AUIHAlign::right:
             drawX = SizeX() - totalW - 5;
             break;
+          default:
+            E("halign junk")
+            break;
         }
         switch (VAlign()) {
           case AUIVAlign::top:
@@ -91,6 +94,9 @@ namespace aui {
             break;
           case AUIVAlign::bottom:
             drawY = SizeY() - f->descent - 5;
+            break;
+          default:
+            E("valign junk")
             break;
         }
         XDrawString(d, w, gc, drawX, drawY, Text().c_str(), (int) Text().size());

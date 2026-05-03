@@ -67,6 +67,9 @@ namespace aui {
       case AUIHAlign::right:
         drawX = SizeX() - totalW - 5;
         break;
+      default:
+        E("halign")
+        break;
     }
     switch (VAlign()) {
       case AUIVAlign::top:
@@ -78,6 +81,10 @@ namespace aui {
       case AUIVAlign::bottom:
         drawY = SizeY() - f->descent - 5;
         break;
+      default:
+        E("valign")
+        break;
+
     }
     XSetForeground(d, GCPtr(), BlackPixel(d, cg->Scr()));
     XDrawString(d, bb, GCPtr(), drawX, drawY, TextPtr(),
@@ -123,8 +130,6 @@ namespace aui {
   AButton* AButton::AttachTo(AWidget *w, std::string inText) {
     return new AButton(inText, w);
   }
-
-
 
   AButton::~AButton() {
     D3("v")

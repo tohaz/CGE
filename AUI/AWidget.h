@@ -64,7 +64,7 @@ namespace aui {
       UINT64 SizeX();
       UINT64 SizeY();
       UINT32 BGColor();
-      CHAR8* TextPtr();
+      const CHAR8* TextPtr();
       std::string& Text();
       std::string& Title();
       XFontStruct* Font();

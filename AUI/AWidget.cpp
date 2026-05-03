@@ -118,8 +118,8 @@ namespace aui {
     E("default draw routine called")
   }
 
-  CHAR8* AWidget::TextPtr() {
-    return (CHAR8*)mText.c_str();
+  const CHAR8* AWidget::TextPtr() {
+    return (const CHAR8*)mText.c_str();
   }
 
   std::string& AWidget::Text() {
