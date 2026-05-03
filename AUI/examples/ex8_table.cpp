@@ -10,51 +10,51 @@ void StopTimer(time_point<high_resolution_clock> start) {
   D("time: %f ms", duration_ms1.count());
 }
 
-void AddRowHandler(XEvent* ev, AWidget* w, void* d) {
+void AddRowHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D1("Add Row");
   ATable* t = (ATable*)d;
   t->AddRow();
   t->Draw();
 }
 
-void RemoveRowHandler(XEvent* ev, AWidget* w, void* d) {
+void RemoveRowHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D1("Remove Row");
   ATable* t = (ATable*)d;
   t->RemoveLastRow();
 }
 
-void AddColumnHandler(XEvent* ev, AWidget* w, void* d) {
+void AddColumnHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D1("Add Column");
   ATable* t = (ATable*)d;
   t->AddColumn();
   t->Draw();
 }
 
-void RemoveColumnHandler(XEvent* ev, AWidget* w, void* d) {
+void RemoveColumnHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D1("Remove Column");
   ATable* t = (ATable*)d;
   t->RemoveLastColumn();
 }
 
-void MoveUpHandler(XEvent* ev, AWidget* w, void* d) {
+void MoveUpHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D2("Up");
   ATable* t = (ATable*)d;
   t->ScrollUpPx(9);
 }
 
-void MoveDownHandler(XEvent* ev, AWidget* w, void* d) {
+void MoveDownHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D2("Down");
   ATable* t = (ATable*)d;
   t->ScrollDownPx(9);
 }
 
-void MoveLeftHandler(XEvent* ev, AWidget* w, void* d) {
+void MoveLeftHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D2("Left");
   ATable* t = (ATable*)d;
   t->ScrollLeftPx(9);
 }
 
-void MoveRightHandler(XEvent* ev, AWidget* w, void* d) {
+void MoveRightHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
   D2("Right");
   ATable* t = (ATable*)d;
   t->ScrollRightPx(9);
