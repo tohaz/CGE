@@ -1,54 +1,48 @@
+# --- Paths (Relative) ---
+LIB_ROOT   := ..
+CGLIB_PATH := $(LIB_ROOT)/Custom/libCGLib.a
+
+SRC_DIR    := .
+BUILD_DIR  := bin
+# Path for dependency files inside bin
+DEP_DIR    := $(BUILD_DIR)/deps
+
 # --- Compiler Settings ---
-CXX = g++
-
-#-std=c++26 -O0 -g3 -Wall -c -fmessage-length=0
-#CXXFLAGS = -Wall -Wextra -g -std=c++26
-CXXFLAGS = -Wall -Wextra -g -std=c++26 -O0 -g3 -fmessage-length=0
-
-INCLUDE_PATH = ../
-CPPFLAGS = -I$(INCLUDE_PATH)
-LDFLAGS = -Llib -L../Custom/
-LIBS = -lCGLib -lX11 -lX11-xcb -lxcb -lxcb-cursor
-
-# --- Paths ---
-# Path to the static library file (dependency)
-CGLIB_PATH = ../Custom/libCGLib.a
-
-SRC_DIR = ./
-BUILD_DIR = ./bin/
+CXX := g++
+# We use -MF to explicitly tell GCC where to put the .d file
+CXXFLAGS := -Wall -Wextra -g -std=c++26 -O0 -g3 -fmessage-length=0 -MMD -MP
+CPPFLAGS := -I$(LIB_ROOT)
+LDFLAGS  := -L$(LIB_ROOT)/Custom
+LIBS     := -lCGLib -lX11 -lX11-xcb -lxcb -lxcb-cursor
 
 # --- File Discovery ---
-SRCS = $(wildcard $(SRC_DIR)*.cpp)
-EXES = $(patsubst $(SRC_DIR)%.cpp,$(BUILD_DIR)%,$(SRCS))
+SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+EXES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%,$(SRCS))
+DEPS := $(patsubst $(SRC_DIR)/%.cpp,$(DEP_DIR)/%.d,$(SRCS))
 
-# --- Special Targets ---
+# --- Rules ---
 
-# Automatically delete the target file if the recipe fails during execution
-.DELETE_ON_ERROR:
+all: build_external_libs $(EXES)
 
-all: $(EXES)
+# Create both bin and bin/deps directories
+$(BUILD_DIR) $(DEP_DIR):
+	mkdir -p $@
 
-# Create the build directory if it doesn't exist
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
-# Target to trigger build in the parent directory
+# Call the parent makefile
 .PHONY: build_external_libs
 build_external_libs:
-	$(MAKE) -C ..
+	$(MAKE) -C $(LIB_ROOT)
 
-# Link the library path to the external build command
-$(CGLIB_PATH): build_external_libs
-	@:
+# Rule for building executables
+# We add -MF $(DEP_DIR)/$*.d to redirect the dependency file
+$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(CGLIB_PATH) | $(BUILD_DIR) $(DEP_DIR)
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS)
 
-# --- Build Rule for Executables ---
-# 'rm -f $@' is executed FIRST. This ensures that if the compiler fails 
-# later, the old binary is already gone and won't persist.
-$(BUILD_DIR)%: $(SRC_DIR)%.cpp $(CGLIB_PATH) | $(BUILD_DIR)
-	rm -f $@
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $< -o $@ $(LDFLAGS) $(LIBS)
+# Include generated dependencies from the new subdirectory
+-include $(DEPS)
 
-# --- Cleanup ---
-.PHONY: clean
 clean:
 	rm -rf $(BUILD_DIR)
+
+.PHONY: all clean build_external_libs
+

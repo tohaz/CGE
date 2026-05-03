@@ -12,26 +12,12 @@ using namespace aui;
 int main() {
 	//char *qqq = new char[1]; // generate error
   UINT32 delay_ms = 50; // delay before thead calls window to close
-  AUI* au = AUI::Create("table");
-  AWindow* w = au->MainWnd();
-
-  ATable* ta = ATable::AttachTo(w);
+  AUI* au = AUI::Create("helpers");
+//  AWindow* w = au->MainWnd();
   
-  ta->AddRow();
+  UNUSED UINT16 q = SafeUINT16(1);
+  q = SafeUINT16(0x10000-1);
 
-
-  for(int i = 0; i < 10; i++) {
-    ta->AddColumn();
-  }
-
-  ta->AddRows(20);
-
-  ta->AddColumns(30);
-  
-  ta->Move(0, 0);
-  
-  ta->Resize(400, 250);
-    
   std::future<void> handle;
   if(need_delay_exit) {
     handle = std::async(std::launch::async, [=]() {
@@ -49,7 +35,6 @@ int main() {
   }
   
   au = 0;
-  ta = 0;
 
   return 0;
 }

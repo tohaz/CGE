@@ -1,39 +1,37 @@
-# Define directories and variables
-SRC_DIR := ./
-INCLUDE_DIR := ./
+# --- Paths (Relative) ---
+SRC_DIR := .
 OBJ_DIR := Custom/obj
 LIB_DIR := Custom
-#BIN_DIR := Custom
 
+# --- Compiler Settings ---
 CXX := g++
 AR := ar
-CXXFLAGS := -Wall -Wextra -std=c++20 
-LDFLAGS := -L$(LIB_DIR)                       
-LIBS := -lCGLib         
+CXXFLAGS := -Wall -Wextra -std=c++20 -MMD -MP -I.
 
-# Files
+# --- Files ---
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
-LIB_NAME := libCGLib.a
+LIB_NAME  := libCGLib.a
 STATIC_LIB := $(LIB_DIR)/$(LIB_NAME)
 
-# Default target
+# --- Rules ---
+
 all: dirs $(STATIC_LIB)
 
-# Create necessary directories
 dirs:
-	mkdir -p $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR)
+	mkdir -p $(OBJ_DIR)
 
-# Rule to create the static library
 $(STATIC_LIB): $(OBJ_FILES)
 	$(AR) rcs $@ $(OBJ_FILES)
 
-# Rule to compile source files into object files
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Clean up generated files
+# Include dependencies (.d files)
+-include $(OBJ_FILES:.o=.d)
+
 clean:
-	rm -rf $(OBJ_DIR) $(LIB_DIR) $(BIN_DIR)
+	rm -rf $(LIB_DIR)
 
 .PHONY: all clean dirs
+

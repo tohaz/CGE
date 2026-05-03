@@ -3,6 +3,8 @@
 
 #define DEBUG_LEVEL 1
 
+#define UNUSED [[maybe_unused]]
+
 #if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
   #error "Not tested on Big-endian system"
 #elif defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

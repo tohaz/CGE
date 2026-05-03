@@ -46,5 +46,14 @@ else
 		exit 1
 fi
 
+valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t6_helpers
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}+++Test 6 Success+++${NC}"
+else
+    echo -e "${RED}Failed Test6==========================================================================================${NC}"
+		exit 1
+fi
+
+
 
 echo -e "${GREEN}+++ALL Success+++${NC}"

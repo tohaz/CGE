@@ -26,13 +26,38 @@
 #include "AWindow.h"
 #include "defaults.h"
 
+#pragma GCC push_options
+#pragma GCC optimize ("O2")
 
 namespace aui {
-  INT32 SafeINT32(UINT32 val);
-  INT16 SafeINT16(UINT32 val);
-  UINT16 SafeUINT16(UINT32 val);
-  INT16 SafeINT16(UINT16 val);
+  static __attribute__((always_inline)) inline INT32 SafeINT32(UINT32 val) {
+    if(val > 0x7FFFFFFF) {
+      E("UINT32 to INT32 conversion error");
+    }
+    return (INT32) val;
+  }
 
+  static __attribute__((always_inline)) inline INT16 SafeINT16(UINT16 val) {
+    if(val >= 0x8000) {
+      E("UINT16 to INT16 conversion error");
+    }
+    return (INT16) val;
+  }
+
+  static __attribute__((always_inline)) inline INT16 SafeINT16(UINT32 val) {
+    if(val >= 0x8000) {
+      E("UINT32 to INT16 conversion error");
+    }
+    return (INT16) val;
+  }
+
+  static __attribute__((always_inline)) inline UINT16 SafeUINT16(UINT32 val) {
+    if(val >= 0x10000) {
+      E("UINT32 to UINT16 conversion error");
+    }
+    return (UINT16) val;
+  }
+#pragma GCC pop_options
 
   class AWidget;
   class AWindow;
