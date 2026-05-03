@@ -10,7 +10,7 @@ DEP_DIR    := $(BUILD_DIR)/deps
 # --- Compiler Settings ---
 CXX := g++
 # We use -MF to explicitly tell GCC where to put the .d file
-CXXFLAGS := -Wall -Wextra -g -std=c++26 -O0 -g3 -fmessage-length=0 -MMD -MP
+CXXFLAGS := -Wall -Wextra -std=c++26 -O0 -g3 -fmessage-length=0 -MMD -MP
 CPPFLAGS := -I$(LIB_ROOT)
 LDFLAGS  := -L$(LIB_ROOT)/Custom
 LIBS     := -lCGLib -lX11 -lX11-xcb -lxcb -lxcb-cursor

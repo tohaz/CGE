@@ -6,7 +6,7 @@ LIB_DIR := Custom
 # --- Compiler Settings ---
 CXX := g++
 AR := ar
-CXXFLAGS := -Wall -Wextra -std=c++20 -MMD -MP -I.
+CXXFLAGS := -Wall -Wextra -MMD -MP -I. -std=c++26 -O0 -g3 -fmessage-length=0 -pedantic -pedantic-errors -Werror
 
 # --- Files ---
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
