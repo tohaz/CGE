@@ -116,7 +116,6 @@ namespace aui {
     return endr;
   }
 
-
   void ATable::DrawRowHeader(Drawable dest, ATableRangeData1 rowStartData,
       ATableRangeData1 rowEndData) {
     Display *d = AUIPtr()->Disp();
@@ -150,26 +149,28 @@ namespace aui {
   }
 
   void ATable::AddRow() {
-      UINT64 lastK = 0;
-      if (!mRows.empty()) {
-        lastK = static_cast<UINT64>(mRows.rbegin()->first) + 1;
-      }
-      INT64 signedKey = SafeINT64(lastK);
-      mRows[signedKey];
-      if (!mRowH.contains(signedKey)) {
-        std::string label = std::to_string(lastK);
-        mRowH[signedKey] = { AUI_TABLE_CELL_H, label };
-        mTotalContentHeight += AUI_TABLE_CELL_H;
-        static size_t lastLen = 0;
-        if (label.length() > lastLen) {
-          XFontStruct *font_info = Font();
-          INT32 len = SafeINT32(label.length());
-          int text_width = font_info ? XTextWidth(font_info, label.c_str(), len) : len * 7;
-          mRowHeaderWidth = SafeUINT32(text_width + 12);
-          lastLen = label.length();
-        }
+    UINT64 lastK = 0;
+    if(!mRows.empty()) {
+      lastK = static_cast<UINT64>(mRows.rbegin()->first) + 1;
+    }
+    INT64 signedKey = SafeINT64(lastK);
+    mRows[signedKey];
+    if(!mRowH.contains(signedKey)) {
+      std::string label = std::to_string(lastK);
+      mRowH[signedKey] = { AUI_TABLE_CELL_H, label };
+      mTotalContentHeight += AUI_TABLE_CELL_H;
+      static size_t lastLen = 0;
+      if(label.length() > lastLen) {
+        XFontStruct *font_info = Font();
+        INT32 len = SafeINT32(label.length());
+        int text_width =
+            font_info ? XTextWidth(font_info, label.c_str(), len) : len * 7;
+        mRowHeaderWidth = SafeUINT32(text_width + 12);
+        lastLen = label.length();
       }
     }
+  }
+
   void ATable::ScrollUpPx(INT64 px) {
     mVOffset -= px;
     if(mVOffset < 0)
@@ -308,47 +309,95 @@ namespace aui {
   }
 
   void aui::ATable::OnButtonPress(XEvent *ev) {
-    INT32 x = ev->xbutton.x;
-    INT32 y = ev->xbutton.y;
-    UINT32 button = ev->xbutton.button;
-    if (button == Button4) { ScrollUpPx(60); return; }
-    if (button == Button5) { ScrollDownPx(60); return; }
-    if (button == Button1) {
-      if (SafeUINT64(x) >= SizeX() - SafeUINT64(AUI_TABLE_SCROLL_THICK) && SafeUINT64(y) > SafeUINT64(mColumnHeaderHeight)) {
-        double viewH = (double)SizeY() - (double)mColumnHeaderHeight - (double)AUI_TABLE_SCROLL_THICK;
-        if ((double)mTotalContentHeight > viewH) {
-          mCurrentScrollMode = AUIScrollMode::AUIVertical;
-          double thumbH = std::max(20.0, (viewH / (double)mTotalContentHeight) * viewH);
-          double maxScroll = (double)mTotalContentHeight - viewH;
-          double travelTrack = viewH - thumbH;
-          INT32 vPos = SafeINT32(mColumnHeaderHeight) + (int)(((double)mVOffset / maxScroll) * travelTrack);
-          if (y >= vPos && y <= vPos + (int)thumbH) mScrollGrabOffset = y - vPos;
-          else mScrollGrabOffset = (int)(thumbH / 2.0);
-          OnMouseMove(ev);
+      INT32 x = ev->xbutton.x;
+      INT32 y = ev->xbutton.y;
+      UINT32 button = ev->xbutton.button;
+      Display *d = AUIPtr()->Disp();
+      Window w = Wnd();
+      if (button == Button4) { ScrollUpPx(60); return; }
+      if (button == Button5) { ScrollDownPx(60); return; }
+      if (button == Button1) {
+        if (y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
+          ATableRangeData1 colStart = Offset2Column(mHOffset);
+          INT64 currX = SafeINT64(mRowHeaderWidth) - colStart.offset;
+          for (auto const& [id, data] : mColumnW) {
+            if (id < colStart.cell) continue;
+            currX += data.first;
+            if (std::abs(x - SafeINT32(currX)) < 5) {
+              mResizeMode = AUIResizeMode::AUIColumn;
+              mResizeId = id;
+              mResizeBasePos = x;
+              mResizeBaseSize = data.first;
+              XDefineCursor(d, w, mHorizCursor);
+              return;
+            }
+          }
         }
-        return;
-      }
-      if (SafeUINT64(y) >= SizeY() - SafeUINT64(AUI_TABLE_SCROLL_THICK) && SafeUINT64(x) > SafeUINT64(mRowHeaderWidth)) {
-        double viewW = (double)SizeX() - (double)mRowHeaderWidth - (double)AUI_TABLE_SCROLL_THICK;
-        if ((double)mTotalContentWidth > viewW) {
-          mCurrentScrollMode = AUIScrollMode::AUIHorizontal;
-          double thumbW = std::max(20.0, (viewW / (double)mTotalContentWidth) * viewW);
-          double maxScroll = (double)mTotalContentWidth - viewW;
-          double travelTrack = viewW - thumbW;
-          int hPos = SafeINT32(mRowHeaderWidth) + (int)(((double)mHOffset / maxScroll) * travelTrack);
-          if (x >= hPos && x <= hPos + (int)thumbW) mScrollGrabOffset = x - hPos;
-          else mScrollGrabOffset = (int)(thumbW / 2.0);
-          OnMouseMove(ev);
+        if (std::abs(x - SafeINT32(mRowHeaderWidth)) < 5) {
+          mResizeMode = AUIResizeMode::AUIHeader;
+          mResizeBasePos = x;
+          mResizeBaseSize = (INT64)mRowHeaderWidth;
+          XDefineCursor(d, w, mHorizCursor);
+          return;
         }
-        return;
+        if (x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
+          ATableRangeData1 rowStart = Offset2Row(mVOffset);
+          INT64 currY = SafeINT64(mColumnHeaderHeight) - rowStart.offset;
+          for (auto const& [id, data] : mRowH) {
+            if (id < rowStart.cell) continue;
+            currY += data.first;
+            if (std::abs(y - SafeINT32(currY)) < 5) {
+              mResizeMode = AUIResizeMode::AUIRow;
+              mResizeId = id;
+              mResizeBasePos = y;
+              mResizeBaseSize = data.first;
+              XDefineCursor(d, w, mVertCursor);
+              return;
+            }
+          }
+        }
+        if (SafeUINT64(x) >= SizeX() - SafeUINT64(AUI_TABLE_SCROLL_THICK) && SafeUINT64(y) > SafeUINT64(mColumnHeaderHeight)) {
+          double viewH = (double)SizeY() - (double)mColumnHeaderHeight - (double)AUI_TABLE_SCROLL_THICK;
+          if ((double)mTotalContentHeight > viewH) {
+            mCurrentScrollMode = AUIScrollMode::AUIVertical;
+            double thumbH = std::max(20.0, (viewH / (double)mTotalContentHeight) * viewH);
+            double maxScroll = (double)mTotalContentHeight - viewH;
+            double travelTrack = viewH - thumbH;
+            INT32 vPos = SafeINT32(mColumnHeaderHeight) + (int)(((double)mVOffset / maxScroll) * travelTrack);
+            if (y >= vPos && y <= vPos + (int)thumbH) mScrollGrabOffset = y - vPos;
+            else mScrollGrabOffset = (int)(thumbH / 2.0);
+            OnMouseMove(ev);
+          }
+          return;
+        }
+        if (SafeUINT64(y) >= SizeY() - SafeUINT64(AUI_TABLE_SCROLL_THICK) && SafeUINT64(x) > SafeUINT64(mRowHeaderWidth)) {
+          double viewW = (double)SizeX() - (double)mRowHeaderWidth - (double)AUI_TABLE_SCROLL_THICK;
+          if ((double)mTotalContentWidth > viewW) {
+            mCurrentScrollMode = AUIScrollMode::AUIHorizontal;
+            double thumbW = std::max(20.0, (viewW / (double)mTotalContentWidth) * viewW);
+            double maxScroll = (double)mTotalContentWidth - viewW;
+            double travelTrack = viewW - thumbW;
+            int hPos = SafeINT32(mRowHeaderWidth) + (int)(((double)mHOffset / maxScroll) * travelTrack);
+            if (x >= hPos && x <= hPos + (int)thumbW) mScrollGrabOffset = x - hPos;
+            else mScrollGrabOffset = (int)(thumbW / 2.0);
+            OnMouseMove(ev);
+          }
+          return;
+        }
+        auto [row, col] = ScreenToCell(x, y);
+        mCursorRow = row;
+        mCursorCol = col;
+        mSelectedRow = row;
+        Draw();
       }
     }
-  }
 
-  void ATable::OnButtonRelease([[maybe_unused]] XEvent *ev) {
+    void aui::ATable::OnButtonRelease(XEvent *ev) {
     mCurrentScrollMode = AUIScrollMode::AUINone;
     mResizeMode = AUIResizeMode::AUINone;
     mResizeId = -1;
+    XUndefineCursor(AUIPtr()->Disp(), Wnd());
+    OnMouseMove(ev);
   }
 
   std::pair<INT64, INT64> ATable::ScreenToCell(INT32 x, INT32 y) {
@@ -401,118 +450,102 @@ namespace aui {
     }
   }
 
-  void ATable::OnMouseMove(XEvent *ev) {
-    Display *d = AUIPtr()->Disp();
-    Window w = Wnd();
-    INT32 x = ev->xmotion.x;
-    INT32 y = ev->xmotion.y;
-    // 1. ACTIVE RESIZING
-    if(mResizeMode == AUIResizeMode::AUIColumn) {
-      INT32 delta = x - mResizeBasePos;
-      INT64 newW = std::max((INT64) 30, mResizeBaseSize + delta);
-      mTotalContentWidth += (newW - mColumnW[mResizeId].first);
-      mColumnW[mResizeId].first = newW;
-      // Elastic pull-back
-      INT64 viewW = (INT64) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
-      INT64 maxScroll = std::max((INT64) 0, mTotalContentWidth - viewW);
-      if(mHOffset > maxScroll)
-        mHOffset = maxScroll;
-      Draw();
-      return;
-    }
-    if(mResizeMode == AUIResizeMode::AUIRow) {
-      int delta = y - mResizeBasePos;
-      INT64 newH = std::max((INT64) 15, mResizeBaseSize + delta);
-      mTotalContentHeight += (newH - mRowH[mResizeId].first);
-      mRowH[mResizeId].first = newH;
-      // Elastic pull-back
-      INT64 viewH =
-          (INT64) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
-      INT64 maxScroll = std::max((INT64) 0, mTotalContentHeight - viewH);
-      if(mVOffset > maxScroll)
-        mVOffset = maxScroll;
-      Draw();
-      return;
-    }
-    if(mResizeMode == AUIResizeMode::AUIHeader) {
-      int delta = x - mResizeBasePos;
-      mRowHeaderWidth = SafeUINT32(std::max((INT64)20, (INT64)mResizeBaseSize + (INT64)delta));
-      Draw();
-      return;
-    }
-    // 2. SCROLLING
-    if(mCurrentScrollMode == AUIScrollMode::AUIVertical) {
-      double viewH =
-          (double) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
-      double thumbH = std::max(20.0,
-          (viewH / (double) mTotalContentHeight) * viewH);
-      double travelTrack = viewH - thumbH;
-      double maxScroll = (double) mTotalContentHeight - viewH;
-
-      if(travelTrack > 0) {
-        double trackY = (double)y - (double)mColumnHeaderHeight - (double)mScrollGrabOffset;
-        double ratio = trackY / travelTrack;
-        mVOffset = (INT64) (std::max(0.0, std::min(1.0, ratio)) * maxScroll);
+  void aui::ATable::OnMouseMove(XEvent *ev) {
+      Display *d = AUIPtr()->Disp();
+      Window w = Wnd();
+      INT32 x = ev->xmotion.x;
+      INT32 y = ev->xmotion.y;
+      if(mResizeMode == AUIResizeMode::AUIColumn) {
+        XDefineCursor(d, w, mHorizCursor);
+        INT32 delta = x - mResizeBasePos;
+        INT64 newW = std::max((INT64) 30, mResizeBaseSize + delta);
+        mTotalContentWidth += (newW - mColumnW[mResizeId].first);
+        mColumnW[mResizeId].first = newW;
+        INT64 viewW = (INT64) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
+        INT64 maxScroll = std::max((INT64) 0, mTotalContentWidth - viewW);
+        if(mHOffset > maxScroll) mHOffset = maxScroll;
         Draw();
+        return;
       }
-      return;
-    }
-    if(mCurrentScrollMode == AUIScrollMode::AUIHorizontal) {
-      double viewW = (double) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
-      double thumbW = std::max(20.0,
-          (viewW / (double) mTotalContentWidth) * viewW);
-      double travelTrack = viewW - thumbW;
-      double maxScroll = (double) mTotalContentWidth - viewW;
-
-      if(travelTrack > 0) {
-        double trackX = (double)x - (double)mRowHeaderWidth - (double)mScrollGrabOffset;
-        double ratio = trackX / travelTrack;
-        mHOffset = (INT64) (std::max(0.0, std::min(1.0, ratio)) * maxScroll);
+      if(mResizeMode == AUIResizeMode::AUIRow) {
+        XDefineCursor(d, w, mVertCursor);
+        int delta = y - mResizeBasePos;
+        INT64 newH = std::max((INT64) 15, mResizeBaseSize + delta);
+        mTotalContentHeight += (newH - mRowH[mResizeId].first);
+        mRowH[mResizeId].first = newH;
+        INT64 viewH = (INT64) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
+        INT64 maxScroll = std::max((INT64) 0, mTotalContentHeight - viewH);
+        if(mVOffset > maxScroll) mVOffset = maxScroll;
         Draw();
+        return;
       }
-      return;
-    }
-
-    // 3. HOVER CURSORS
-    bool cursorSet = false;
-    if(y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
-      ATableRangeData1 colStart = Offset2Column(mHOffset);
-      INT64 currX = SafeINT64(mRowHeaderWidth) - colStart.offset;
-      for (auto const& [id, data] : mColumnW) {
-        if(id < colStart.cell)
-          continue;
-        currX += data.first;
-        if(std::abs(x - (int) currX) < 5) {
-          XDefineCursor(d, w, mHorizCursor);
-          cursorSet = true;
-          break;
+      if(mResizeMode == AUIResizeMode::AUIHeader) {
+        XDefineCursor(d, w, mHorizCursor);
+        int delta = x - mResizeBasePos;
+        mRowHeaderWidth = SafeUINT32(std::max((INT64)20, (INT64)mResizeBaseSize + (INT64)delta));
+        Draw();
+        return;
+      }
+      if(mCurrentScrollMode == AUIScrollMode::AUIVertical) {
+        double viewH = (double) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
+        double thumbH = std::max(20.0, (viewH / (double) mTotalContentHeight) * viewH);
+        double travelTrack = viewH - thumbH;
+        double maxScroll = (double) mTotalContentHeight - viewH;
+        if(travelTrack > 0) {
+          double trackY = (double)y - (double)mColumnHeaderHeight - (double)mScrollGrabOffset;
+          double ratio = trackY / travelTrack;
+          mVOffset = (INT64) (std::max(0.0, std::min(1.0, ratio)) * maxScroll);
+          Draw();
         }
-        if(currX > SafeINT64(SizeX()))
-          break;
+        return;
       }
-    } else if(x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
-      ATableRangeData1 rowStart = Offset2Row(mVOffset);
-      INT64 currY = SafeINT64(mColumnHeaderHeight) - rowStart.offset;
-      for (auto const& [id, data] : mRowH) {
-        if(id < rowStart.cell)
-          continue;
-        currY += data.first;
-        if(std::abs(y - (int) currY) < 5) {
-          XDefineCursor(d, w, mVertCursor);
-          cursorSet = true;
-          break;
+      if(mCurrentScrollMode == AUIScrollMode::AUIHorizontal) {
+        double viewW = (double) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
+        double thumbW = std::max(20.0, (viewW / (double) mTotalContentWidth) * viewW);
+        double travelTrack = viewW - thumbW;
+        double maxScroll = (double) mTotalContentWidth - viewW;
+        if(travelTrack > 0) {
+          double trackX = (double)x - (double)mRowHeaderWidth - (double)mScrollGrabOffset;
+          double ratio = trackX / travelTrack;
+          mHOffset = (INT64) (std::max(0.0, std::min(1.0, ratio)) * maxScroll);
+          Draw();
         }
-        if(currY > SafeINT64(SizeY()))
-          break;
+        return;
       }
+      bool cursorSet = false;
+      if(y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
+        ATableRangeData1 colStart = Offset2Column(mHOffset);
+        INT64 currX = SafeINT64(mRowHeaderWidth) - colStart.offset;
+        for (auto const& [id, data] : mColumnW) {
+          if(id < colStart.cell) continue;
+          currX += data.first;
+          if(std::abs(x - (int) currX) < 5) {
+            XDefineCursor(d, w, mHorizCursor);
+            cursorSet = true;
+            break;
+          }
+          if(currX > SafeINT64(SizeX())) break;
+        }
+      } else if(x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
+        ATableRangeData1 rowStart = Offset2Row(mVOffset);
+        INT64 currY = SafeINT64(mColumnHeaderHeight) - rowStart.offset;
+        for (auto const& [id, data] : mRowH) {
+          if(id < rowStart.cell) continue;
+          currY += data.first;
+          if(std::abs(y - (int) currY) < 5) {
+            XDefineCursor(d, w, mVertCursor);
+            cursorSet = true;
+            break;
+          }
+          if(currY > SafeINT64(SizeY())) break;
+        }
+      }
+      if(std::abs(x - (int)mRowHeaderWidth) < 5) {
+        XDefineCursor(d, w, mHorizCursor);
+        cursorSet = true;
+      }
+      if(!cursorSet) XUndefineCursor(d, w);
     }
-    if(std::abs(x - (int)mRowHeaderWidth) < 5) {
-      XDefineCursor(d, w, mHorizCursor);
-      cursorSet = true;
-    }
-    if(!cursorSet)
-      XUndefineCursor(d, w);
-  }
 
   void ATable::RemoveRow(INT64 rowIdx) {
     // 1. Cleanup data and pointers

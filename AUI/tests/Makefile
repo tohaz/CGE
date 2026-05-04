@@ -1,95 +1,70 @@
-# --- Paths (Relative) ---
-LIB_ROOT   := ..
-CGLIB_PATH := $(LIB_ROOT)/Custom/libCGLib.a
-
-SRC_DIR    := .
-# Default build mode is debug (options: debug, release, srelease)
+# --- Universal Makefile for Examples/Tests (Sub-directory) ---
+AUI_ROOT   := ..
 BUILD_MODE ?= debug
 
-# Set build directory based on mode
-ifeq ($(BUILD_MODE), release)
-    BUILD_DIR := bin/release
-else ifeq ($(BUILD_MODE), srelease)
-    BUILD_DIR := bin/srelease
+# Synchronize library path logic with AUI root Makefile
+ifeq ($(BUILD_MODE), debug)
+  AUI_LIB_DIR := $(AUI_ROOT)/Custom
+  BUILD_DIR   := bin
 else
-    BUILD_DIR := bin
+  AUI_LIB_DIR := $(AUI_ROOT)/Custom/$(BUILD_MODE)
+  BUILD_DIR   := bin/$(BUILD_MODE)
 endif
 
-DEP_DIR    := $(BUILD_DIR)/deps
+AUI_LIB := $(AUI_LIB_DIR)/libAUI.a
+DEP_DIR := $(BUILD_DIR)/deps
+SRC_DIR := .
 
-# --- Tools ---
 CXX      := g++
 STRIP    := strip
 
-# --- Compiler Settings ---
-# Base strict flags for code quality and standards compliance
 BASE_FLAGS := -std=c++26 -MMD -pedantic -pedantic-errors -Wall -Wextra -Werror \
               -Wcast-align -Wdisabled-optimization -Wlogical-op -Wmissing-include-dirs \
-              -Wnoexcept -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo \
-              -Wstrict-null-sentinel -Wswitch-default -Wundef -Wfloat-equal
+              -Wfloat-equal -Wconversion -Wsign-conversion
 
-# Mode-specific flags
 ifeq ($(BUILD_MODE), release)
-    # Optimization for speed
-    CXXFLAGS := $(BASE_FLAGS) -O3
-    LDFLAGS  := -L$(LIB_ROOT)/Custom
+  CXXFLAGS := $(BASE_FLAGS) -O3
+  LDFLAGS  := -L$(AUI_LIB_DIR)
 else ifeq ($(BUILD_MODE), srelease)
-    # Maximum optimization for size
-    # -Os: optimize for size
-    # -ffunction-sections -fdata-sections: place each function/data item into its own section
-    CXXFLAGS := $(BASE_FLAGS) -Os -ffunction-sections -fdata-sections
-    # -Wl,--gc-sections: tell the linker to remove unused sections (dead code stripping)
-    LDFLAGS  := -L$(LIB_ROOT)/Custom -Wl,--gc-sections
+  CXXFLAGS := $(BASE_FLAGS) -Os -ffunction-sections -fdata-sections
+  LDFLAGS  := -L$(AUI_LIB_DIR) -Wl,--gc-sections
 else
-    # Debug mode with symbol information
-    CXXFLAGS := $(BASE_FLAGS) -O0 -g3
-    LDFLAGS  := -L$(LIB_ROOT)/Custom
+  CXXFLAGS := $(BASE_FLAGS) -O0 -g3
+  LDFLAGS  := -L$(AUI_LIB_DIR)
 endif
 
-CPPFLAGS := -I$(LIB_ROOT)
-LIBS     := -lCGLib -lX11 -lX11-xcb -lxcb -lxcb-cursor
+CPPFLAGS := -I$(AUI_ROOT)
+LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor
 
-# --- File Discovery ---
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 EXES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%,$(SRCS))
 DEPS := $(patsubst $(SRC_DIR)/%.cpp,$(DEP_DIR)/%.d,$(SRCS))
 
-# --- Rules ---
+all: build_aui_lib $(EXES)
 
-# Default target
-all: build_external_libs $(EXES)
+release srelease:
+	@$(MAKE) BUILD_MODE=$@ all
 
-# Target for speed-optimized release build
-release:
-	@$(MAKE) BUILD_MODE=release all
+.PHONY: build_aui_lib
+build_aui_lib:
+	@echo "--- Ensuring AUI Library [Mode: $(BUILD_MODE)] ---"
+	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
 
-# Target for size-optimized release build
-srelease:
-	@$(MAKE) BUILD_MODE=srelease all
-
-# Create necessary build directories
-$(BUILD_DIR) $(DEP_DIR):
-	mkdir -p $@
-
-# Build external library by calling its own Makefile
-.PHONY: build_external_libs
-build_external_libs:
-	$(MAKE) -C $(LIB_ROOT)
-
-# Executable build rule
-$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(CGLIB_PATH) | $(BUILD_DIR) $(DEP_DIR)
+$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
+	@echo "Building application [$(BUILD_MODE)]: $<"
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS)
 ifneq ($(BUILD_MODE), debug)
-	@echo "Stripping symbols for $(BUILD_MODE) build: $@"
 	@$(STRIP) --strip-all $@
 endif
 
-# Include generated dependency files (.d)
+$(BUILD_DIR) $(DEP_DIR):
+	@mkdir -p $@
+
 -include $(DEPS)
 
-# Remove all build artifacts
 clean:
-	rm -rf bin/
+	@echo "--- Cleaning Sub-project [$(BUILD_MODE)] ---"
+	rm -rf $(BUILD_DIR)
+	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) clean
 
-.PHONY: all clean build_external_libs release srelease
-
+.PHONY: all clean build_aui_lib release srelease
