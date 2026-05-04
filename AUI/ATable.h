@@ -15,17 +15,21 @@ namespace aui {
   }ATableRangeData1;
 
   typedef struct {
-      INT64 cell = -1;
-      INT64 offset = -1;
-      INT64 cell2 = -1;
-      INT64 offset2 = -1;
-  }ATableRangeData2;
+    INT64 cell = -1;
+    INT64 offset = -1;
+    INT64 cell2 = -1;
+    INT64 offset2 = -1;
+  } ATableRangeData2;
 
   typedef struct {
-      std::string data;
-      AUIHAlign hal;
-      AUIVAlign val;
-  }AUICellData;
+    std::string data;
+    AUIHAlign hal;
+    AUIVAlign val;
+  } AUICellData;
+
+//  typedef struct {
+//    std::string name;
+//  } AUIColumnData;
 
   enum class AUIScrollMode{AUINone, AUIVertical, AUIHorizontal};
   enum class AUIResizeMode {AUINone, AUIColumn, AUIRow, AUIHeader};

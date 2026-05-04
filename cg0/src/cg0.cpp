@@ -29,31 +29,31 @@ int main() {
   w->DisableResize();
   w->PrintDimensions();
 
-  ATable* ta = ATable::AttachTo(w);
-  for(int i = 0; i < 5; i++) ta->AddRow();
-  for(int i = 0; i < 5; i++) ta->AddColumn();
-  ta->AddRows(10);
-  ta->AddColumns(10);
-  AUICellData di;
-  di.data = "sta";
-  ta->Insert(0, 0, &di);
-  di.data = "ZZZ";
-  ta->Insert(0, 3, &di);
-  di.data = "TTTTT";
-  ta->Insert(0, 4, &di);
-  di.data = "HHH";
-  ta->Insert(0, 6, &di);
-  di.data = "123";
-  ta->Insert(1, 1, &di);
-  di.data = "aaa";
-  ta->Insert(2, 2, &di);
-  di.data = "qqq";
-  ta->Insert(2, 0, &di);
-
-
 //  AButton* bProc = AButton::AttachTo(w, "Processes");
 //  bProc->ResizeX(120);
 //  bProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
+
+//  ATable* ta = ATable::AttachTo(w);
+//  for(int i = 0; i < 5; i++) ta->AddRow();
+//  for(int i = 0; i < 5; i++) ta->AddColumn();
+//  ta->AddRows(10);
+//  ta->AddColumns(10);
+//  AUICellData di;
+//  di.data = "sta";
+//  ta->Insert(0, 0, &di);
+//  di.data = "ZZZ";
+//  ta->Insert(0, 3, &di);
+//  di.data = "TTTTT";
+//  ta->Insert(0, 4, &di);
+//  di.data = "HHH";
+//  ta->Insert(0, 6, &di);
+//  di.data = "123";
+//  ta->Insert(1, 1, &di);
+//  di.data = "aaa";
+//  ta->Insert(2, 2, &di);
+//  di.data = "qqq";
+//  ta->Insert(2, 0, &di);
+
 
   StopTimer(start);
   cg->ProcessMessages();
