@@ -1,3 +1,5 @@
+04.05.26 Added release and srelease(size optimized) build targets
+
 01.05.2026
 Its my attempt on small UI that is intended for a memory editor program for Linux that i develop.
 Goal is to grow along with main program, so anything can change breaking everything.
