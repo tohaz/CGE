@@ -1,8 +1,13 @@
 #include <cassert>
 #include <AUILib.h>
 
+#include "ProcessList.h"
+
 using namespace aui;
+using namespace cg;
 using namespace std::chrono;
+
+ProcessList pr;
 
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
@@ -16,8 +21,18 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   AWindow* wProcess = AWindow::AttachTo(au, "Open process");
   wProcess->Move(1000, 500);
   wProcess->EnableResize();
-  wProcess->Resize(500, 450);
+  wProcess->Resize(640, 450);
   wProcess->DisableResize();
+  ATable* ta = ATable::AttachTo(wProcess);
+  ta->AddRows(20);
+  ta->AddColumns(20);
+  ta->DisableRowHeader();
+  ta->Resize(500, 400);
+  ta->Move(10, 40);
+  AButton* bProcOK = AButton::AttachTo(wProcess, "Choose");
+  bProcOK->Resize(80, 20);
+  bProcOK->Move(530, 10);
+//  bProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
 }
 
 int main() {
@@ -29,30 +44,9 @@ int main() {
   w->DisableResize();
   w->PrintDimensions();
 
-//  AButton* bProc = AButton::AttachTo(w, "Processes");
-//  bProc->ResizeX(120);
-//  bProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
-
-//  ATable* ta = ATable::AttachTo(w);
-//  for(int i = 0; i < 5; i++) ta->AddRow();
-//  for(int i = 0; i < 5; i++) ta->AddColumn();
-//  ta->AddRows(10);
-//  ta->AddColumns(10);
-//  AUICellData di;
-//  di.data = "sta";
-//  ta->Insert(0, 0, &di);
-//  di.data = "ZZZ";
-//  ta->Insert(0, 3, &di);
-//  di.data = "TTTTT";
-//  ta->Insert(0, 4, &di);
-//  di.data = "HHH";
-//  ta->Insert(0, 6, &di);
-//  di.data = "123";
-//  ta->Insert(1, 1, &di);
-//  di.data = "aaa";
-//  ta->Insert(2, 2, &di);
-//  di.data = "qqq";
-//  ta->Insert(2, 0, &di);
+  AButton* bOpenProc = AButton::AttachTo(w, "Processes");
+  bOpenProc->Resize(100, 20);
+  bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
 
 
   StopTimer(start);

@@ -1,3 +1,9 @@
+# 
+# Additional make targets:
+# 1. Release optimized by speed(make release) 
+# 2. Release, optimized by size(make srelease)
+#
+
 # --- Universal Makefile for Examples/Tests (Sub-directory) ---
 AUI_ROOT   := ..
 BUILD_MODE ?= debug

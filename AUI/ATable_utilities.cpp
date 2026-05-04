@@ -159,6 +159,28 @@ namespace aui {
     return mColumns.size();
   }
 
+  void ATable::SetRowHeaderWidth(UINT32 width) {
+    D1("setting row header width=%u", width)
+    mRowHeaderWidth = width;
+    Draw();
+  }
+
+  void ATable::SetRowHeaderResizeEnabled(bool enable) {
+    D1()
+    mRowHeaderResizeEnabled = enable;
+  }
+
+  void ATable::SetRowHeightResizeEnabled(bool enable) {
+    D1()
+    mRowHeightResizeEnabled = enable;
+  }
+
+  void ATable::DisableRowHeader() {
+    D1()
+    mRowHeaderResizeEnabled = false;
+    mRowHeightResizeEnabled = false;
+    SetRowHeaderWidth(0);
+  }
 
 
 

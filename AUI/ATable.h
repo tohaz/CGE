@@ -22,9 +22,9 @@ namespace aui {
   } ATableRangeData2;
 
   typedef struct {
-    std::string data;
-    AUIHAlign hal;
-    AUIVAlign val;
+    std::string data = "";
+    AUIHAlign hal = AUIHAlign::center;
+    AUIVAlign val = AUIVAlign::center;
   } AUICellData;
 
 //  typedef struct {
@@ -55,7 +55,7 @@ namespace aui {
       std::map<INT64, std::pair<INT64, std::string> > mRowH;
       std::map<INT64, std::pair<INT64, std::string> > mColumnW;
       //
-      INT64 mHOffset = 10;
+      INT64 mHOffset = 0;
       INT64 mVOffset = 0;
       UINT32 mColumnHeaderHeight = 20;
       UINT32 mRowHeaderWidth = 50;
@@ -82,6 +82,8 @@ namespace aui {
       Cursor mHorizCursor = None;
       Cursor mVertCursor = None;
       bool mAutoWiden = false;
+      bool mRowHeaderResizeEnabled = true;
+      bool mRowHeightResizeEnabled = true;
 
     public:
       virtual ~ATable();
@@ -113,6 +115,10 @@ namespace aui {
       void UpdateColumnWidthToFit(INT64 colIdx);
       void AddColumns(UINT32 number);
       void AddRows(UINT32 number);
+      void SetRowHeaderWidth(UINT32 width);
+      void SetRowHeaderResizeEnabled(bool enable);
+      void SetRowHeightResizeEnabled(bool enable);
+      void DisableRowHeader();
       void OnButtonPress(XEvent *ev);
       void OnButtonRelease(XEvent *ev);
       void OnMouseMove(XEvent *ev);
