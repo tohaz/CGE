@@ -1,4 +1,4 @@
-04.05.26 Added release and srelease(size optimized) build targets
+04.05.26 Added release and srelease(size optimized) build targets, code cleanup
 
 01.05.2026
 Its my attempt on small UI that is intended for a memory editor program for Linux that i develop.
