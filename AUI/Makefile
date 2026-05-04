@@ -8,9 +8,10 @@ CXX := g++
 AR := ar
 
 # -Wold-style-cast -Weffc++ 
-# -Wconversion -Wsign-conversion 
+# 
 #CXXFLAGS := -Wall -Wextra -MMD -MP -I. -std=c++26 -O0 -g3 -pedantic-errors -Werror -Wshadow -Wfloat-equal -Wswitch-default -Wcast-align
-CXXFLAGS := -std=c++26 -O0 -g3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wcast-align -Wcast-qual -Wdisabled-optimization -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-null-sentinel -Wswitch-default -Wundef -Wfloat-equal -c -fmessage-length=0
+CXXFLAGS := -fmax-errors=15 -std=c++26 -O0 -g3 -pedantic -pedantic-errors -Wall -Wextra -Werror -Wcast-align -Wcast-qual -Wdisabled-optimization -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept \
+			-Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo -Wstrict-null-sentinel -Wswitch-default -Wundef -Wfloat-equal -Wconversion -Wsign-conversion -c 
 # --- Files ---
 SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))

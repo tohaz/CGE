@@ -8,14 +8,15 @@ namespace aui {
     D3();
     AUI *cg = wParent->AUIPtr();
     Display* d = cg->Disp();
-    UINT32 scr = cg->Scr();
+    INT32 scr = cg->Scr();
     SetType(AUIWidgetType::defaultLabel);
     SetBGColor(AUI_DEFAULT_LABEL_BG);
     SetXY(30, 30);
     SetSizeXY(AUI_DEFAULT_LABEL_SZX, AUI_DEFAULT_LABEL_SZY);
     SetAUIPtr(cg);
     SetWndParent(wParent);
-    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), X(), Y(), SizeX(), SizeY(), BorderSz(),
+    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+        SafeUINT32(SizeX()), SafeUINT32(SizeY()), BorderSz(),
         BlackPixel(d, scr), BGColor()));
     Window w = Wnd();
     XSelectInput(d, w, ExposureMask|ButtonPressMask|KeyPressMask|ButtonReleaseMask);
@@ -45,10 +46,10 @@ namespace aui {
         drawX = 5;
         break;
       case AUIHAlign::center:
-        drawX = (SizeX() - totalW) / 2;
+        drawX = (SafeINT32(SizeX()) - totalW) / 2;
         break;
       case AUIHAlign::right:
-        drawX = SizeX() - totalW - 5;
+        drawX = SafeINT32(SizeX()) - totalW - 5;
         break;
       default:
         E("halign junk")
@@ -59,10 +60,10 @@ namespace aui {
         drawY = f->ascent + 5;
         break;
       case AUIVAlign::center:
-        drawY = (SizeY() + f->ascent - f->descent) / 2;
+        drawY = (SafeINT32(SizeY()) + f->ascent - f->descent) / 2;
         break;
       case AUIVAlign::bottom:
-        drawY = SizeY() - f->descent - 5;
+        drawY = SafeINT32(SizeY()) - f->descent - 5;
         break;
       default:
         E("valign junk")
@@ -71,7 +72,6 @@ namespace aui {
     XDrawString(d, wi, GCPtr(), drawX, drawY, Text().c_str(),
         (int) Text().size());
     XFlush(d);
-
   }
 
   ALabel::~ALabel() {

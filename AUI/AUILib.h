@@ -10,10 +10,12 @@
 #include <dirent.h>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <regex>
 #include <string>
 #include <stack>
+#include <type_traits>
 #include <unordered_map>
 #include <string.h>
 
@@ -26,37 +28,120 @@
 #include "AWindow.h"
 #include "defaults.h"
 
+
+
+namespace aui {
 #pragma GCC push_options
 #pragma GCC optimize ("O2")
 
-namespace aui {
-  static __attribute__((always_inline)) inline INT32 SafeINT32(UINT32 val) {
-    if(val > 0x7FFFFFFF) {
-      E("UINT32 to INT32 conversion error");
-    }
-    return (INT32) val;
-  }
-
   static __attribute__((always_inline)) inline INT16 SafeINT16(UINT16 val) {
-    if(val >= 0x8000) {
+    if(val > static_cast<UINT16>(std::numeric_limits<INT16>::max())) [[unlikely]] {
       E("UINT16 to INT16 conversion error");
     }
-    return (INT16) val;
+    return static_cast<INT16>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT16 SafeINT16(INT32 val) {
+    if(val > std::numeric_limits<INT16>::max()
+        || val < std::numeric_limits<INT16>::min()) [[unlikely]] {
+      E("INT32 to INT16 conversion error");
+    }
+    return static_cast<INT16>(val);
   }
 
   static __attribute__((always_inline)) inline INT16 SafeINT16(UINT32 val) {
-    if(val >= 0x8000) {
+    if(val > static_cast<UINT32>(std::numeric_limits<INT16>::max())) [[unlikely]] {
       E("UINT32 to INT16 conversion error");
     }
-    return (INT16) val;
+    return static_cast<INT16>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT16 SafeINT16(INT64 val) {
+    if(val > std::numeric_limits<INT16>::max()
+        || val < std::numeric_limits<INT16>::min()) [[unlikely]] {
+      E("INT64 to INT16 conversion error");
+    }
+    return static_cast<INT16>(val);
   }
 
   static __attribute__((always_inline)) inline UINT16 SafeUINT16(UINT32 val) {
-    if(val >= 0x10000) {
+    if(val > std::numeric_limits<UINT16>::max()) [[unlikely]] {
       E("UINT32 to UINT16 conversion error");
     }
-    return (UINT16) val;
+    return static_cast<UINT16>(val);
   }
+
+  static __attribute__((always_inline)) inline INT32 SafeINT32(UINT32 val) {
+    if(val > static_cast<UINT32>(std::numeric_limits<INT32>::max())) [[unlikely]] {
+      E("UINT32 to INT32 conversion error");
+    }
+    return static_cast<INT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT32 SafeINT32(INT64 val) {
+    if(val > std::numeric_limits<INT32>::max()
+        || val < std::numeric_limits<INT32>::min()) [[unlikely]] {
+      E("INT64 to INT32 conversion error");
+    }
+    return static_cast<INT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT32 SafeINT32(UINT64 val) {
+    if(val > static_cast<UINT64>(std::numeric_limits<INT32>::max())) [[unlikely]] {
+      E("UINT64 to INT32 conversion error");
+    }
+    return static_cast<INT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline UINT32 SafeUINT32(INT32 val) {
+    if(val < 0) [[unlikely]] {
+      E("INT32 to UINT32 conversion error (negative)");
+    }
+    return static_cast<UINT32>(val);
+  }
+
+
+  static __attribute__((always_inline)) inline UINT32 SafeUINT32(INT64 val) {
+    if(val > static_cast<INT64>(std::numeric_limits<UINT32>::max()) || val < 0) [[unlikely]] {
+      E("INT64 to UINT32 conversion error");
+    }
+    return static_cast<UINT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline UINT32 SafeUINT32(UINT64 val) {
+    if(val > (UINT64) std::numeric_limits<UINT32>::max()) [[unlikely]] {
+      E("UINT64 to UINT32 conversion error");
+    }
+    return static_cast<UINT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT64 SafeINT64(UINT64 val) {
+    if(val > static_cast<UINT64>(std::numeric_limits<INT64>::max())) [[unlikely]] {
+      E("UINT64 to INT64 conversion error");
+    }
+    return static_cast<INT64>(val);
+  }
+
+  static __attribute__((always_inline)) inline UINT64 SafeUINT64(INT32 val) {
+    if(val < 0) [[unlikely]] {
+      E("INT32 to UINT64 conversion error");
+    }
+    return static_cast<UINT64>(val);
+  }
+
+  static __attribute__((always_inline)) inline UINT64 SafeUINT64(UINT32 val) {
+    return static_cast<UINT64>(val);
+  }
+
+
+  static __attribute__((always_inline)) inline UINT64 SafeUINT64(INT64 val) {
+    if(val < 0) [[unlikely]] {
+      E("INT64 to UINT64 conversion error");
+    }
+    return static_cast<UINT64>(val);
+  }
+
+
 #pragma GCC pop_options
 
   class AWidget;
@@ -100,7 +185,5 @@ namespace aui {
       ~AUI();
   };
 }
-
-
 
 #endif

@@ -8,16 +8,19 @@ namespace aui {
   AInputBox::AInputBox(AWidget *wParent) {
       AUI *aui = wParent->AUIPtr();
       Display* d = aui->Disp();
-      UINT32 scr = aui->Scr();
+      INT32 scr = aui->Scr();
       SetAUIPtr(aui);
       SetWndParent(wParent);
+      UINT32 szx = SafeUINT32(SizeX());
+      UINT32 szy = SafeUINT32(SizeY());
       SetType(AUIWidgetType::defaultInputBox);
       SetTitle(std::string("InputBox"));
       SetXY(AUI_DEFAULT_INPUT_X, AUI_DEFAULT_INPUT_Y);
       SetSizeXY(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
       SetBGColor(AUI_DEFAULT_INPUT_BG);
       SetHAlign(AUIHAlign::right);
-      InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), X(), Y(), SizeX(), SizeY(), 1,
+      InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+          szx, szy, 1,
           BlackPixel(d, scr), BGColor()));
       XSelectInput(d, Wnd(), ExposureMask | ButtonReleaseMask | KeyPressMask);
       D3("inputbox: disp=%lu, wnd=%lu, scr=%d, auiptr %lu", (INT64)d, (INT64)Wnd(), scr, (UINT64)aui)
@@ -27,7 +30,9 @@ namespace aui {
       mFilter = mFilterStr;
 
       // Start the blink thread
-      mBlinkThread = std::thread([this]() {
+      INT32 i32szx = SafeINT32(szx);
+      INT32 i32szy = SafeINT32(szy);
+      mBlinkThread = std::thread([this, i32szx, i32szy]() {
         while (!mStopBlink) {
           std::this_thread::sleep_for(std::chrono::milliseconds(500));
           mCursorVisible = !mCursorVisible;
@@ -40,8 +45,8 @@ namespace aui {
           // These fields are technically required for an Expose event
           ev.x = 0;
           ev.y = 0;
-          ev.width = SizeX();
-          ev.height = SizeY();
+          ev.width = i32szx;
+          ev.height = i32szy;
           XLockDisplay(d1);
           XSendEvent(d1, Wnd(), False, ExposureMask, (XEvent*)&ev);
           XFlush(d1);
@@ -66,20 +71,21 @@ namespace aui {
         GC gc = GCPtr();
         XFontStruct *f = Font();
         XClearWindow(d, w);
-        int totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
-        int textBeforeCursorW = XTextWidth(f, Text().c_str(), (int) mCursorPos);
-        int fontHeight = f->ascent + f->descent;
-        int drawX = 0;
-        int drawY = 0;
+        INT32 totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
+        INT32 textBeforeCursorW = XTextWidth(f, Text().c_str(), (int) mCursorPos);
+        INT32 fontHeight = f->ascent + f->descent;
+        INT32 drawX = 0;
+        INT32 drawY = 0;
+
         switch (HAlign()) {
           case AUIHAlign::left:
             drawX = 5;
             break;
           case AUIHAlign::center:
-            drawX = (SizeX() - totalW) / 2;
+            drawX = (SafeINT32(SizeX()) - totalW) / 2;
             break;
           case AUIHAlign::right:
-            drawX = SizeX() - totalW - 5;
+            drawX = SafeINT32(SizeX()) - totalW - 5;
             break;
           default:
             E("halign junk")
@@ -90,10 +96,10 @@ namespace aui {
             drawY = f->ascent + 5;
             break;
           case AUIVAlign::center:
-            drawY = (SizeY() + f->ascent - f->descent) / 2;
+            drawY = (SafeINT32(SizeY()) + f->ascent - f->descent) / 2;
             break;
           case AUIVAlign::bottom:
-            drawY = SizeY() - f->descent - 5;
+            drawY = SafeINT32(SizeY()) - f->descent - 5;
             break;
           default:
             E("valign junk")

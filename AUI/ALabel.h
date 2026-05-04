@@ -12,7 +12,6 @@ namespace aui {
       static ALabel* AttachTo(AWidget* w, std::string inText);
       virtual ~ALabel();
       void Draw();
-
   };
 }
 

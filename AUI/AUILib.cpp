@@ -8,24 +8,35 @@ namespace aui {
   UINT32 HLColor(UINT32 ci) {
     RGBAColor c;
     c.value = ci;
-    UINT32 overall = c.rgba.r + c.rgba.g + c.rgba.b;
+    UINT32 overall = static_cast<UINT32>(c.rgba.r) +
+                       static_cast<UINT32>(c.rgba.g) +
+                       static_cast<UINT32>(c.rgba.b);
     // 0x80 * 3 = 384
+//    if(overall > 384) {
+//      if(c.rgba.r > AUI_HL_SHIFT) c.rgba.r -= AUI_HL_SHIFT;
+//      else c.rgba.r = 0;
+//      if(c.rgba.g > AUI_HL_SHIFT) c.rgba.g -= AUI_HL_SHIFT;
+//      else c.rgba.g = 0;
+//      if(c.rgba.b > AUI_HL_SHIFT) c.rgba.b -= AUI_HL_SHIFT;
+//      else c.rgba.b = 0;
+//    }
+//    else {
+//      if(c.rgba.r < 255) c.rgba.r += AUI_HL_SHIFT;
+//      else c.rgba.r = 255;
+//      if(c.rgba.g < 255) c.rgba.g += AUI_HL_SHIFT;
+//      else c.rgba.g = 255;
+//      if(c.rgba.b < 255) c.rgba.b += AUI_HL_SHIFT;
+//      else c.rgba.b = 255;
+//    }
     if(overall > 384) {
-      if(c.rgba.r > AUI_HL_SHIFT) c.rgba.r -= AUI_HL_SHIFT;
-      else c.rgba.r = 0;
-      if(c.rgba.g > AUI_HL_SHIFT) c.rgba.g -= AUI_HL_SHIFT;
-      else c.rgba.g = 0;
-      if(c.rgba.b > AUI_HL_SHIFT) c.rgba.b -= AUI_HL_SHIFT;
-      else c.rgba.b = 0;
-    }
-    else {
-      if(c.rgba.r < 255) c.rgba.r += AUI_HL_SHIFT;
-      else c.rgba.r = 255;
-      if(c.rgba.g < 255) c.rgba.g += AUI_HL_SHIFT;
-      else c.rgba.g = 255;
-      if(c.rgba.b < 255) c.rgba.b += AUI_HL_SHIFT;
-      else c.rgba.b = 255;
-    }
+      c.rgba.r = (c.rgba.r > AUI_HL_SHIFT) ? static_cast<uint8_t>(c.rgba.r - AUI_HL_SHIFT) : static_cast<uint8_t>(0);
+      c.rgba.g = (c.rgba.g > AUI_HL_SHIFT) ? static_cast<uint8_t>(c.rgba.g - AUI_HL_SHIFT) : static_cast<uint8_t>(0);
+      c.rgba.b = (c.rgba.b > AUI_HL_SHIFT) ? static_cast<uint8_t>(c.rgba.b - AUI_HL_SHIFT) : static_cast<uint8_t>(0);
+    } else {
+      c.rgba.r = (c.rgba.r < (255 - AUI_HL_SHIFT)) ? static_cast<uint8_t>(c.rgba.r + AUI_HL_SHIFT) : static_cast<uint8_t>(255);
+      c.rgba.g = (c.rgba.g < (255 - AUI_HL_SHIFT)) ? static_cast<uint8_t>(c.rgba.g + AUI_HL_SHIFT) : static_cast<uint8_t>(255);
+      c.rgba.b = (c.rgba.b < (255 - AUI_HL_SHIFT)) ? static_cast<uint8_t>(c.rgba.b + AUI_HL_SHIFT) : static_cast<uint8_t>(255);
+      }
     return c.value;
   }
 
@@ -73,9 +84,7 @@ namespace aui {
       XEvent event;
       while(!mShouldExit) {
           XNextEvent(mDisplay, &event);
-          // 1. Используем универсальное поле для получения ID окна для любого типа события
           Window targetWin = event.xany.window;
-          // 2. Если окно зарегистрировано в карте виджетов
           if(mWidg.contains(targetWin)) {
               AWidget* widget = mWidg[targetWin];
               switch(event.type) {
@@ -84,7 +93,6 @@ namespace aui {
                         if(mWidg.contains(event.xany.window)) {
                             mWidg[event.xany.window]->Draw();
                         } else if (mMainWnd && event.xany.window == mMainWnd->Wnd()) {
-                            // ОЧЕНЬ ВАЖНО: Родитель должен чистить свой фон, иначе под кнопками будет "пунктир"
                             mMainWnd->Draw();
                         }
                     }
@@ -113,7 +121,6 @@ namespace aui {
                       break;
 
                   case ClientMessage:
-                      // Если это сообщение закрытия для главного окна
                       if(targetWin == mMainWnd->Wnd()) {
                           D1("Shutting down AUI...")
                           ExitAUI();
@@ -126,7 +133,6 @@ namespace aui {
 
                   case ConfigureNotify:
                       D3("ConfigureNotify for widget %lu", (UINT64)targetWin)
-                      // Здесь можно добавить UpdateBuffer() при изменении размера
                       break;
 
                   case UnmapNotify:
@@ -140,12 +146,11 @@ namespace aui {
                       break;
               }
           }
-          // 3. Если окно НЕ в карте (например, это само главное окно, если оно не в mWidg)
           else {
               if (event.type == Expose && mMainWnd && targetWin == mMainWnd->Wnd()) {
                   if (event.xexpose.count == 0) {
                       D3("Expose event for MAIN window")
-                      mMainWnd->Draw(); // Очистка фона родителя фиксит глитчи под рамками
+                      mMainWnd->Draw();
                   }
               } else {
                   D2("Event %d for non-registered window %lu", event.type, (UINT64)targetWin)
@@ -269,11 +274,11 @@ namespace aui {
   };
 
   const char* AUI::XEventToString(INT32 ev) {
-    std::string s;
-    if(CGXEventNames.contains(ev)) {
-      return CGXEventNames[ev].c_str();
+    UINT32 uEv = static_cast<UINT32>(ev);
+    if(CGXEventNames.contains(uEv)) {
+      return CGXEventNames.at(uEv).c_str();
     }
-    E("unknown event encountered")
+    E("unknown event encountered: %d", ev);
     return "unknown";
   }
 

@@ -20,7 +20,7 @@ namespace aui {
       AUI* mAUI = 0;
       std::string mTitle = "set title plz", mText = "set me";
       AUIWidgetType mType = AUIWidgetType::unset;
-      UINT64 mX = 10, mY = 10;
+      INT64 mX = 10, mY = 10;
       UINT64 mSzX = 10, mSzY = 10;
       RGBAColor mBGColor = {0};
       std::map<Window, AWidget*> mWidg;

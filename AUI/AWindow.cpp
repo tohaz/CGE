@@ -29,14 +29,18 @@ namespace aui {
     SetSizeXY(AUI_DEFAULT_WINDOW_SZX, AUI_DEFAULT_WINDOW_SZY);
     if(!ParentWidget()) {
       D3("creating rooted window")
-      InitWidgetProps(XCreateSimpleWindow(d, RootWindow(d, scr), 0, 0, SizeX(),
-         SizeY(), 1, BlackPixel(d, scr), WhitePixel(d, scr)));
+      InitWidgetProps(XCreateSimpleWindow(d, RootWindow(d, scr), 0, 0,
+        SafeUINT32(SizeX()),
+        SafeUINT32(SizeY()),
+        1, BlackPixel(d, scr), WhitePixel(d, scr)));
       DisableResize();
     }
     else {
       D3("creating child window")
-      InitWidgetProps(XCreateSimpleWindow(d, ParentWidget()->Wnd(), 0, 0, SizeX(),
-          SizeY(), 1, BlackPixel(d, scr), WhitePixel(d, scr)));
+      InitWidgetProps(XCreateSimpleWindow(d, ParentWidget()->Wnd(), 0, 0,
+        SafeUINT32(SizeX()),
+        SafeUINT32(SizeY()),
+        1, BlackPixel(d, scr), WhitePixel(d, scr)));
       DisableResize();
     }
     Window w = Wnd();
@@ -58,12 +62,12 @@ namespace aui {
     return new AWindow(newTitle, wParent);
   }
 
-  void AWindow::OnKeyPress(XEvent *ev) {
+  void AWindow::OnKeyPress(UNUSED XEvent *ev) {
     D3()
-    if (ev->type == ClientMessage) {
+//    if (ev->type == ClientMessage) {
 //      if (ev->xclient.data.l[0] == wmDeleteMessage) {
 //      }
-    }
+//    }
   }
 
   void AWindow::Draw() {

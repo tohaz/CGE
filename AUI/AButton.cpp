@@ -8,7 +8,7 @@ namespace aui {
     SetAUIPtr(aui);
     SetWndParent(wParent);
     Display *d = aui->Disp();
-    UINT32 scr = aui->Scr();
+    INT32 scr = aui->Scr();
     SetType(AUIWidgetType::defaultButton);
     SetXY(AUI_DEFAULT_BUTTON_X, AUI_DEFAULT_BUTTON_Y);
     SetSizeXY(AUI_DEFAULT_BUTTON_SZX, AUI_DEFAULT_BUTTON_SZY);
@@ -17,10 +17,10 @@ namespace aui {
     swa.background_pixmap = None;
     swa.border_pixel = BlackPixel(d, scr);
     swa.bit_gravity = StaticGravity;
-    // ФИКС: SaveUnder заставляет сервер корректно обновлять фон ПОД рамкой кнопки
     swa.save_under = True;
     swa.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask;
-    Window w = XCreateWindow(d, wParent->Wnd(), X(), Y(), SizeX(), SizeY(),
+    Window w = XCreateWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+        SafeUINT32(SizeX()), SafeUINT32(SizeY()),
     AUI_DEFAULT_BUTTON_BORDERW,
     CopyFromParent, InputOutput, CopyFromParent,
     CWBackPixmap | CWBorderPixel | CWEventMask | CWBitGravity | CWSaveUnder,
@@ -40,6 +40,8 @@ namespace aui {
       D3("x")
       return;
     }
+    UINT32 szx = SafeUINT32(SizeX());
+    UINT32 szy = SafeUINT32(SizeY());
     Display *d = cg->Disp();
     Window wi = Wnd();
     if(!BB()) {
@@ -53,7 +55,7 @@ namespace aui {
     }
     XFontStruct *f = Font();
     XSetForeground(d, GCPtr(), IsHL() ? HLColor(BGColor()) : BGColor());
-    XFillRectangle(d, bb, GCPtr(), 0, 0, SizeX(), SizeY());
+    XFillRectangle(d, bb, GCPtr(), 0, 0, szx, szy);
     INT32 totalW = XTextWidth(f, Text().c_str(), (INT32) Text().size());
     INT32 drawX = 0;
     INT32 drawY = 0;
@@ -62,10 +64,10 @@ namespace aui {
         drawX = 5;
         break;
       case AUIHAlign::center:
-        drawX = (SizeX() - totalW) / 2;
+        drawX = (SafeINT32(szx) - totalW) / 2;
         break;
       case AUIHAlign::right:
-        drawX = SizeX() - totalW - 5;
+        drawX = SafeINT32(szx) - totalW - 5;
         break;
       default:
         E("halign")
@@ -76,10 +78,10 @@ namespace aui {
         drawY = f->ascent + 5;
         break;
       case AUIVAlign::center:
-        drawY = (SizeY() + f->ascent - f->descent) / 2;
+        drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
         break;
       case AUIVAlign::bottom:
-        drawY = SizeY() - f->descent - 5;
+        drawY = SafeINT32(szy) - f->descent - 5;
         break;
       default:
         E("valign")
@@ -87,10 +89,9 @@ namespace aui {
 
     }
     XSetForeground(d, GCPtr(), BlackPixel(d, cg->Scr()));
-    XDrawString(d, bb, GCPtr(), drawX, drawY, TextPtr(),
-        Text().length());
+    XDrawString(d, bb, GCPtr(), drawX, drawY, TextPtr(), SafeINT32(Text().length()));
     XSetWindowBorder(d, wi, BlackPixel(d, cg->Scr()));
-    XCopyArea(d, bb, wi, GCPtr(), 0, 0, SizeX(), SizeY(), 0, 0);
+    XCopyArea(d, bb, wi, GCPtr(), 0, 0, szx, szy, 0, 0);
     XFlush(d);
   }
 

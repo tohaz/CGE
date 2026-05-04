@@ -9,7 +9,7 @@ namespace aui {
     D2();
     AUI *cg = wParent->AUIPtr();
     Display *d = cg->Disp();
-    UINT32 scr = cg->Scr();
+    INT32 scr = cg->Scr();
     SetType(AUIWidgetType::defaultTable);
     SetBGColor(AUI_TABLE_BG);
     SetXY(AUI_TABLE_X, AUI_TABLE_Y);
@@ -17,9 +17,8 @@ namespace aui {
     SetAUIPtr(cg);
     SetWndParent(wParent);
     SetBB(None);
-    InitWidgetProps(
-        XCreateSimpleWindow(d, wParent->Wnd(), X(), Y(), SizeX(), SizeY(), 1,
-            BlackPixel(d, scr), BGColor()));
+    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()), SafeUINT32(SizeX()),
+        SafeUINT32(SizeY()), 1, BlackPixel(d, scr), BGColor()));
     Window w = Wnd();
     XSelectInput(d, w,
     ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
@@ -42,23 +41,24 @@ namespace aui {
   }
 
   void ATable::Draw() {
-    AUI *au = AUIPtr();
-    Display *d = au->Disp();
+    AUI* au = AUIPtr();
+    Display* d = au->Disp();
     Window w = Wnd();
     GC gc = GCPtr();
+    UINT32 szx = SafeUINT32(SizeX());
+    UINT32 szy = SafeUINT32(SizeY());
     // Optimization: Only recreate pixmap if size changed or it doesn't exist
     if(BB() == None) {
-      SetBB(XCreatePixmap(d, w, (UINT32) SizeX(), (UINT32) SizeY(),
-          DefaultDepth(d, au->Scr())));
+      SetBB(XCreatePixmap(d, w, szx, szy, static_cast<unsigned int>(DefaultDepth(d, au->Scr()))));
     }
     Pixmap bb = BB();
     // Clear the background of the buffer
     XSetForeground(d, gc, BGColor());
     XFillRectangle(d, bb, gc, 0, 0, (UINT32) SizeX(), (UINT32) SizeY());
     ATableRangeData1 rowStart = Offset2Row(mVOffset);
-    ATableRangeData1 rowEnd = Offset2RowRange(rowStart, SizeY());
+    ATableRangeData1 rowEnd = Offset2RowRange(rowStart, SafeINT64(SizeY()));
     ATableRangeData1 colStart = Offset2Column(mHOffset);
-    ATableRangeData1 colEnd = Offset2ColumnRange(colStart, SizeX());
+    ATableRangeData1 colEnd = Offset2ColumnRange(colStart, SafeINT64(SizeX()));
     ATableRangeData2 rRow = { rowStart.cell, rowStart.offset, rowEnd.cell,
         rowEnd.offset };
     ATableRangeData2 rCol = { colStart.cell, colStart.offset, colEnd.cell,
@@ -95,8 +95,8 @@ namespace aui {
     INT64 rowIdx = offset / AUI_TABLE_CELL_H;
     INT64 internalOffset = offset % AUI_TABLE_CELL_H;
     // Safety check against total rows
-    if(rowIdx >= (INT64) mRowH.size()) {
-      rowIdx = mRowH.size() - 1;
+    if(rowIdx >= SafeINT64(mRowH.size())) {
+      rowIdx = SafeINT64(mRowH.size()) - 1;
       internalOffset = AUI_TABLE_CELL_H;
     }
     return {(INT64)rowIdx, internalOffset};
@@ -111,7 +111,7 @@ namespace aui {
     endr.cell = startRow.cell + rowsVisible;
     // Clamp to actual row count
     if(endr.cell >= (INT64) mRowH.size()) {
-      endr.cell = mRowH.size() - 1;
+      endr.cell = SafeINT64(mRowH.size()) - 1;
     }
     return endr;
   }
@@ -122,9 +122,9 @@ namespace aui {
     Display *d = AUIPtr()->Disp();
     GC gc = GCPtr();
     XFontStruct *font_info = Font();
-    UINT64 y_pos = (INT64) mColumnHeaderHeight - rowStartData.offset;
+    UINT64 y_pos = SafeUINT64(static_cast<INT64>(mColumnHeaderHeight) - rowStartData.offset);
     for (INT64 i = rowStartData.cell; i <= rowEndData.cell; i++) {
-      UINT64 currentH = GetRowHeight(i);
+      UINT64 currentH = SafeUINT64(GetRowHeight(i));
       if(currentH > 0 && y_pos + currentH > mColumnHeaderHeight
           && y_pos < SizeY()) {
         XSetForeground(d, gc, 0xCCCCCC);
@@ -134,13 +134,14 @@ namespace aui {
         XDrawRectangle(d, dest, gc, 0, (INT32)y_pos, (UINT32)mRowHeaderWidth,
             (UINT32) currentH);
         std::string label = mRowH[i].second;
+        INT32 len = SafeINT32(label.length());
         int text_w =
             font_info ?
-                XTextWidth(font_info, label.c_str(), label.length()) :
+                XTextWidth(font_info, label.c_str(), len) :
                 (INT32) label.length() * 6;
-        XDrawString(d, dest, gc, (INT32)(mRowHeaderWidth - text_w - 4),
-            (INT32)(y_pos + (currentH / 2) + 4), label.c_str(),
-            label.length());
+        XDrawString(d, dest, gc, SafeINT32(static_cast<INT64>(mRowHeaderWidth) - text_w - 4),
+                  SafeINT32(static_cast<INT64>(y_pos) + (static_cast<INT64>(currentH) / 2) + 4),
+                  label.c_str(), len);
       }
       y_pos += currentH;
       if(y_pos >= SizeY())
@@ -149,28 +150,26 @@ namespace aui {
   }
 
   void ATable::AddRow() {
-    UINT64 lastK = 0;
-    if(mRows.size() > 0)
-      lastK = mRows.rbegin()->first + 1;
-    mRows[lastK];
-    if(!mRowH.contains(lastK)) {
-      std::string label = std::to_string(lastK);
-      mRowH[lastK] = { AUI_TABLE_CELL_H, label };
-      mTotalContentHeight += AUI_TABLE_CELL_H;
-      // Optimization: Only re-calculate header width if the string length increased
-      static size_t lastLen = 0;
-      if(label.length() > lastLen) {
-        XFontStruct *font_info = Font();
-        int text_width =
-            font_info ?
-                XTextWidth(font_info, label.c_str(), label.length()) :
-                label.length() * 7;
-        mRowHeaderWidth = text_width + 12;
-        lastLen = label.length();
+      UINT64 lastK = 0;
+      if (!mRows.empty()) {
+        lastK = static_cast<UINT64>(mRows.rbegin()->first) + 1;
+      }
+      INT64 signedKey = SafeINT64(lastK);
+      mRows[signedKey];
+      if (!mRowH.contains(signedKey)) {
+        std::string label = std::to_string(lastK);
+        mRowH[signedKey] = { AUI_TABLE_CELL_H, label };
+        mTotalContentHeight += AUI_TABLE_CELL_H;
+        static size_t lastLen = 0;
+        if (label.length() > lastLen) {
+          XFontStruct *font_info = Font();
+          INT32 len = SafeINT32(label.length());
+          int text_width = font_info ? XTextWidth(font_info, label.c_str(), len) : len * 7;
+          mRowHeaderWidth = SafeUINT32(text_width + 12);
+          lastLen = label.length();
+        }
       }
     }
-  }
-
   void ATable::ScrollUpPx(INT64 px) {
     mVOffset -= px;
     if(mVOffset < 0)
@@ -179,13 +178,11 @@ namespace aui {
   }
 
   void ATable::ScrollDownPx(INT64 px) {
-    // Prevent scrolling beyond the last row
-    INT64 maxScroll = mTotalContentHeight - (SizeY() - mColumnHeaderHeight);
-    if(maxScroll < 0)
-      maxScroll = 0;
+    INT64 visibleArea = SafeINT64(SizeY()) - SafeINT64(mColumnHeaderHeight);
+    INT64 maxScroll = mTotalContentHeight - visibleArea;
+    if (maxScroll < 0) maxScroll = 0;
     mVOffset += px;
-    if(mVOffset > maxScroll)
-      mVOffset = maxScroll;
+    if (mVOffset > maxScroll) mVOffset = maxScroll;
     Draw();
   }
 
@@ -310,81 +307,40 @@ namespace aui {
     XSetClipMask(d, gc, None);
   }
 
-  void ATable::OnButtonPress(XEvent *ev) {
+  void aui::ATable::OnButtonPress(XEvent *ev) {
     INT32 x = ev->xbutton.x;
     INT32 y = ev->xbutton.y;
     UINT32 button = ev->xbutton.button;
-    if(button == Button4) { ScrollUpPx(60); return; }
-    if(button == Button5) { ScrollDownPx(60); return; }
-    if(button == Button1) {
-      if((UINT64)x >= SizeX() - (UINT64)AUI_TABLE_SCROLL_THICK && (UINT64)y > (UINT64)mColumnHeaderHeight) {
-        double viewH = (double) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
-        if(mTotalContentHeight > viewH) {
+    if (button == Button4) { ScrollUpPx(60); return; }
+    if (button == Button5) { ScrollDownPx(60); return; }
+    if (button == Button1) {
+      if (SafeUINT64(x) >= SizeX() - SafeUINT64(AUI_TABLE_SCROLL_THICK) && SafeUINT64(y) > SafeUINT64(mColumnHeaderHeight)) {
+        double viewH = (double)SizeY() - (double)mColumnHeaderHeight - (double)AUI_TABLE_SCROLL_THICK;
+        if ((double)mTotalContentHeight > viewH) {
           mCurrentScrollMode = AUIScrollMode::AUIVertical;
-          double thumbH = std::max(20.0, (viewH / (double) mTotalContentHeight) * viewH);
-          double maxScroll = (double) mTotalContentHeight - viewH;
+          double thumbH = std::max(20.0, (viewH / (double)mTotalContentHeight) * viewH);
+          double maxScroll = (double)mTotalContentHeight - viewH;
           double travelTrack = viewH - thumbH;
-          INT32 vPos = mColumnHeaderHeight + (int) (((double) mVOffset / maxScroll) * travelTrack);
-          if(y >= vPos && y <= vPos + thumbH) mScrollGrabOffset = y - vPos;
-          else mScrollGrabOffset = (int) (thumbH / 2.0);
+          INT32 vPos = SafeINT32(mColumnHeaderHeight) + (int)(((double)mVOffset / maxScroll) * travelTrack);
+          if (y >= vPos && y <= vPos + (int)thumbH) mScrollGrabOffset = y - vPos;
+          else mScrollGrabOffset = (int)(thumbH / 2.0);
           OnMouseMove(ev);
         }
         return;
       }
-      if((UINT64)y >= SizeY() - (UINT64)AUI_TABLE_SCROLL_THICK && (UINT64)x > (UINT64)mRowHeaderWidth) {
-        double viewW = (double) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
-        if(mTotalContentWidth > viewW) {
+      if (SafeUINT64(y) >= SizeY() - SafeUINT64(AUI_TABLE_SCROLL_THICK) && SafeUINT64(x) > SafeUINT64(mRowHeaderWidth)) {
+        double viewW = (double)SizeX() - (double)mRowHeaderWidth - (double)AUI_TABLE_SCROLL_THICK;
+        if ((double)mTotalContentWidth > viewW) {
           mCurrentScrollMode = AUIScrollMode::AUIHorizontal;
-          double thumbW = std::max(20.0, (viewW / (double) mTotalContentWidth) * viewW);
-          double maxScroll = (double) mTotalContentWidth - viewW;
+          double thumbW = std::max(20.0, (viewW / (double)mTotalContentWidth) * viewW);
+          double maxScroll = (double)mTotalContentWidth - viewW;
           double travelTrack = viewW - thumbW;
-          int hPos = mRowHeaderWidth + (int) (((double) mHOffset / maxScroll) * travelTrack);
-          if(x >= hPos && x <= hPos + thumbW) mScrollGrabOffset = x - hPos;
-          else mScrollGrabOffset = (int) (thumbW / 2.0);
+          int hPos = SafeINT32(mRowHeaderWidth) + (int)(((double)mHOffset / maxScroll) * travelTrack);
+          if (x >= hPos && x <= hPos + (int)thumbW) mScrollGrabOffset = x - hPos;
+          else mScrollGrabOffset = (int)(thumbW / 2.0);
           OnMouseMove(ev);
         }
         return;
-      }
-      if(std::abs(x - (int)mRowHeaderWidth) < 5) {
-        mResizeMode = AUIResizeMode::AUIHeader;
-        mResizeBasePos = x;
-        mResizeBaseSize = mRowHeaderWidth;
-        return;
-      }
-      if(mAllowColumnResize && ((UINT32) y < mColumnHeaderHeight) && ((UINT32)x > mRowHeaderWidth)) {
-        ATableRangeData1 colStart = Offset2Column(mHOffset);
-        INT64 currX = (INT64) mRowHeaderWidth - colStart.offset;
-        for (INT64 i = colStart.cell; i <= Offset2ColumnRange(colStart, SizeX()).cell; i++) {
-          currX += GetColumnWidth(i);
-          if(std::abs(x - (int) currX) < 5) {
-            mResizeMode = AUIResizeMode::AUIColumn;
-            mResizeId = i;
-            mResizeBasePos = x;
-            mResizeBaseSize = GetColumnWidth(i);
-            return;
-          }
-        }
-      }
-      if(mAllowRowResize && x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
-        ATableRangeData1 rowStart = Offset2Row(mVOffset);
-        INT64 currY = (INT64) mColumnHeaderHeight - rowStart.offset;
-        for (INT64 i = rowStart.cell; i <= Offset2RowRange(rowStart, SizeY()).cell; i++) {
-          currY += GetRowHeight(i);
-          if(std::abs(y - (int) currY) < 5) {
-            mResizeMode = AUIResizeMode::AUIRow;
-            mResizeId = i;
-            mResizeBasePos = y;
-            mResizeBaseSize = GetRowHeight(i);
-            return;
-          }
-        }
-      }
-      auto [r, c] = ScreenToCell(x, y);
-      if(r != -1 && c != -1) {
-        mCursorRow = r;
-        mCursorCol = c;
-        if(mRowSelectMode) mSelectedRow = r;
-        Draw();
       }
     }
   }
@@ -418,39 +374,30 @@ namespace aui {
     return {targetRow, targetCol};
   }
 
-  void ATable::DrawScrollbars(Drawable dest) {
+  void aui::ATable::DrawScrollbars(Drawable dest) {
     Display *d = AUIPtr()->Disp();
     GC gc = GCPtr();
-    // Using a slightly lighter grey for the track and darker for the thumb
-    // or just the thumb as per your current style.
-    XSetForeground(d, gc, 0x555555);
-    // Vertical Scrollbar
-    double viewH =
-        (double) SizeY() - mColumnHeaderHeight - AUI_TABLE_SCROLL_THICK;
-    if(mTotalContentHeight > viewH) {
-      double ratio = viewH / (double) mTotalContentHeight;
-      double thumbH = std::max(20.0, viewH * ratio);
-      double maxScroll = (double) mTotalContentHeight - viewH;
+    double viewH = (double)SizeY() - (double)mColumnHeaderHeight - (double)AUI_TABLE_SCROLL_THICK;
+    double viewW = (double)SizeX() - (double)mRowHeaderWidth - (double)AUI_TABLE_SCROLL_THICK;
+    if ((double)mTotalContentHeight > viewH) {
+      double thumbH = std::max(20.0, (viewH / (double)mTotalContentHeight) * viewH);
+      double maxScroll = (double)mTotalContentHeight - viewH;
       double travelTrack = viewH - thumbH;
-      int vPos = mColumnHeaderHeight
-          + (INT32) (((double) mVOffset / maxScroll) * travelTrack);
-      // Draw the thumb at the right edge with defined thickness
-      XFillRectangle(d, dest, gc, SizeX() - AUI_TABLE_SCROLL_THICK, vPos,
-      AUI_TABLE_SCROLL_THICK, (UINT32) thumbH);
+      int vPos = SafeINT32(mColumnHeaderHeight) + (int)(((double)mVOffset / maxScroll) * travelTrack);
+      XSetForeground(d, gc, 0x888888);
+      //      XFillRectangle(d, dest, gc, SafeINT32(SizeX() - SafeUINT64(AUI_TABLE_SCROLL_THICK)), vPos,
+      //          SafeUINT32(AUI_TABLE_SCROLL_THICK), SafeUINT32(thumbH));
+      XFillRectangle(d, dest, gc, SafeINT32(SizeX() - SafeUINT64(AUI_TABLE_SCROLL_THICK)), vPos,
+          SafeUINT32(AUI_TABLE_SCROLL_THICK), static_cast<UINT32>(thumbH));
     }
-    // Horizontal Scrollbar
-    double viewW = (double) SizeX() - mRowHeaderWidth - AUI_TABLE_SCROLL_THICK;
-    if(mTotalContentWidth > viewW) {
-      double ratio = viewW / (double) mTotalContentWidth;
-      double thumbW = std::max(20.0, viewW * ratio);
-      double maxScroll = (double) mTotalContentWidth - viewW;
+    if ((double)mTotalContentWidth > viewW) {
+      double thumbW = std::max(20.0, (viewW / (double)mTotalContentWidth) * viewW);
+      double maxScroll = (double)mTotalContentWidth - viewW;
       double travelTrack = viewW - thumbW;
-      int hPos = mRowHeaderWidth
-          + (INT32) (((double) mHOffset / maxScroll) * travelTrack);
-      // Draw the thumb at the bottom edge with defined thickness
-      XFillRectangle(d, dest, gc, hPos, SizeY() - AUI_TABLE_SCROLL_THICK,
-          (UINT32) thumbW,
-          AUI_TABLE_SCROLL_THICK);
+      int hPos = SafeINT32(mRowHeaderWidth) + (int)(((double)mHOffset / maxScroll) * travelTrack);
+      XSetForeground(d, gc, 0x888888);
+      XFillRectangle(d, dest, gc, hPos, SafeINT32(SizeY() - SafeUINT64(AUI_TABLE_SCROLL_THICK)),
+          static_cast<UINT32>(thumbW), SafeUINT32(AUI_TABLE_SCROLL_THICK));
     }
   }
 
@@ -489,7 +436,7 @@ namespace aui {
     }
     if(mResizeMode == AUIResizeMode::AUIHeader) {
       int delta = x - mResizeBasePos;
-      mRowHeaderWidth = std::max((INT32)20, (INT32)(mResizeBaseSize + delta));
+      mRowHeaderWidth = SafeUINT32(std::max((INT64)20, (INT64)mResizeBaseSize + (INT64)delta));
       Draw();
       return;
     }
@@ -503,7 +450,7 @@ namespace aui {
       double maxScroll = (double) mTotalContentHeight - viewH;
 
       if(travelTrack > 0) {
-        double trackY = (double) y - mColumnHeaderHeight - mScrollGrabOffset;
+        double trackY = (double)y - (double)mColumnHeaderHeight - (double)mScrollGrabOffset;
         double ratio = trackY / travelTrack;
         mVOffset = (INT64) (std::max(0.0, std::min(1.0, ratio)) * maxScroll);
         Draw();
@@ -518,7 +465,7 @@ namespace aui {
       double maxScroll = (double) mTotalContentWidth - viewW;
 
       if(travelTrack > 0) {
-        double trackX = (double) x - mRowHeaderWidth - mScrollGrabOffset;
+        double trackX = (double)x - (double)mRowHeaderWidth - (double)mScrollGrabOffset;
         double ratio = trackX / travelTrack;
         mHOffset = (INT64) (std::max(0.0, std::min(1.0, ratio)) * maxScroll);
         Draw();
@@ -530,7 +477,7 @@ namespace aui {
     bool cursorSet = false;
     if(y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
       ATableRangeData1 colStart = Offset2Column(mHOffset);
-      UINT64 currX = (UINT64) mRowHeaderWidth - colStart.offset;
+      INT64 currX = SafeINT64(mRowHeaderWidth) - colStart.offset;
       for (auto const& [id, data] : mColumnW) {
         if(id < colStart.cell)
           continue;
@@ -540,12 +487,12 @@ namespace aui {
           cursorSet = true;
           break;
         }
-        if(currX > SizeX())
+        if(currX > SafeINT64(SizeX()))
           break;
       }
     } else if(x < SafeINT32(mRowHeaderWidth) && y > SafeINT32(mColumnHeaderHeight)) {
       ATableRangeData1 rowStart = Offset2Row(mVOffset);
-      UINT64 currY = (INT64) mColumnHeaderHeight - rowStart.offset;
+      INT64 currY = SafeINT64(mColumnHeaderHeight) - rowStart.offset;
       for (auto const& [id, data] : mRowH) {
         if(id < rowStart.cell)
           continue;
@@ -555,7 +502,7 @@ namespace aui {
           cursorSet = true;
           break;
         }
-        if(currY > SizeY())
+        if(currY > SafeINT64(SizeY()))
           break;
       }
     }
@@ -655,26 +602,19 @@ namespace aui {
     // 1. Locate the column in the width/label map
     auto it = mColumnW.find(colIdx);
     if(it != mColumnW.end()) {
-      // 2. Update the label string (stored as the second element of the pair)
       it->second.second = name;
-      // 3. Optional: Logic to automatically expand column width if name is too long
-      // This ensures the header text isn't immediately clipped
       XFontStruct *font_info = Font();
       int text_width =
           font_info ?
               XTextWidth(font_info, name.c_str(), (int) name.length()) :
               (int) name.length() * 7;
-      // Add padding (e.g., 20px) and check if it's larger than current width
       if((INT64) text_width + 20 > it->second.first) {
         INT64 newW = (INT64) text_width + 20;
         mTotalContentWidth += (newW - it->second.first);
         it->second.first = newW;
       }
-      // 4. Trigger a refresh to show the new name
       Draw();
     } else {
-      // If the column doesn't exist in the map yet, you could
-      // choose to ignore or log an error.
       E("Attempted to set name for non-existent column: %ld", colIdx);
     }
   }
@@ -684,12 +624,11 @@ namespace aui {
     if(it != mRowH.end()) {
       it->second.second = name;
       XFontStruct *font_info = Font();
-      UINT32 text_width =
-          font_info ?
-              XTextWidth(font_info, name.c_str(), (int) name.length()) :
-              (int) name.length() * 7;
-      if(text_width + 12 > mRowHeaderWidth) {
-        mRowHeaderWidth = text_width + 12;
+      INT32 text_width = font_info ?
+                XTextWidth(font_info, name.c_str(), SafeINT32(name.length())) :
+                SafeINT32(name.length() * 7);
+      if(SafeUINT32(text_width + 12) > mRowHeaderWidth) {
+        mRowHeaderWidth = SafeUINT32(text_width + 12);
       }
       Draw();
     } else {
@@ -786,8 +725,6 @@ namespace aui {
     XFontStruct *font_info = Font();
     // Start drawing at mRowHeaderWidth, adjusted back by the internal cell offset
     INT64 x_pos = (INT64)mRowHeaderWidth - colStartData.offset;
-    // This clipping is the most important part.
-    // It forces X11 to ignore anything that slides under the intersection box.
     XRectangle clip = {SafeINT16(mRowHeaderWidth), 0, SafeUINT16(SizeXUI32() - mRowHeaderWidth),
         SafeUINT16(mColumnHeaderHeight)};
     XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
@@ -810,8 +747,6 @@ namespace aui {
   }
 
   void ATable::ScrollRightPx(INT64 px) {
-    // The 'Viewport' for data is the window width minus the row header.
-    // If the scrollbar takes physical space inside the window, subtract that too.
     INT64 visibleDataArea = (INT64)SizeX() - (INT64)mRowHeaderWidth - (INT64)AUI_TABLE_SCROLL_THICK;
     INT64 maxScroll = mTotalContentWidth - visibleDataArea;
     if (maxScroll < 0) maxScroll = 0;
@@ -850,12 +785,14 @@ namespace aui {
 
   void ATable::AddColumn() {
     UINT64 lastK = 0;
-    if(mColumns.size() > 0) lastK = mColumns.rbegin()->first + 1;
-    mColumns[lastK];
+    if(!mColumns.empty()) {
+      lastK = SafeUINT64(mColumns.rbegin()->first + 1);
+    }
+    mColumns[SafeINT64(lastK)];
     AUI *au = AUIPtr();
-    if(!mColumnW.contains(lastK)) {
+    if(!mColumnW.contains(SafeINT64(lastK))) {
       std::string name = au->NumberToBaseString(lastK);
-      mColumnW[lastK] = { AUI_TABLE_CELL_W, name };
+      mColumnW[SafeINT64(lastK)] = { AUI_TABLE_CELL_W, name };
       mTotalContentWidth += AUI_TABLE_CELL_W;
       if(mAutoWiden) {
         XFontStruct *font_info = Font();
@@ -863,7 +800,7 @@ namespace aui {
         if((INT64)textW + 20 > AUI_TABLE_CELL_W) {
           INT64 newW = (INT64)textW + 20;
           mTotalContentWidth += (newW - AUI_TABLE_CELL_W);
-          mColumnW[lastK].first = newW;
+          mColumnW[SafeINT64(lastK)].first = newW;
         }
       }
     } else {
@@ -875,11 +812,11 @@ namespace aui {
     if (number == 0) return;
     AUI *au = AUIPtr();
     std::string name = "";
-    INT64 startIdx = (INT64)mColumnW.size();
+    UINT64 startIdx = mColumnW.size();
     for (UINT32 i = 0; i < number; ++i) {
-      INT64 currentIdx = startIdx + i;
+      UINT64 currentIdx = startIdx + i;
       name = au->NumberToBaseString(currentIdx);
-      mColumnW[currentIdx] = {AUI_TABLE_CELL_W, name};
+      mColumnW[SafeINT64(currentIdx)] = {AUI_TABLE_CELL_W, name};
       mTotalContentWidth += AUI_TABLE_CELL_W;
     }
     Draw();

@@ -182,10 +182,10 @@ namespace aui {
     D3();
     mResizeEnabled = false;
     XSizeHints *hints = XAllocSizeHints();
-    hints->min_width = mSzX;
-    hints->max_width = mSzX;
-    hints->min_height = mSzY;
-    hints->max_height = mSzY;
+    hints->min_width = SafeINT32(mSzX);
+    hints->max_width = SafeINT32(mSzX);
+    hints->min_height = SafeINT32(mSzY);
+    hints->max_height = SafeINT32(mSzY);
     hints->flags |= PMinSize + PMaxSize;
     XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
     XFree(hints);
@@ -195,20 +195,19 @@ namespace aui {
     D3();
     mResizeEnabled = true;
     XSizeHints *hints = XAllocSizeHints();
-    hints->min_width = mSzX;
-    hints->max_width = mSzX;
-    hints->min_height = mSzY;
-    hints->max_height = mSzY;
+    hints->min_width = SafeINT32(mSzX);
+    hints->max_width = SafeINT32(mSzX);
+    hints->min_height = SafeINT32(mSzY);
+    hints->max_height = SafeINT32(mSzY);
     hints->flags &= ~(PMinSize + PMaxSize);
     XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
     XFree(hints);
   }
 
-
-  void AWidget::Move(unsigned int x, unsigned int y) {
+  void AWidget::Move(UINT32 x, UINT32 y) {
     mX = x;
     mY = y;
-    XMoveWindow(mAUI->Disp(), mWindow, x, y);
+    XMoveWindow(mAUI->Disp(), mWindow, SafeINT32(x), SafeINT32(y));
     XSync(mAUI->Disp(), False);
   }
 
@@ -344,7 +343,7 @@ namespace aui {
     XWindowAttributes watt;
     XGetWindowAttributes(d, Wnd(), &watt);
     if(SizeX() > 0 && SizeY() > 0) {
-      mBackBuffer = XCreatePixmap(d, Wnd(), SizeX(), SizeY(), watt.depth);
+      mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()), SafeUINT32(SizeY()), (UINT32)watt.depth);
     }
   }
 
@@ -367,12 +366,12 @@ namespace aui {
   }
 
   void AWidget::ResizeX(UINT32 szx) {
-    AWidget::Resize(szx, mSzY);
+    AWidget::Resize(szx, SafeUINT32(mSzY));
     D3("v")
   }
 
   void AWidget::ResizeY(UINT32 szy) {
-    AWidget::Resize(mSzX, szy);
+    AWidget::Resize(SafeUINT32(mSzX), szy);
     D3("v")
   }
 
@@ -412,6 +411,5 @@ namespace aui {
     }
     D2("<widget '%s' destructor ends", mTitle.c_str())
   }
-
 }
 
