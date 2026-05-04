@@ -5,7 +5,7 @@
 
 #include "AUILib.h"
 
-bool need_delay_exit = 1;
+bool need_delay_exit = 0;
 
 using namespace aui;
 

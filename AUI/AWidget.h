@@ -44,6 +44,7 @@ namespace aui {
       void SetAUIPtr(AUI* p);
       void SetWndParent(AWidget* wParent);
       void UpdateBuffer();
+      void SetSize(UINT64 szx, UINT64 szy);
 
     public:
       AWidget();

@@ -24,7 +24,7 @@ namespace aui {
     protected:
     public:
       static AInputBox* AttachTo(AWidget* wParent);
-      static AInputBox* AttachTo(AWidget* wParent, char* value);
+      static AInputBox* AttachTo(AWidget* wParent, std::string value);
       virtual ~AInputBox();
       void Draw();
       void OnKeyPress(XEvent* ev);
@@ -32,7 +32,7 @@ namespace aui {
       void OnButtonRelease(XEvent* ev);
       void OnBackSpace();
       void SetInputFilter(std::string f);
-      virtual void SetText(char* value);
+      virtual void SetText(std::string value);
   };
 }
 

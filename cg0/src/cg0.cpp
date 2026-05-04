@@ -33,6 +33,11 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   bProcOK->Resize(80, 20);
   bProcOK->Move(530, 10);
 //  bProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
+  AInputBox* ib = AInputBox::AttachTo(wProcess, "123");
+  ib->Move(10, 10);
+//  ib->X();
+//    ib->SetOnSubmitCB(InputSubmitHandler, lbo2);
+
 }
 
 int main() {

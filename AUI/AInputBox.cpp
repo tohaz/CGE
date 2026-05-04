@@ -10,6 +10,7 @@ namespace aui {
       Display* d = aui->Disp();
       INT32 scr = aui->Scr();
       SetAUIPtr(aui);
+      SetSize(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
       SetWndParent(wParent);
       UINT32 szx = SafeUINT32(SizeX());
       UINT32 szy = SafeUINT32(SizeY());
@@ -19,6 +20,7 @@ namespace aui {
       SetSizeXY(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
       SetBGColor(AUI_DEFAULT_INPUT_BG);
       SetHAlign(AUIHAlign::right);
+      D1("Creating inputbox %ux%u", szx, szy)
       InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
           szx, szy, 1,
           BlackPixel(d, scr), BGColor()));
@@ -59,7 +61,7 @@ namespace aui {
     return new AInputBox(wParent);
   }
 
-  AInputBox* AInputBox::AttachTo(AWidget* wParent, char* val) {
+  AInputBox* AInputBox::AttachTo(AWidget* wParent, std::string val) {
     AInputBox* ib = AttachTo(wParent);
     ib->SetText(val);
     return ib;
@@ -180,8 +182,8 @@ namespace aui {
     }
   }
 
-  void AInputBox::SetText(char *v) {
-    AWidget::SetText(v);
+  void AInputBox::SetText(std::string val) {
+    AWidget::SetText(val);
     mCursorPos = Text().size();
     Draw();
   }

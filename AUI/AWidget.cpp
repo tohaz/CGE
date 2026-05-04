@@ -411,5 +411,11 @@ namespace aui {
     }
     D2("<widget '%s' destructor ends", mTitle.c_str())
   }
+
+  void AWidget::SetSize(UINT64 x, UINT64 y) {
+    mSzX = x;
+    mSzY = y;
+  }
+
 }
 
