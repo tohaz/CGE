@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <cerrno>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
@@ -124,6 +125,7 @@ namespace aui {
 
   static __attribute__((always_inline)) inline UINT64 SafeUINT64(INT32 val) {
     if(val < 0) [[unlikely]] {
+      DS()
       E("INT32 to UINT64 conversion error");
     }
     return static_cast<UINT64>(val);
@@ -133,12 +135,35 @@ namespace aui {
     return static_cast<UINT64>(val);
   }
 
-
   static __attribute__((always_inline)) inline UINT64 SafeUINT64(INT64 val) {
     if(val < 0) [[unlikely]] {
       E("INT64 to UINT64 conversion error");
     }
     return static_cast<UINT64>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT32 SafeINT32(double val) {
+    if(std::isnan(val) || val > static_cast<double>(std::numeric_limits<INT32>::max())
+        || val < static_cast<double>(std::numeric_limits<INT32>::min())) [[unlikely]] {
+      E("double to INT32 conversion error (overflow or NaN)")
+    }
+    return static_cast<INT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline UINT32 SafeUINT32(double val) {
+    if(std::isnan(val) || val > static_cast<double>(std::numeric_limits<UINT32>::max())
+        || val < 0.0) [[unlikely]] {
+      E("double to UINT32 conversion error (overflow, negative, or NaN)")
+    }
+    return static_cast<UINT32>(val);
+  }
+
+  static __attribute__((always_inline)) inline INT64 SafeINT64(double val) {
+    if (std::isnan(val) || val > static_cast<double>(std::numeric_limits<INT64>::max())
+          || val < static_cast<double>(std::numeric_limits<INT64>::min())) [[unlikely]] {
+      E("double to INT64 conversion error (overflow or NaN)")
+    }
+    return static_cast<INT64>(val);
   }
 
 

@@ -170,7 +170,8 @@ namespace aui {
   }
 
   void ATable::ScrollDownPx(INT64 px) {
-    INT64 visibleArea = SafeINT64(SizeY()) - SafeINT64(mColumnHeaderHeight);
+//    INT64 visibleArea = SafeINT64(SizeY()) - SafeINT64(mColumnHeaderHeight);
+    INT64 visibleArea = SafeINT64(SizeY()) - mColumnHeaderHeight;
     INT64 maxScroll = mTotalContentHeight - visibleArea;
     if (maxScroll < 0) maxScroll = 0;
     mVOffset += px;
@@ -292,7 +293,7 @@ namespace aui {
     if(button == Button1) {
       if(y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
         ATableRangeData1 colStart = Offset2Column(mHOffset);
-        INT64 currX = SafeINT64(mRowHeaderWidth) - colStart.offset;
+        INT64 currX = mRowHeaderWidth - colStart.offset;
         for (auto const& [id, data] : mColumnW) {
           if(id < colStart.cell)
             continue;
@@ -318,7 +319,7 @@ namespace aui {
       if(mRowHeightResizeEnabled && x < SafeINT32(mRowHeaderWidth)
           && y > SafeINT32(mColumnHeaderHeight)) {
         ATableRangeData1 rowStart = Offset2Row(mVOffset);
-        INT64 currY = SafeINT64(mColumnHeaderHeight) - rowStart.offset;
+        INT64 currY = mColumnHeaderHeight - rowStart.offset;
         for (auto const& [id, data] : mRowH) {
           if(id < rowStart.cell)
             continue;
@@ -511,7 +512,7 @@ namespace aui {
     bool cursorSet = false;
     if(y < SafeINT32(mColumnHeaderHeight) && x > SafeINT32(mRowHeaderWidth)) {
       ATableRangeData1 colStart = Offset2Column(mHOffset);
-      INT64 currX = SafeINT64(mRowHeaderWidth) - colStart.offset;
+      INT64 currX = mRowHeaderWidth - colStart.offset;
       for (auto const& [id, data] : mColumnW) {
         if(id < colStart.cell)
           continue;
@@ -527,7 +528,7 @@ namespace aui {
     } else if(mRowHeightResizeEnabled && x < SafeINT32(mRowHeaderWidth)
         && y > SafeINT32(mColumnHeaderHeight)) {
       ATableRangeData1 rowStart = Offset2Row(mVOffset);
-      INT64 currY = SafeINT64(mColumnHeaderHeight) - rowStart.offset;
+      INT64 currY = mColumnHeaderHeight - rowStart.offset;
       for (auto const& [id, data] : mRowH) {
         if(id < rowStart.cell)
           continue;

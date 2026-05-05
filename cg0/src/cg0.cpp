@@ -12,7 +12,7 @@ ProcessList pr;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
-  D3("time: %f ms", duration_ms1.count());
+  D1("time: %f ms", duration_ms1.count());
 }
 
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
@@ -32,14 +32,14 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   UNUSED AButton* bProcOK = AButton::AttachTo(wProcess, "Choose");
   bProcOK->Resize(80, 20);
   bProcOK->Move(530, 10);
-//  AInputBox* ib = AInputBox::AttachTo(wProcess, "123");
-//  ib->Move(10, 10);
-  //au->ExitAUI();
+  UNUSED AInputBox* ib = AInputBox::AttachTo(wProcess, "");
+  ib->SetTitle("Search");
+  ib->Move(10, 10);
 }
 
 int main() {
   time_point<high_resolution_clock> start = high_resolution_clock::now();
-  AUI* cg = AUI::Create("cg0 main");
+  UNUSED AUI* cg = AUI::Create("cg0 main");
   AWindow* w = cg->MainWnd();
 
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
@@ -53,8 +53,5 @@ int main() {
 
   return 0;
 }
-
-
-//AInputBox* ib = AInputBox::AttachTo(w, "");
 
 

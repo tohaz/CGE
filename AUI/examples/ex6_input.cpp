@@ -31,7 +31,8 @@ int main() {
   lbo2->Move(15, 110);
   lbo2->SetHAlign(AUIHAlign::left);
 
-  AInputBox* ib = AInputBox::AttachTo(w, (char*)"edit me");
+  AInputBox* ib = AInputBox::AttachTo(w, (char*)"");
+  ib->SetTitle((char *) "Edit Me");
   ib->SetOnSubmitCB(InputSubmitHandler, lbo2);
 
   au->ProcessMessages();

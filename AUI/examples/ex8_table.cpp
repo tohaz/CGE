@@ -63,8 +63,8 @@ void MoveRightHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
 int main() {
   D3("starting main()")
   time_point<high_resolution_clock> start = high_resolution_clock::now();
-  AUI* cg = AUI::Create("cg0 main");
-  AWindow* w = cg->MainWnd();
+  AUI* au = AUI::Create("table example main");
+  AWindow* w = au->MainWnd();
   w->EnableResize();
   w->Resize(540, 380);
   w->DisableResize();
@@ -120,9 +120,9 @@ int main() {
   D1("table size [%lu, %lu]", ta->Rows(), ta->Columns())
 
   StopTimer(start);
-  cg->ProcessMessages();
-  delete cg;
-  cg = 0;
+  au->ProcessMessages();
+  delete au;
+  au  = nullptr;
 
   return 0;
 }

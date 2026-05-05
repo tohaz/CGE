@@ -45,7 +45,7 @@ namespace aui {
     }
     Window w = Wnd();
     XStoreName(d, w, Title().c_str());
-    XSelectInput(d, w, ExposureMask | KeyPressMask | StructureNotifyMask);
+    XSelectInput(d, w, ExposureMask | KeyPressMask | StructureNotifyMask| FocusChangeMask);
     XSetWindowBackground(d, w, BGColor());
     XMapWindow(d, w);
     cg->AddWidget(this);

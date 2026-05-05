@@ -20,6 +20,8 @@ namespace aui {
       std::thread mBlinkThread;
       std::atomic<bool> mStopBlink{false};
       bool mCursorVisible = true;
+      bool mIsFocused = false;
+
 
     protected:
     public:
@@ -27,10 +29,12 @@ namespace aui {
       static AInputBox* AttachTo(AWidget* wParent, std::string value);
       virtual ~AInputBox();
       void Draw();
+      void OnBackSpace();
       void OnKeyPress(XEvent* ev);
       void OnButtonPress(XEvent* ev);
       void OnButtonRelease(XEvent* ev);
-      void OnBackSpace();
+      void OnFocusIn([[maybe_unused]] XEvent* ev);
+      void OnFocusOut([[maybe_unused]] XEvent* ev);
       void SetInputFilter(std::string f);
       virtual void SetText(std::string value);
   };

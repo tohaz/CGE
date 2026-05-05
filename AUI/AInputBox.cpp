@@ -24,7 +24,7 @@ namespace aui {
       InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
           szx, szy, 1,
           BlackPixel(d, scr), BGColor()));
-      XSelectInput(d, Wnd(), ExposureMask | ButtonReleaseMask | KeyPressMask);
+      XSelectInput(d, Wnd(), ExposureMask | ButtonReleaseMask| ButtonPressMask | KeyPressMask | FocusChangeMask);
       D3("inputbox: disp=%lu, wnd=%lu, scr=%d, auiptr %lu", (INT64)d, (INT64)Wnd(), scr, (UINT64)aui)
       XMapWindow(d, Wnd());
       aui->AddWidget(this);
@@ -69,50 +69,55 @@ namespace aui {
 
   void AInputBox::Draw() {
     Display *d = AUIPtr()->Disp();
-        Window w = Wnd();
-        GC gc = GCPtr();
-        XFontStruct *f = Font();
-        XClearWindow(d, w);
-        INT32 totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
-        INT32 textBeforeCursorW = XTextWidth(f, Text().c_str(), (int) mCursorPos);
-        INT32 fontHeight = f->ascent + f->descent;
-        INT32 drawX = 0;
-        INT32 drawY = 0;
-
-        switch (HAlign()) {
-          case AUIHAlign::left:
-            drawX = 5;
-            break;
-          case AUIHAlign::center:
-            drawX = (SafeINT32(SizeX()) - totalW) / 2;
-            break;
-          case AUIHAlign::right:
-            drawX = SafeINT32(SizeX()) - totalW - 5;
-            break;
-          default:
-            E("halign junk")
-            break;
-        }
-        switch (VAlign()) {
-          case AUIVAlign::top:
-            drawY = f->ascent + 5;
-            break;
-          case AUIVAlign::center:
-            drawY = (SafeINT32(SizeY()) + f->ascent - f->descent) / 2;
-            break;
-          case AUIVAlign::bottom:
-            drawY = SafeINT32(SizeY()) - f->descent - 5;
-            break;
-          default:
-            E("valign junk")
-            break;
-        }
-        XDrawString(d, w, gc, drawX, drawY, Text().c_str(), (int) Text().size());
-        if (mCursorVisible) {
-          int cursorX = drawX + textBeforeCursorW;
-          int cursorYTop = drawY - f->ascent;
-          XDrawLine(d, w, gc, cursorX, cursorYTop, cursorX, cursorYTop + fontHeight);
-        }
+    Window w = Wnd();
+    GC gc = GCPtr();
+    XFontStruct *f = Font();
+    XClearWindow(d, w);
+    bool showHint = Text().empty() && !mIsFocused;
+    std::string stringToDraw = showHint ? Title() : Text();
+    if(showHint) {
+      XSetForeground(d, gc, 0x000000);
+    } else {
+      XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
+    }
+    INT32 totalW = XTextWidth(f, stringToDraw.c_str(), (int)stringToDraw.size());
+    INT32 textBeforeCursorW = XTextWidth(f, Text().c_str(), (int)mCursorPos);
+    INT32 fontHeight = f->ascent + f->descent;
+    INT32 drawX = 0;
+    INT32 drawY = 0;
+    switch (HAlign()) {
+      case AUIHAlign::left:
+        drawX = 5;
+        break;
+      case AUIHAlign::center:
+        drawX = (SafeINT32(SizeX()) - totalW) / 2;
+        break;
+      case AUIHAlign::right:
+        drawX = SafeINT32(SizeX()) - totalW - 5;
+        break;
+      default:
+        break;
+    }
+    switch (VAlign()) {
+      case AUIVAlign::top:
+        drawY = f->ascent + 5;
+        break;
+      case AUIVAlign::center:
+        drawY = (SafeINT32(SizeY()) + f->ascent - f->descent) / 2;
+        break;
+      case AUIVAlign::bottom:
+        drawY = SafeINT32(SizeY()) - f->descent - 5;
+        break;
+      default:
+        break;
+    }
+    XDrawString(d, w, gc, drawX, drawY, stringToDraw.c_str(), (int)stringToDraw.size());
+    if (mIsFocused && mCursorVisible) {
+      int cursorX = drawX + textBeforeCursorW;
+      int cursorYTop = drawY - f->ascent;
+      XDrawLine(d, w, gc, cursorX, cursorYTop, cursorX, cursorYTop + fontHeight);
+    }
+    XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
   }
 
   void AInputBox::OnKeyPress(XEvent *ev) {
@@ -159,7 +164,8 @@ namespace aui {
   }
 
   void AInputBox::OnButtonPress([[maybe_unused]]XEvent *ev) {
-    D3("ev %lu", (UINT64)ev)
+    D3("Requesting focus for window %lu", (UINT64)Wnd())
+    XSetInputFocus(AUIPtr()->Disp(), Wnd(), RevertToParent, CurrentTime);
   }
 
   void AInputBox::OnButtonRelease([[maybe_unused]]XEvent *ev) {
@@ -173,18 +179,32 @@ namespace aui {
 
   void AInputBox::OnBackSpace() {
     D2("backspace")
-    if(Text().size() > 0) {
-      Text().erase(mCursorPos-- - 1, 1);
-      D2("deleting character at pos %lu", mCursorPos--)
-    }
-    else {
-      D1("data empty")
+    if(Text().size() > 0 && mCursorPos > 0) {
+      Text().erase(mCursorPos - 1, 1);
+      mCursorPos--;
+      D2("deleting character, new pos %lu", mCursorPos)
+    } else {
+      D1("data empty or cursor at start")
     }
   }
 
   void AInputBox::SetText(std::string val) {
     AWidget::SetText(val);
     mCursorPos = Text().size();
+    Draw();
+  }
+
+  void AInputBox::OnFocusIn(UNUSED XEvent *ev) {
+    D()
+    mIsFocused = true;
+    mCursorVisible = true;
+    Draw();
+  }
+
+  void AInputBox::OnFocusOut(UNUSED XEvent *ev) {
+    D()
+    mIsFocused = false;
+    mCursorVisible = false;
     Draw();
   }
 

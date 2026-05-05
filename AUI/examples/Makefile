@@ -1,7 +1,7 @@
 # 
 # Additional make targets:
-# 1. Release optimized by speed(make release) 
-# 2. Release, optimized by size(make srelease)
+# 1. Release optimized by speed (make release) 
+# 2. Release optimized by size (make srelease)
 #
 
 # --- Universal Makefile for Examples/Tests (Sub-directory) ---
@@ -19,8 +19,10 @@ ifeq ($(OS),Darwin)
 endif
 
 # Enable multithreading by default
-# Using += allows users to override this from the command line if needed
 MAKEFLAGS += -j$(NPROCS)
+
+# If a rule fails, delete the target file it was creating
+.DELETE_ON_ERROR:
 
 # Define library and build directory paths based on BUILD_MODE
 ifeq ($(BUILD_MODE), debug)
@@ -62,33 +64,33 @@ SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 EXES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%,$(SRCS))
 DEPS := $(patsubst $(SRC_DIR)/%.cpp,$(DEP_DIR)/%.d,$(SRCS))
 
-# Main target: Build all executables
+# Main target
 all: $(EXES)
 
 # Mode switching targets
 release srelease:
 	@$(MAKE) BUILD_MODE=$@ all
 
-# Rule to build the library file. 
-# Linking $(EXES) will wait for this command to finish completely.
+# Rule to build the library file
 $(AUI_LIB):
 	@echo "--- Ensuring AUI Library [Mode: $(BUILD_MODE)] ---"
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
 
-# Rule for building applications.
-# $(AUI_LIB) is a prerequisite, preventing race conditions during linking.
+# Rule for building applications
 $(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
 	@echo "Building application [$(BUILD_MODE)]: $<"
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS)
+	@# Remove old binary explicitly before starting to ensure a fresh state
+	@rm -f $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS) || (rm -f $@ && exit 1)
 ifneq ($(BUILD_MODE), debug)
 	@$(STRIP) --strip-all $@
 endif
 
-# Ensure build directories exist before compilation starts
+# Ensure build directories exist
 $(BUILD_DIR) $(DEP_DIR):
 	@mkdir -p $@
 
-# Include automatically generated dependency files (.d)
+# Include auto-generated dependency files
 -include $(DEPS)
 
 clean:
@@ -97,3 +99,5 @@ clean:
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) clean
 
 .PHONY: all clean release srelease
+
+

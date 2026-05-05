@@ -57,9 +57,6 @@ static_assert(sizeof(long) == 8, "long must be 8 bytes");
 #define UINT64 unsigned long
 #define INT64 long
 
-//#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wpedantic"
-
 // RGBAColor red(255, 0, 0);
 // RGBAColor hexColor = 0xFF55AA00;
 union RGBAColor {

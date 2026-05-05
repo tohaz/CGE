@@ -12,7 +12,6 @@ namespace aui {
       UINT64 IndexFromY(UINT32 y);
       INT64 mVOffset = 0;
       INT64 mHOffset = 0;
-      UINT64 mLongestItem = 1;
       UINT64 mTextY = 0; // line height in px
       bool mScrollbarsEnabled = false;
       void DrawScrollbars();
@@ -26,6 +25,14 @@ namespace aui {
       bool mSrollbarRightHL = false;
       bool mSingleSelect = true;
       UINT64 mSelectIndex = 0; // first element is 1, not 0
+      bool mIsFocused = false;
+      bool mIsDraggingV = false;
+      bool mIsDraggingH = false;
+      UINT64 mMaxWidthPx = 0; // Calculated in AddItem
+      bool mShowVThumb = true;
+      bool mShowVArrows = true;
+      bool mShowHThumb = true;
+      bool mShowHArrows = true;
 
     protected:
     public:
@@ -35,11 +42,17 @@ namespace aui {
       void AddItem(std::string s);
       void OnButtonPress(XEvent *ev);
       void OnButtonRelease(XEvent *ev);
+      void OnFocusIn(XEvent *ev);
+      void OnFocusOut(XEvent *ev);
+      void OnKeyPress(XEvent *ev);
+      void OnMouseMove(XEvent *ev);
       void ScrollDownPx(INT64 px);
       void ScrollUpPx(INT64 px);
       void ScrollLeftPx(INT64 px);
       void ScrollRightPx(INT64 px);
       void EnableScrollbars();
+      void ShowVerticalScroll(bool thumb, bool arrows);
+      void ShowHorizontalScroll(bool thumb, bool arrows);
   };
 }
 

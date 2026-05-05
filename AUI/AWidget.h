@@ -30,11 +30,15 @@ namespace aui {
       AUIVAlign mVAlign = AUIVAlign::center;
       UINT32 mBorderSz = AUI_DEFAULT_LABEL_BORDERW;
       std::function<void(XEvent* ev, AWidget* w, void* data)> OnButtonPressCB = nullptr;
+      std::function<void(XEvent* ev, AWidget* w, void* data)> OnFocusInCB = nullptr;
+      std::function<void(XEvent* ev, AWidget* w, void* data)> OnFocusOutCB = nullptr;
       std::function<void(XEvent* ev, AWidget* w, void* data)> OnButtonReleaseCB = nullptr;
       std::function<void(XEvent* ev, AWidget* w, void* data)> OnMouseMoveCB = nullptr;
       std::function<void(AWidget* w, void* data)> OnSubmitCB = nullptr;
       void* mUserDataButtonPress = nullptr;
       void* mUserDataButtonRelease = nullptr;
+      void* mUserDataFocusIn = nullptr;
+      void* mUserDataFocusOut = nullptr;
       void* mUserDataMouseMove = nullptr;
       void* mUserDataSubmit = nullptr;
       Pixmap mBackBuffer = None;
@@ -71,9 +75,11 @@ namespace aui {
       XFontStruct* Font();
       GC GCPtr();
       virtual void Draw();
-      virtual void OnKeyPress(XEvent* ev);
       virtual void OnButtonPress(XEvent* ev);
       virtual void OnButtonRelease(XEvent* ev);
+      virtual void OnFocusIn(XEvent* ev);
+      virtual void OnFocusOut(XEvent* ev);
+      virtual void OnKeyPress(XEvent* ev);
       virtual void OnMouseMove(XEvent* ev);
       virtual void OnSubmit();
       AWidget* ParentWidget();

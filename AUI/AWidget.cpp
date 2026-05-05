@@ -39,7 +39,7 @@ namespace aui {
   AUI* AWidget::AUIPtr() {
     return mAUI;
   }
-  
+
   void AWidget::SetAUIPtr(AUI *p) {
     mAUI = p;
   }
@@ -262,6 +262,30 @@ namespace aui {
     mUserDataSubmit = data;
   }
 
+  void AWidget::OnFocusIn(UNUSED XEvent *ev) {
+    D()
+    if(OnFocusInCB == 0) {
+      D3("CB is not set")
+      return;
+    }
+    else {
+      D3("CB is set")
+      OnFocusInCB(ev, this, mUserDataFocusIn);
+    }
+  }
+
+  void AWidget::OnFocusOut(UNUSED XEvent *ev) {
+    D()
+    if(OnFocusOutCB == 0) {
+      D3("CB is not set")
+      return;
+    }
+    else {
+      D3("CB is set")
+      OnFocusOutCB(ev, this, mUserDataFocusOut);
+    }
+  }
+
   void AWidget::OnButtonPress(XEvent *ev) {
     D2()
     if(OnButtonPressCB == 0) {
@@ -426,5 +450,4 @@ namespace aui {
     }
     D2("<widget '%s' destructor ends", mTitle.c_str());
   }
-
 }

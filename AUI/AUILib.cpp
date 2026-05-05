@@ -107,6 +107,14 @@ namespace aui {
             D2("KeyPress event for widget %lu", (UINT64)targetWin)
             widget->OnKeyPress(&event);
             break;
+          case FocusIn:
+            D3()
+            widget->OnFocusIn(&event);
+            break;
+          case FocusOut:
+            D3()
+            widget->OnFocusOut(&event);
+            break;
           case ClientMessage:
             if(targetWin == mMainWnd->Wnd()) {
               D1("Shutting down AUI...")

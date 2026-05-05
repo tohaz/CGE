@@ -19,8 +19,8 @@ int main() {
   lv->Resize(300, 250);
   lv->EnableScrollbars();
 
-  lv->AddItem("1ABCDEFGHIJKLMNOPQRSTUVWXYX");
-  lv->AddItem("2wabcdefdhijklmnopqrstuvwxyz");
+  lv->AddItem("1ABCDEFGHIJKLMNOPQRSTUVWXYX1111111111111111");
+  lv->AddItem("2wabcdefdhijklmnopqrstuvwxyz222222222222");
 
   std::string z;
   for(UINT32 i = 0; i < 100; i++) {
