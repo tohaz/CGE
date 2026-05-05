@@ -5,7 +5,7 @@
 
 #include "AUILib.h"
 
-bool need_delay_exit = 0;
+bool need_delay_exit = 1;
 
 using namespace aui;
 
@@ -43,8 +43,6 @@ int main() {
   ta->Insert(2, 2, &di);
   di.data = "qqq";
   ta->Insert(2, 0, &di);
-
-
   
   ta->Move(0, 0);
   
@@ -59,14 +57,14 @@ int main() {
   }
 
   au->ProcessMessages();
-
-  delete au;
   
   if(need_delay_exit) {
     handle.get();
   }
+
+  delete au;
   
-  au = 0;
+  au = nullptr;
   ta = 0;
 
   return 0;

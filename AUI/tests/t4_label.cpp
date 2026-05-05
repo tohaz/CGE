@@ -25,8 +25,11 @@ int main() {
 
   au->ProcessMessages();
 
-  delete au;
   handle.get();
+  
+  delete au;
+  au = nullptr;
+  lb = nullptr;
 
   return 0;
 }

@@ -12,13 +12,13 @@ ProcessList pr;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
-  D("time: %f ms", duration_ms1.count());
+  D3("time: %f ms", duration_ms1.count());
 }
 
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
-  D()
+  D3()
   AUI* au = w->AUIPtr();
-  AWindow* wProcess = AWindow::AttachTo(au, "Open process");
+  UNUSED AWindow* wProcess = AWindow::AttachTo(au, "Open process");
   wProcess->Move(1000, 500);
   wProcess->EnableResize();
   wProcess->Resize(640, 450);
@@ -29,32 +29,24 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   ta->DisableRowHeader();
   ta->Resize(500, 400);
   ta->Move(10, 40);
-  AButton* bProcOK = AButton::AttachTo(wProcess, "Choose");
+  UNUSED AButton* bProcOK = AButton::AttachTo(wProcess, "Choose");
   bProcOK->Resize(80, 20);
   bProcOK->Move(530, 10);
-//  bProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
-  AInputBox* ib = AInputBox::AttachTo(wProcess, "123");
-  ib->Move(10, 10);
-//  ib->X();
-//    ib->SetOnSubmitCB(InputSubmitHandler, lbo2);
-
+//  AInputBox* ib = AInputBox::AttachTo(wProcess, "123");
+//  ib->Move(10, 10);
+  //au->ExitAUI();
 }
 
 int main() {
   time_point<high_resolution_clock> start = high_resolution_clock::now();
   AUI* cg = AUI::Create("cg0 main");
   AWindow* w = cg->MainWnd();
-  w->EnableResize();
-  w->Resize(540, 380);
-  w->DisableResize();
-  w->PrintDimensions();
 
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
   bOpenProc->Resize(100, 20);
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
-
-
   StopTimer(start);
+  ButtonProcessesHandler(0, w, 0);
   cg->ProcessMessages();
   delete cg;
   cg = 0;

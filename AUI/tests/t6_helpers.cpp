@@ -28,13 +28,14 @@ int main() {
 
   au->ProcessMessages();
 
-  delete au;
   
   if(need_delay_exit) {
     handle.get();
   }
   
-  au = 0;
+  delete au;
+  au = nullptr;
+  
 
   return 0;
 }

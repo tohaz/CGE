@@ -36,11 +36,14 @@ int main() {
   });
 
   au->ProcessMessages();
+  
+  handle.get();
 
   delete au;
-  au = 0;
+  au = nullptr;
+  bn = nullptr;
+  bnt = nullptr;
 
-  handle.get();
   return 0;
 }
 

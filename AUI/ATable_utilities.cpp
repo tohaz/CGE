@@ -155,34 +155,31 @@ namespace aui {
   }
 
   UINT64 ATable::Columns() {
-    D2()
+    D3()
     return mColumns.size();
   }
 
   void ATable::SetRowHeaderWidth(UINT32 width) {
-    D1("setting row header width=%u", width)
+    D3("setting row header width=%u", width)
     mRowHeaderWidth = width;
     Draw();
   }
 
   void ATable::SetRowHeaderResizeEnabled(bool enable) {
-    D1()
+    D3()
     mRowHeaderResizeEnabled = enable;
   }
 
   void ATable::SetRowHeightResizeEnabled(bool enable) {
-    D1()
+    D3()
     mRowHeightResizeEnabled = enable;
   }
 
   void ATable::DisableRowHeader() {
-    D1()
+    D3()
     mRowHeaderResizeEnabled = false;
     mRowHeightResizeEnabled = false;
     SetRowHeaderWidth(0);
   }
-
-
-
 
 }

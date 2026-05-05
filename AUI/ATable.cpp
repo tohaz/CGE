@@ -17,11 +17,10 @@ namespace aui {
     SetAUIPtr(cg);
     SetWndParent(wParent);
     SetBB(None);
-    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()), SafeUINT32(SizeX()),
-        SafeUINT32(SizeY()), 1, BlackPixel(d, scr), BGColor()));
+    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+        SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr), BGColor()));
     Window w = Wnd();
-    XSelectInput(d, w,
-    ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
+    XSelectInput(d, w, ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
     XMapWindow(d, w);
     xcb_connection_t *conn = XGetXCBConnection(d);
     xcb_cursor_context_t *ctx;
@@ -728,20 +727,35 @@ namespace aui {
 
   ATable::~ATable() {
     AUI *au = AUIPtr();
-    Display *d = au->Disp();
+    UNUSED Display *d = au->Disp();
     // XCB CURSOR CLEANUP
     // We must use xcb_free_cursor with the XCB connection
+    if (!au || !au->Disp()) {
+      E("something wrong with ATable destruction")
+    }
     xcb_connection_t *conn = XGetXCBConnection(d);
+    if(conn && !xcb_connection_has_error(conn)) {
+      D2("========xcb connected for deallocation")
+    }
+    else {
+      E("========xcb is not avaliable for deallocation")
+    }
     if(mHorizCursor != 0) {
       D2("freeing horizontal cursor via xcb")
       xcb_free_cursor(conn, (xcb_cursor_t) mHorizCursor);
       mHorizCursor = 0;
+    }
+    else {
+      D3("not freeing horizontal cursor via xcb")
     }
     if(mVertCursor != 0) {
       D2("freeing vertical cursor via xcb")
       xcb_free_cursor(conn, (xcb_cursor_t) mVertCursor);
       mVertCursor = 0;
     }
+    else {
+      D3("not freeing vertical cursor via xcb")
+    }
+    xcb_flush(conn);
   }
-
 }

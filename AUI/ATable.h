@@ -122,7 +122,6 @@ namespace aui {
       void OnButtonPress(XEvent *ev);
       void OnButtonRelease(XEvent *ev);
       void OnMouseMove(XEvent *ev);
-
   };
 }
 

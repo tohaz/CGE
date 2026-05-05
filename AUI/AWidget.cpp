@@ -30,7 +30,7 @@ namespace aui {
 
         if (!mFont) E("Cannot open 'fixed' font either, exit.")
       }
-      else D3("opened font with description:%s, id %llu", AUI_DEFAULT_FONT, (UINT64)mFont)
+      else D3("opened font with description:%s, id %lu", AUI_DEFAULT_FONT, (UINT64)mFont)
       XSetFont(d, mGC, mFont->fid);
     }
     else E("Font is already set")
@@ -162,19 +162,23 @@ namespace aui {
   }
 
   void AWidget::DestroyChildWidgets() {
-    AWidget* w = 0;
     if(mWidg.size() > 0) {
-      D2(">widget '%s' have children", mTitle.c_str())
-      D2("scrolling widget map for child widgets");
-      for (auto const& [key, val] : mWidg) {
-        w = (AWidget*) val;
-        D2("=deleting child %lu", (UINT64) key)
-        mAUI->UnregisterWindow(key);
-        delete w;
+      D2(">widget '%s' has children", mTitle.c_str());
+      while (!mWidg.empty()) {
+        auto it = mWidg.begin();
+        AWidget* child = (AWidget*) it->second;
+        // 1. Remove from the local parent map first to prevent re-entry/infinite loops
+        mWidg.erase(it);
+        if(child) {
+          // 2. We do NOT set child->mWindow = 0 here.
+          // The child needs its ID to successfully call UnregisterWindow() in its own destructor.
+          // 3. Instead, we use a flag or check in the base destructor to see
+          // if the X server already killed the window.
+          delete child;
+        }
       }
-    }
-    else {
-      D2(">widget '%s' dont have children", mTitle.c_str())
+    } else {
+      D2(">widget '%s' doesn't have children", mTitle.c_str());
     }
   }
 
@@ -375,47 +379,52 @@ namespace aui {
     D3("v")
   }
 
-  AWidget::~AWidget() {
-    D3("widget '%s' destructor active", mTitle.c_str())
-    Display* d = mAUI->Disp();
-    if(mFont != 0) {
-     D2("freeing font %lu", (UINT64)mFont)
-     XFreeFont(d, mFont);
-     mFont = 0;
-    }
-    else {
-      D2("not freeing font")
-    }
-    if(mGC != 0) {
-      D2("freeing GC %lu", (UINT64)mGC)
-      XFreeGC(d, mGC);
-      mGC = 0;
-    }
-    else {
-      D2("not freeing GC")
-    }
-
-    if(mBackBuffer) {
-      D2()
-      XFreePixmap(AUIPtr()->Disp(), mBackBuffer);
-      mBackBuffer = 0;
-    }
-
-    if(mWindow != 0) {
-       D2("destroying window")
-       XDestroyWindow(d, mWindow);
-       mWindow = 0;
-    }
-    else {
-      D2("not destroying window")
-    }
-    D2("<widget '%s' destructor ends", mTitle.c_str())
-  }
-
   void AWidget::SetSize(UINT64 x, UINT64 y) {
     mSzX = x;
     mSzY = y;
   }
 
-}
+  AWidget::~AWidget() {
+    D3("widget '%s' destructor active", mTitle.c_str());
+    // 1. CRITICAL: Unregister from the global AUI map FIRST.
+    // Use the actual mWindow ID before we potentially lose it.
+    if(mAUI && mWindow != 0) {
+      mAUI->UnregisterWindow(mWindow);
+    }
+    // 2. Recursively delete children (Bottom-Up C++ destruction)
+    DestroyChildWidgets();
+    Display *d = mAUI->Disp();
+    // 3. Resource Cleanup
+    if(mFont != 0) {
+      D2("freeing font %lu", (UINT64)mFont);
+      XFreeFont(d, mFont);
+      mFont = 0;
+    } else {
+      D2("widget '%s' has no font to free", mTitle.c_str());
+    }
+    if(mGC != 0) {
+      D2("freeing GC %lu", (UINT64)mGC);
+      XFreeGC(d, mGC);
+      mGC = 0;
+    } else {
+      D2("widget '%s' has no GC to free", mTitle.c_str());
+    }
+    if(mBackBuffer) {
+      D2("freeing backbuffer");
+      XFreePixmap(d, mBackBuffer);
+      mBackBuffer = 0;
+    } else {
+      D2("widget '%s' has no backbuffer to free", mTitle.c_str());
+    }
+    // 4. X11 Window Destruction
+    // We only call XDestroyWindow if this object is the one initiating the kill.
+    // If mWindow is already 0, it means a parent handled the X server side.
+    if(mWindow != 0) {
+      D2("destroying window %lu", (UINT64)mWindow);
+      XDestroyWindow(d, mWindow);
+      mWindow = 0;
+    }
+    D2("<widget '%s' destructor ends", mTitle.c_str());
+  }
 
+}

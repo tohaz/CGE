@@ -12,22 +12,6 @@ namespace aui {
                        static_cast<UINT32>(c.rgba.g) +
                        static_cast<UINT32>(c.rgba.b);
     // 0x80 * 3 = 384
-//    if(overall > 384) {
-//      if(c.rgba.r > AUI_HL_SHIFT) c.rgba.r -= AUI_HL_SHIFT;
-//      else c.rgba.r = 0;
-//      if(c.rgba.g > AUI_HL_SHIFT) c.rgba.g -= AUI_HL_SHIFT;
-//      else c.rgba.g = 0;
-//      if(c.rgba.b > AUI_HL_SHIFT) c.rgba.b -= AUI_HL_SHIFT;
-//      else c.rgba.b = 0;
-//    }
-//    else {
-//      if(c.rgba.r < 255) c.rgba.r += AUI_HL_SHIFT;
-//      else c.rgba.r = 255;
-//      if(c.rgba.g < 255) c.rgba.g += AUI_HL_SHIFT;
-//      else c.rgba.g = 255;
-//      if(c.rgba.b < 255) c.rgba.b += AUI_HL_SHIFT;
-//      else c.rgba.b = 255;
-//    }
     if(overall > 384) {
       c.rgba.r = (c.rgba.r > AUI_HL_SHIFT) ? static_cast<uint8_t>(c.rgba.r - AUI_HL_SHIFT) : static_cast<uint8_t>(0);
       c.rgba.g = (c.rgba.g > AUI_HL_SHIFT) ? static_cast<uint8_t>(c.rgba.g - AUI_HL_SHIFT) : static_cast<uint8_t>(0);
@@ -45,10 +29,10 @@ namespace aui {
     mDisplay = XOpenDisplay(NULL);
     XInitThreads();
     if (mDisplay == NULL) E("Cannot open default display")
-    D2("opened display %lu", mDisplay)
+    D3("opened display %lu", (UINT64)mDisplay)
     mScreen = DefaultScreen(mDisplay);
     CreateMainWindow();
-    D1("init finished, widget size %lu, short size %lu, int %lu, long %lu, float %lu, double %lu, ptr %lu",
+    D3("init finished, widget size %lu, short size %lu, int %lu, long %lu, float %lu, double %lu, ptr %lu",
         sizeof(AWidget),
         sizeof(short), sizeof(int), sizeof(long),
         sizeof(float), sizeof(double), sizeof(void*))
@@ -81,82 +65,92 @@ namespace aui {
   }
 
   void AUI::ProcessMessages() {
-      XEvent event;
-      while(!mShouldExit) {
-          XNextEvent(mDisplay, &event);
-          Window targetWin = event.xany.window;
-          if(mWidg.contains(targetWin)) {
-              AWidget* widget = mWidg[targetWin];
-              switch(event.type) {
-                  case Expose:
-                    if (event.xexpose.count == 0) {
-                        if(mWidg.contains(event.xany.window)) {
-                            mWidg[event.xany.window]->Draw();
-                        } else if (mMainWnd && event.xany.window == mMainWnd->Wnd()) {
-                            mMainWnd->Draw();
-                        }
-                    }
-                      break;
-                  case NoExpose:
-                    D3("NoExpose event for widget %lu", (UINT64)targetWin)
-                      break;
-                  case ButtonPress:
-                    D3("ButtonPress event for widget %lu", (UINT64)targetWin)
-                      widget->OnButtonPress(&event);
-                      break;
-
-                  case ButtonRelease:
-                      D3("ButtonRelease event for widget %lu", (UINT64)targetWin)
-                      widget->OnButtonRelease(&event);
-                      break;
-
-                  case MotionNotify:
-                      D3("MotionNotify event for widget %lu", (UINT64)targetWin)
-                      widget->OnMouseMove(&event);
-                      break;
-
-                  case KeyPress:
-                      D2("KeyPress event for widget %lu", (UINT64)targetWin)
-                      widget->OnKeyPress(&event);
-                      break;
-
-                  case ClientMessage:
-                      if(targetWin == mMainWnd->Wnd()) {
-                          D1("Shutting down AUI...")
-                          ExitAUI();
-                          return;
-                      } else {
-                          D2("Closing secondary window %lu", (UINT64)targetWin)
-                          RemoveWidget(targetWin);
-                      }
-                      break;
-
-                  case ConfigureNotify:
-                      D3("ConfigureNotify for widget %lu", (UINT64)targetWin)
-                      break;
-
-                  case UnmapNotify:
-                  case MapNotify:
-                  case ReparentNotify:
-                      D3("System notification %d for window %lu", event.type, (UINT64)targetWin)
-                      break;
-
-                  default:
-                      D("Event %d not processed for widget", event.type)
-                      break;
-              }
-          }
-          else {
-              if (event.type == Expose && mMainWnd && targetWin == mMainWnd->Wnd()) {
-                  if (event.xexpose.count == 0) {
-                      D3("Expose event for MAIN window")
-                      mMainWnd->Draw();
-                  }
-              } else {
-                  D2("Event %d for non-registered window %lu", event.type, (UINT64)targetWin)
-              }
-          }
+    XEvent event;
+    mShouldExit = false;
+    D3("entering message loop")
+    while (!mShouldExit) {
+      D3("before XNextEvent")
+      XNextEvent(mDisplay, &event);
+      if(mShouldExit) {
+        D1("===========XNextEvent fired while exit signal is active")
+        return;
       }
+      Window targetWin = event.xany.window;
+      if(mWidg.contains(targetWin)) {
+        AWidget *widget = mWidg[targetWin];
+        switch (event.type) {
+          case Expose:
+            if(event.xexpose.count == 0) {
+              if(mWidg.contains(event.xany.window)) {
+                mWidg[event.xany.window]->Draw();
+              } else if(mMainWnd && event.xany.window == mMainWnd->Wnd()) {
+                mMainWnd->Draw();
+              }
+            }
+            break;
+          case NoExpose:
+            D3("NoExpose event for widget %lu", (UINT64)targetWin)
+            break;
+          case ButtonPress:
+            D3("ButtonPress event for widget %lu", (UINT64)targetWin)
+            widget->OnButtonPress(&event);
+            break;
+          case ButtonRelease:
+            D3("ButtonRelease event for widget %lu", (UINT64)targetWin)
+            widget->OnButtonRelease(&event);
+            break;
+          case MotionNotify:
+            D3("MotionNotify event for widget %lu", (UINT64)targetWin)
+            widget->OnMouseMove(&event);
+            break;
+          case KeyPress:
+            D2("KeyPress event for widget %lu", (UINT64)targetWin)
+            widget->OnKeyPress(&event);
+            break;
+          case ClientMessage:
+            if(targetWin == mMainWnd->Wnd()) {
+              D1("Shutting down AUI...")
+              ExitAUI();
+              return;
+            } else {
+              D2("Closing secondary window %lu", (UINT64)targetWin)
+              RemoveWidget(targetWin);
+            }
+            break;
+          case ConfigureNotify:
+            D3("ConfigureNotify for widget %lu", (UINT64)targetWin)
+            break;
+          case UnmapNotify:
+          case MapNotify:
+          case ReparentNotify:
+            D3("System notification %d for window %lu", event.type,
+                (UINT64)targetWin)
+            break;
+          default:
+            D("Event %d not processed for widget", event.type)
+            break;
+        }
+      }
+      else {
+        if(event.type == Expose && mMainWnd && targetWin == mMainWnd->Wnd()) {
+          if(event.xexpose.count == 0) {
+            D3("Expose event for MAIN window")
+            mMainWnd->Draw();
+          }
+        }
+        else {
+          D2("Event %d for non-registered window %lu", event.type,
+              (UINT64)targetWin)
+        }
+      }
+    }
+    if(mDisplay) {
+      D2(">>>>>>>>>>>>>>>>>>>>>syncing XLib")
+      XSync(mDisplay, False);
+    } else {
+      E("display vanished while message loop active")
+    }
+    D2("======================ProcessMessages ends")
   }
 
   AWindow* AUI::MainWnd() {
@@ -166,7 +160,7 @@ namespace aui {
   void AUI::AddWidget(AWidget *w) {
     AWidget* wp = w->ParentWidget();
     mWidg.insert({w->Wnd(), w});
-    D2("adding widget type %d, reg sz=%lu, wnd %lu", w->Type(), mWidg.size(), w->Wnd())
+    D2("adding widget type %u, reg sz=%lu, wnd %lu", (UINT32)w->Type(), mWidg.size(), w->Wnd())
     if(wp != 0) {
       D3("widg has parent")
       wp->AddWidgetChild(w);
@@ -200,7 +194,7 @@ namespace aui {
 
   void AUI::CloseDisplay() {
     if(mDisplay != 0) {
-      D2("freeing display %lu", mDisplay)
+      D2("freeing display %lu", (UINT64)mDisplay)
       XCloseDisplay(mDisplay);
       mDisplay = 0;
     }
@@ -215,43 +209,22 @@ namespace aui {
   }
 
   void AUI::RemoveWidget(Window w) {
+    // 1. Check if it exists in the global map
+    if(!mWidg.contains(w)) {
+      D2("Attempted to remove non-registered window %lu", (UINT64)w);
+      return;
+    }
     AWidget *wi = mWidg[w];
-    UnregisterWindow(w);
-    wi->DestroyChildWidgets();
-    if(wi->ParentWidget() != 0) {
+    // 2. Remove from parent's internal list so the parent
+    // doesn't try to delete it again later.
+    if(wi->ParentWidget() != nullptr) {
       wi->ParentWidget()->UnregisterChild(wi);
     }
+    // 3. Initiate destruction.
+    // NOTE: We do NOT call UnregisterWindow(w) here.
+    // ~AWidget will call it. This ensures the map entry exists
+    // until the very start of the destructor.
     delete wi;
-  }
-  // purpose: xlib expects all secondary windows to be closed before main one
-  // otherwise it will crash or app would leak memory
-  void AUI::RemoveMiscWindows() {
-    D2("Removing misc windows")
-    AWidget* w = 0;
-    Window wmn = mMainWnd->Wnd();
-    std::stack<Window> remS;
-    for(auto const& [key, val] : mWidg) {
-      if(key != wmn) {
-        w = (AWidget*) val;
-        if(w->ParentWidget() == 0) {
-          remS.push(w->Wnd());
-        }
-      }
-    }
-    while (!remS.empty()) {
-      RemoveWidget(remS.top());
-      remS.pop();
-    }
-    D2("Finished removing misc windows")
-  }
-
-  void AUI::RemoveParentWidget(Window w) {
-    AWidget* wi = GetWidget(w);
-    RemoveWidget(wi->ParentWidget()->Wnd());
-  }
-
-  void AUI::RemoveParentWidget(AWidget* w) {
-    RemoveWidget(w->ParentWidget()->Wnd());
   }
 
   AWidget* AUI::GetWidget(Window w) {
@@ -300,30 +273,36 @@ namespace aui {
   }
 
   AUI::~AUI() {
-    D3("============AUI destructor starts, map sz %lu", mWidg.size());
-    if(mMainWnd != 0) {
-      UnregisterWindow(mMainWnd->Wnd());
-      D2("unregistered main window, widg map, size is %lu", mWidg.size())
+    D3("============AUI destructor starts");
+    UNUSED size_t threadId = std::hash<std::thread::id> { }(
+        std::this_thread::get_id());
+    D1(">>>>>>>>>>>>>>>>>>>>ExitAUI called from thread %lu", (UINT64)threadId);
+    mShouldExit = true;
+    // 1. Delete the Main Window first.
+    // This triggers recursive destruction of all children via ~AWidget.
+    if(mMainWnd != nullptr) {
+      AWidget *root = mMainWnd;
+      mMainWnd = nullptr;
+      delete root;
     }
-    if((UINT64)mWidg.size() > 0) {
-      D2("erasing widget map size %lu", mWidg.size());
-      for (auto it = mWidg.begin(); it != mWidg.end(); ++it) {
-          delete it->second;
+    // 2. Clear any leftover secondary/orphan windows.
+    // We use a while loop because calling 'delete' on a widget
+    // will trigger UnregisterWindow, which removes it from this map.
+    while (!mWidg.empty()) {
+      auto it = mWidg.begin();
+      AWidget *w = it->second;
+      if(w) {
+        delete w;
+      } else {
+        mWidg.erase(it);
       }
-      mWidg.clear();
     }
-    else {
-      D2("not erasing widget map")
+    // 3. Final X11 shutdown
+    if(mDisplay != nullptr) {
+      XSync(mDisplay, False);
+      XCloseDisplay(mDisplay);
+      mDisplay = nullptr;
     }
-    if(mMainWnd != 0) {
-      D2("deleting main window")
-      delete mMainWnd;
-      mMainWnd = 0;
-    }
-    else {
-      D2("not deleting main window")
-    }
-    CloseDisplay();
     D3("============AUI destructor ends");
   }
 }

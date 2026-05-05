@@ -7,7 +7,7 @@
 
 using namespace aui;
 
-bool need_delay_exit = 0;
+bool need_delay_exit = 1;
 
 int main() {
   UINT32 delay_ms = 50; 

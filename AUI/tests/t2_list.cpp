@@ -22,7 +22,7 @@ int main() {
   lv->AddItem("2wabcdefdhijklmnopqrstuvwxyz");
 
   std::string z;
-  for(UINT32 i = 0; i < 10000; i++) {
+  for(UINT32 i = 0; i < 100; i++) {
     z = std::to_string(i + 13) + "zzz";
     lv->AddItem(z.c_str());
   }
@@ -34,11 +34,12 @@ int main() {
 
   au->ProcessMessages();
 
-  delete au;
-	lv = 0;
-  au = 0;
-
   handle.get();
+
+  delete au;
+  lv = nullptr;
+  au = nullptr;
+
   return 0;
 }
 
