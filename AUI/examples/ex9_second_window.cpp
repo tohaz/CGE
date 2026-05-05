@@ -19,16 +19,16 @@ int main() {
   w->Resize(540, 380);
   w->DisableResize();
 	UNUSED AWindow* wS = AWindow::AttachTo(au, "Open process");
-  UNUSED ALabel* lb = ALabel::AttachTo(wS, "Close main window while not ");
+  ALabel* lb = ALabel::AttachTo(wS, "Close main window while not ");
   lb->Move(10, 10);
   lb->Resize(300, 20);
-  UNUSED ALabel* lb2 = ALabel::AttachTo(wS, "closing this one to test");
+  ALabel* lb2 = ALabel::AttachTo(wS, "closing this one to test");
   lb2->Move(10, 30);
   lb2->Resize(300, 20);
-  UNUSED ALabel* lb3 = ALabel::AttachTo(wS, "correct resource deallocation");
+  ALabel* lb3 = ALabel::AttachTo(wS, "correct resource deallocation");
   lb3->Move(10, 50);
   lb3->Resize(300, 20);
-  UNUSED ALabel* lb4 = ALabel::AttachTo(wS, "(run with Valgrind)");
+  ALabel* lb4 = ALabel::AttachTo(wS, "(run with Valgrind)");
   lb4->Move(10, 70);
   lb4->Resize(300, 20);
 

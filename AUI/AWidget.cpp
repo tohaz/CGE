@@ -34,6 +34,9 @@ namespace aui {
       XSetFont(d, mGC, mFont->fid);
     }
     else E("Font is already set")
+    XSetWindowAttributes swa;
+    swa.bit_gravity = ForgetGravity;
+    XChangeWindowAttributes(d, mWindow, CWBitGravity, &swa);
   }
 
   AUI* AWidget::AUIPtr() {
@@ -183,29 +186,33 @@ namespace aui {
   }
 
   void AWidget::DisableResize() {
-    D3();
-    mResizeEnabled = false;
-    XSizeHints *hints = XAllocSizeHints();
-    hints->min_width = SafeINT32(mSzX);
-    hints->max_width = SafeINT32(mSzX);
-    hints->min_height = SafeINT32(mSzY);
-    hints->max_height = SafeINT32(mSzY);
-    hints->flags |= PMinSize + PMaxSize;
-    XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
-    XFree(hints);
+      D3();
+      mResizeEnabled = false;
+      XSizeHints *hints = XAllocSizeHints();
+      // Use the current size as both min and max
+      hints->min_width = hints->max_width = SafeINT32(mSzX);
+      hints->min_height = hints->max_height = SafeINT32(mSzY);
+      hints->base_width = SafeINT32(mSzX);
+      hints->base_height = SafeINT32(mSzY);
+      hints->flags = PMinSize | PMaxSize | PBaseSize; // Set flags explicitly
+      XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
+      XFree(hints);
   }
 
   void AWidget::EnableResize() {
-    D3();
-    mResizeEnabled = true;
-    XSizeHints *hints = XAllocSizeHints();
-    hints->min_width = SafeINT32(mSzX);
-    hints->max_width = SafeINT32(mSzX);
-    hints->min_height = SafeINT32(mSzY);
-    hints->max_height = SafeINT32(mSzY);
-    hints->flags &= ~(PMinSize + PMaxSize);
-    XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
-    XFree(hints);
+      D3();
+      mResizeEnabled = true;
+      XSizeHints *hints = XAllocSizeHints();
+      hints->min_width = 100;
+      hints->min_height = 100;
+      // Instead of clearing flags, set a massive MaxSize
+      hints->max_width = 10000;
+      hints->max_height = 10000;
+      hints->base_width = SafeINT32(mSzX);
+      hints->base_height = SafeINT32(mSzY);
+      hints->flags = PMinSize | PMaxSize | PBaseSize;
+      XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
+      XFree(hints);
   }
 
   void AWidget::Move(UINT32 x, UINT32 y) {
@@ -376,21 +383,36 @@ namespace aui {
   }
 
   void AWidget::Resize(UINT32 szx, UINT32 szy) {
-    if(szx == mSzX && szy == mSzY) {
-      D3()
-      return;
-    }
-    if(mResizeEnabled) {
-      mSzX = szx;
-      mSzY = szy;
-      XResizeWindow(mAUI->Disp(), mWindow, szx, szy);
-      UpdateBuffer();
-    }
-    else {
-      DS()
-      D("resize is disabled for widget, call EnableResize() if needed")
-    }
-    Draw();
+      if(szx == mSzX && szy == mSzY) {
+          D3()
+          return;
+      }
+      if(mResizeEnabled) {
+          mSzX = szx;
+          mSzY = szy;
+          Display* d = mAUI->Disp();
+          XResizeWindow(d, mWindow, szx, szy);
+          // --- NEW: Sync hints with WM so it re-aligns the X button ---
+          XSizeHints *hints = XAllocSizeHints();
+          if (hints) {
+              hints->flags = PMinSize | PBaseSize;
+              hints->min_width = 100; // Or a reasonable minimum
+              hints->min_height = 100;
+              hints->base_width = SafeINT32(szx);
+              hints->base_height = SafeINT32(szy);
+              XSetWMNormalHints(d, mWindow, hints);
+              XFree(hints);
+          }
+          // Force the server to process the resize and hint update
+          // before we try to Draw()
+          XSync(d, False);
+          UpdateBuffer();
+      }
+      else {
+          DS()
+          D("resize is disabled for widget, call EnableResize() if needed")
+      }
+      Draw();
   }
 
   void AWidget::ResizeX(UINT32 szx) {
