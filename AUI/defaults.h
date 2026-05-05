@@ -123,7 +123,7 @@ union RGBAColor {
 #define AUI_LIST_SZY 200
 #define AUI_LIST_ARROWSZ1 15
 #define AUI_LIST_ARROWSZ2 15
-#define AUI_LIST_BG 0x999999
+#define AUI_LIST_BG 0xCCCCCC
 // CGTable
 #define AUI_TABLE_X 20
 #define AUI_TABLE_Y 20
@@ -162,6 +162,10 @@ enum class AUIVAlign {
   top = 2,
   bottom = 3
 };
+
+#ifndef AUI_GIT_VERSION
+#define AUI_GIT_VERSION "Unknown"
+#endif
 
 #define E(format, ...) {printf("Error|%d%s|%s(%d):" format "\n", 0, __FILE__, __func__, __LINE__, ##__VA_ARGS__);exit(1);}
 

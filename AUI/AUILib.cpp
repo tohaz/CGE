@@ -121,7 +121,7 @@ namespace aui {
             break;
           case ClientMessage:
             if(targetWin == mMainWnd->Wnd()) {
-              D1("Shutting down AUI...")
+              D1("Shutting down AUIv%s...", AUI_GIT_VERSION)
               ExitAUI();
               return;
             } else {
