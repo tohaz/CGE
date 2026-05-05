@@ -270,7 +270,7 @@ namespace aui {
   }
 
   void AWidget::OnFocusIn(UNUSED XEvent *ev) {
-    D()
+    D3()
     if(OnFocusInCB == 0) {
       D3("CB is not set")
       return;
@@ -282,7 +282,7 @@ namespace aui {
   }
 
   void AWidget::OnFocusOut(UNUSED XEvent *ev) {
-    D()
+    D3()
     if(OnFocusOutCB == 0) {
       D3("CB is not set")
       return;
@@ -430,6 +430,60 @@ namespace aui {
     mSzY = y;
   }
 
+  void AWidget::CorrectNegativeCoordinates(XEvent& event) {
+    if(event.xbutton.x < 0) {
+      D1("negative (x=%d) coordinate corrected", event.xbutton.x)
+      event.xbutton.x = 0;
+    }
+    if(event.xbutton.y < 0) {
+      D1("negative (y=%d) coordinate corrected", event.xbutton.y)
+      event.xbutton.y = 0;
+    }
+  }
+  // Xlib sends negative and too large positive coordinates...
+  void AWidget::CorrectCoordinates(XEvent& event) {
+    // Check negatives
+    if(event.xbutton.x < 0) {
+      D1("negative (x=%d) coordinate corrected", event.xbutton.x)
+      event.xbutton.x = 0;
+    }
+    if(event.xbutton.y < 0) {
+      D1("negative (y=%d) coordinate corrected", event.xbutton.y)
+      event.xbutton.y = 0;
+    }
+    // Check overflys
+    if((UINT64)event.xbutton.x > SizeX()) {
+      D1("overflew (x=%d) coordinate corrected", event.xbutton.x)
+      event.xbutton.x = (INT32)SizeX();
+    }
+    if((UINT64)event.xbutton.y > SizeY()) {
+      D1("overflew (y=%d) coordinate corrected", event.xbutton.y)
+      event.xbutton.y = (INT32)SizeY();
+    }
+  }
+
+ void AWidget::CorrectCoordinateX(INT32 &x) {
+    if(x < 0) {
+      D1("negative (x=%d) coordinate corrected", x)
+      x = 0;
+    }
+    if(x > SafeINT32(SizeX())) {
+      D1("overflew (x=%d) coordinate corrected", x)
+      x = SafeINT32(SizeX());
+    }
+  }
+
+  void AWidget::CorrectCoordinateY(INT32 &y) {
+    if(y < 0) {
+      D1("negative (x=%d) coordinate corrected", y)
+      y = 0;
+    }
+    if(y > SafeINT32(SizeY())) {
+      D1("overflew (y=%d) coordinate corrected", y)
+      y = SafeINT32(SizeY());
+    }
+  }
+
   AWidget::~AWidget() {
     D3("widget '%s' destructor active", mTitle.c_str());
     // 1. CRITICAL: Unregister from the global AUI map FIRST.
@@ -472,4 +526,5 @@ namespace aui {
     }
     D2("<widget '%s' destructor ends", mTitle.c_str());
   }
+
 }

@@ -244,23 +244,10 @@ namespace aui {
         &mask);
     // Clamp negative values to zero before converting to UINT64
     // This seems to be the XLib glitch, it sends negative coordinate with no reason
-    UINT64 lx = 0, ly = 0;
-    if(loc_x < 0) {
-      D("coordinate glitch caught on x: %d", loc_x);
-      lx = 0;
-    } else if(loc_x >= (int) SizeX()) {
-      lx = SizeX(); // Clamp to max width
-    } else {
-      lx = SafeUINT64(loc_x);
-    }
-    if(loc_y < 0) {
-      D("coordinate glitch caught on y: %d", loc_y);
-      ly = 0;
-    } else if(loc_y >= (int) SizeY()) {
-      ly = SizeY(); // Clamp to max height
-    } else {
-      ly = SafeUINT64(loc_y);
-    }
+    CorrectCoordinateX(loc_x);
+    CorrectCoordinateY(loc_y);
+    UINT64 lx = SafeUINT64(loc_x);
+    UINT64 ly = SafeUINT64(loc_y);
     switch (ev->xbutton.button) {
       case Button4: // Mouse Wheel Up
         ScrollUpPx(SafeINT64(mTextY * 3));

@@ -12,7 +12,7 @@ ProcessList pr;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
-  D1("time: %f ms", duration_ms1.count());
+  D1("init time: %f ms", duration_ms1.count());
 }
 
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
@@ -24,7 +24,7 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   wProcess->Resize(640, 450);
   wProcess->DisableResize();
   ATable* ta = ATable::AttachTo(wProcess);
-  ta->AddRows(20);
+  ta->AddRows(200);
   ta->AddColumns(20);
   ta->DisableRowHeader();
   ta->Resize(500, 400);
@@ -45,8 +45,8 @@ int main() {
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
   bOpenProc->Resize(100, 20);
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
-  StopTimer(start);
   ButtonProcessesHandler(0, w, 0);
+  StopTimer(start);
   cg->ProcessMessages();
   delete cg;
   cg = 0;

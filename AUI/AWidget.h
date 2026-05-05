@@ -106,6 +106,11 @@ namespace aui {
       void PrintDimensions();
       Pixmap BB();
       void SetBB(Pixmap backBuffer);
+      void CorrectCoordinates(XEvent& event);
+      void CorrectNegativeCoordinates(XEvent& event);
+      void CorrectCoordinateX(INT32 &x);
+      void CorrectCoordinateY(INT32 &y);
+
   };
 }
 

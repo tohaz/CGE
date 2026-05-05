@@ -64,6 +64,7 @@ namespace aui {
     return mDisplay;
   }
 
+
   void AUI::ProcessMessages() {
     XEvent event;
     mShouldExit = false;
@@ -77,7 +78,7 @@ namespace aui {
       }
       Window targetWin = event.xany.window;
       if(mWidg.contains(targetWin)) {
-        AWidget *widget = mWidg[targetWin];
+        AWidget* widget = mWidg[targetWin];
         switch (event.type) {
           case Expose:
             if(event.xexpose.count == 0) {
@@ -93,10 +94,13 @@ namespace aui {
             break;
           case ButtonPress:
             D3("ButtonPress event for widget %lu", (UINT64)targetWin)
+            widget->CorrectCoordinates(event);
             widget->OnButtonPress(&event);
+
             break;
           case ButtonRelease:
             D3("ButtonRelease event for widget %lu", (UINT64)targetWin)
+            widget->CorrectCoordinates(event);
             widget->OnButtonRelease(&event);
             break;
           case MotionNotify:
@@ -284,7 +288,7 @@ namespace aui {
     D3("============AUI destructor starts");
     UNUSED size_t threadId = std::hash<std::thread::id> { }(
         std::this_thread::get_id());
-    D1(">>>>>>>>>>>>>>>>>>>>ExitAUI called from thread %lu", (UINT64)threadId);
+    D2("ExitAUI called from thread %lu", (UINT64)threadId);
     mShouldExit = true;
     // 1. Delete the Main Window first.
     // This triggers recursive destruction of all children via ~AWidget.

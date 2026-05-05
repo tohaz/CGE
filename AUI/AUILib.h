@@ -207,6 +207,7 @@ namespace aui {
       bool IsWindowRegistered(Window w);
       const char* XEventToString(INT32 ev);
       std::string NumberToBaseString(UINT64 num);
+
       ~AUI();
   };
 }
