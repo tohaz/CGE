@@ -70,7 +70,7 @@ namespace aui {
     mShouldExit = false;
     D3("entering message loop")
     while (!mShouldExit) {
-      D3("before XNextEvent")
+      D4("before XNextEvent")
       XNextEvent(mDisplay, &event);
       if(mShouldExit) {
         D1("===========XNextEvent fired while exit signal is active")
@@ -121,7 +121,7 @@ namespace aui {
             break;
           case ClientMessage:
             if(targetWin == mMainWnd->Wnd()) {
-              D1("Shutting down AUIv%s...", AUI_GIT_VERSION)
+              D1("Shutting down AUI (version '%s')", AUI_GIT_VERSION)
               ExitAUI();
               return;
             } else {

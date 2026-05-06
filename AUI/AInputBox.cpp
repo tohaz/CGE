@@ -20,7 +20,7 @@ namespace aui {
       SetSizeXY(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
       SetBGColor(AUI_DEFAULT_INPUT_BG);
       SetHAlign(AUIHAlign::right);
-      D1("Creating inputbox %ux%u", szx, szy)
+      D2("Creating inputbox %ux%u", szx, szy)
       InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
           szx, szy, 1,
           BlackPixel(d, scr), BGColor()));

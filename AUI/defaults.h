@@ -6,7 +6,7 @@
 #include <cxxabi.h>
 #include <string>
 
-#define DEBUG_LEVEL 1
+#define DEBUG_LEVEL 0
 
 #define UNUSED [[maybe_unused]]
 inline void print_stack();
@@ -164,7 +164,7 @@ enum class AUIVAlign {
 };
 
 #ifndef AUI_GIT_VERSION
-#define AUI_GIT_VERSION "Unknown"
+#define AUI_GIT_VERSION "Not a controled build"
 #endif
 
 #define E(format, ...) {printf("Error|%d%s|%s(%d):" format "\n", 0, __FILE__, __func__, __LINE__, ##__VA_ARGS__);exit(1);}
@@ -179,6 +179,7 @@ enum class AUIVAlign {
 #define D1(...) {}
 #define D2(...) {}
 #define D3(...) {}
+#define D4(...) {}
 #define DS1(...) {}
 #define DS2(...) {}
 #define DS3(...) {}
@@ -189,6 +190,7 @@ enum class AUIVAlign {
 #define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
 #define D2(...) {}
 #define D3(...) {}
+#define D4(...) {}
 #define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
 #define DS2(...) {}
 #define DS3(...) {}
@@ -198,6 +200,7 @@ enum class AUIVAlign {
 #define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
 #define D2(format, ...) printf("D%d%s|%s(%d):" format "\n", 2, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
 #define D3(...) {}
+#define D4(...) {}
 #define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
 #define DS2(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
 #define DS3(...) {}
@@ -207,6 +210,17 @@ enum class AUIVAlign {
 #define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
 #define D2(format, ...) printf("D%d%s|%s(%d):" format "\n", 2, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
 #define D3(format, ...) printf("D%d%s|%s(%d):" format "\n", 3, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
+#define D4(...) {}
+#define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
+#define DS2(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
+#define DS3(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
+#endif
+
+#if DEBUG_LEVEL == 4
+#define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
+#define D2(format, ...) printf("D%d%s|%s(%d):" format "\n", 2, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
+#define D3(format, ...) printf("D%d%s|%s(%d):" format "\n", 3, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
+#define D4(format, ...) printf("D%d%s|%s(%d):" format "\n", 3, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
 #define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
 #define DS2(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
 #define DS3(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
