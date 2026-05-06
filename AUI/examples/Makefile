@@ -5,6 +5,7 @@
 #
 
 # --- Universal Makefile for Examples/Tests (Sub-directory) ---
+# This version builds EACH .cpp file into its OWN separate binary.
 AUI_ROOT   := ..
 BUILD_MODE ?= debug
 
@@ -21,10 +22,11 @@ endif
 # Enable multithreading by default
 MAKEFLAGS += -j$(NPROCS)
 
-# If a rule fails, delete the target file it was creating
+# Automatically delete target if a rule fails to prevent corrupted binaries
 .DELETE_ON_ERROR:
 
 # Define library and build directory paths based on BUILD_MODE
+# Synchronize library path logic with AUI root Makefile
 ifeq ($(BUILD_MODE), debug)
   AUI_LIB_DIR := $(AUI_ROOT)/Custom
   BUILD_DIR   := bin
@@ -45,6 +47,7 @@ BASE_FLAGS := -std=c++26 -MMD -pedantic -pedantic-errors -Wall -Wextra -Werror \
               -Wcast-align -Wdisabled-optimization -Wlogical-op -Wmissing-include-dirs \
               -Wfloat-equal -Wconversion -Wsign-conversion
 
+# Optimization logic based on BUILD_MODE
 ifeq ($(BUILD_MODE), release)
   CXXFLAGS := $(BASE_FLAGS) -O3
   LDFLAGS  := -L$(AUI_LIB_DIR)
@@ -60,39 +63,45 @@ CPPFLAGS := -I$(AUI_ROOT)
 LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor
 
 # Source and Target discovery
+# Every .cpp file becomes a separate executable in $(BUILD_DIR)
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 EXES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%,$(SRCS))
 DEPS := $(patsubst $(SRC_DIR)/%.cpp,$(DEP_DIR)/%.d,$(SRCS))
 
-# Main target
-all: $(EXES)
+# --- Rules ---
 
-# Mode switching targets
+# Main target: Build all separate binaries
+all: build_aui_lib $(EXES)
+
+# Helper targets for easy switching from command line
 release srelease:
 	@$(MAKE) BUILD_MODE=$@ all
 
-# Rule to build the library file
-$(AUI_LIB):
+# Recursive call to the root Makefile to ensure libAUI.a is up to date.
+# Marked .PHONY to ensure the library is checked before any app is linked.
+.PHONY: build_aui_lib
+build_aui_lib:
 	@echo "--- Ensuring AUI Library [Mode: $(BUILD_MODE)] ---"
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
 
-# Rule for building applications
-$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
+# Rule for building each application separately.
+# Each app depends on its .cpp source AND the checked library.
+$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp build_aui_lib | $(BUILD_DIR) $(DEP_DIR)
 	@echo "Building application [$(BUILD_MODE)]: $<"
-	@# Remove old binary explicitly before starting to ensure a fresh state
 	@rm -f $@
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS) || (rm -f $@ && exit 1)
 ifneq ($(BUILD_MODE), debug)
 	@$(STRIP) --strip-all $@
 endif
 
-# Ensure build directories exist
+# Ensure build directories exist before compilation starts
 $(BUILD_DIR) $(DEP_DIR):
 	@mkdir -p $@
 
-# Include auto-generated dependency files
+# Include automatically generated dependency files (.d)
 -include $(DEPS)
 
+# Clean only the current mode
 clean:
 	@echo "--- Cleaning Sub-project [$(BUILD_MODE)] ---"
 	rm -rf $(BUILD_DIR)

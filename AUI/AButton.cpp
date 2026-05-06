@@ -94,7 +94,7 @@ namespace aui {
     XCopyArea(d, bb, wi, GCPtr(), 0, 0, szx, szy, 0, 0);
     XFlush(d);
   }
-
+  //
   void AButton::OnButtonPress([[maybe_unused]]XEvent *ev) {
     if(!IsHL()) {
       HL(true);
