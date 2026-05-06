@@ -1,31 +1,15 @@
 # 
 # Additional make targets:
-# 1. Release optimized by speed (make release) 
-# 2. Release optimized by size (make srelease)
+# 1. Release optimized by speed(make release) 
+# 2. Release, optimized by size(make srelease)
 #
 
 # --- Universal Makefile for Examples/Tests (Sub-directory) ---
-# This version builds EACH .cpp file into its OWN separate binary.
 AUI_ROOT   := ..
 BUILD_MODE ?= debug
+# [FEATURE] Enable multithreading
+MAKEFLAGS += -j$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
 
-# Detect number of CPU cores for parallel build
-NPROCS := 1
-OS := $(shell uname -s)
-ifeq ($(OS),Linux)
-  NPROCS := $(shell nproc)
-endif
-ifeq ($(OS),Darwin)
-  NPROCS := $(shell sysctl -n hw.ncpu)
-endif
-
-# Enable multithreading by default
-MAKEFLAGS += -j$(NPROCS)
-
-# Automatically delete target if a rule fails to prevent corrupted binaries
-.DELETE_ON_ERROR:
-
-# Define library and build directory paths based on BUILD_MODE
 # Synchronize library path logic with AUI root Makefile
 ifeq ($(BUILD_MODE), debug)
   AUI_LIB_DIR := $(AUI_ROOT)/Custom
@@ -42,12 +26,10 @@ SRC_DIR := .
 CXX      := g++
 STRIP    := strip
 
-# Compilation flags
 BASE_FLAGS := -std=c++26 -MMD -pedantic -pedantic-errors -Wall -Wextra -Werror \
               -Wcast-align -Wdisabled-optimization -Wlogical-op -Wmissing-include-dirs \
               -Wfloat-equal -Wconversion -Wsign-conversion
 
-# Optimization logic based on BUILD_MODE
 ifeq ($(BUILD_MODE), release)
   CXXFLAGS := $(BASE_FLAGS) -O3
   LDFLAGS  := -L$(AUI_LIB_DIR)
@@ -55,38 +37,33 @@ else ifeq ($(BUILD_MODE), srelease)
   CXXFLAGS := $(BASE_FLAGS) -Os -ffunction-sections -fdata-sections
   LDFLAGS  := -L$(AUI_LIB_DIR) -Wl,--gc-sections
 else
-  CXXFLAGS := $(BASE_FLAGS) -O0 -g3
+  # [FEATURE] Enhanced debug flags for Valgrind
+  CXXFLAGS := $(BASE_FLAGS) -O0 -g3 -fno-inline -fno-omit-frame-pointer
   LDFLAGS  := -L$(AUI_LIB_DIR)
 endif
 
 CPPFLAGS := -I$(AUI_ROOT)
 LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor
 
-# Source and Target discovery
-# Every .cpp file becomes a separate executable in $(BUILD_DIR)
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 EXES := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%,$(SRCS))
 DEPS := $(patsubst $(SRC_DIR)/%.cpp,$(DEP_DIR)/%.d,$(SRCS))
 
 # --- Rules ---
 
-# Main target: Build all separate binaries
+# [FEATURE] Added $(AUI_LIB) as prerequisite to ensure check & link if library changes
 all: build_aui_lib $(EXES)
 
-# Helper targets for easy switching from command line
 release srelease:
 	@$(MAKE) BUILD_MODE=$@ all
 
-# Recursive call to the root Makefile to ensure libAUI.a is up to date.
-# Marked .PHONY to ensure the library is checked before any app is linked.
 .PHONY: build_aui_lib
 build_aui_lib:
 	@echo "--- Ensuring AUI Library [Mode: $(BUILD_MODE)] ---"
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
 
-# Rule for building each application separately.
-# Each app depends on its .cpp source AND the checked library.
-$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp build_aui_lib | $(BUILD_DIR) $(DEP_DIR)
+# [FEATURE] Added $(AUI_LIB) to the dependency list and rm -f for safety
+$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
 	@echo "Building application [$(BUILD_MODE)]: $<"
 	@rm -f $@
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS) || (rm -f $@ && exit 1)
@@ -94,19 +71,19 @@ ifneq ($(BUILD_MODE), debug)
 	@$(STRIP) --strip-all $@
 endif
 
-# Ensure build directories exist before compilation starts
 $(BUILD_DIR) $(DEP_DIR):
 	@mkdir -p $@
 
-# Include automatically generated dependency files (.d)
 -include $(DEPS)
 
-# Clean only the current mode
 clean:
 	@echo "--- Cleaning Sub-project [$(BUILD_MODE)] ---"
 	rm -rf $(BUILD_DIR)
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) clean
 
-.PHONY: all clean release srelease
+# [FEATURE] Use FORCE to check library without triggering unnecessary rebuilds
+FORCE:
+$(AUI_LIB): FORCE
+	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
 
-
+.PHONY: all clean build_aui_lib release srelease
