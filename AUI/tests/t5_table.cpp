@@ -5,29 +5,23 @@
 
 #include "AUILib.h"
 
-bool need_delay_exit = 1;
+bool need_delay_exit = 0;
 
 using namespace aui;
 
-int main() {
-	//char *qqq = new char[1]; // generate error
-  UINT32 delay_ms = 50; // delay before thead calls window to close
-  AUI* au = AUI::Create("table");
-  AWindow* w = au->MainWnd();
+INT32 GeneralTest(ATable *ta) {
+  ta->Clear();
+  ta->Move(0, 0);
+  ta->Resize(400, 250);
 
-  ATable* ta = ATable::AttachTo(w);
-  
   ta->AddRow();
-
-
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < 5; i++) {
     ta->AddColumn();
   }
-
-  ta->AddRows(20);
-
-  ta->AddColumns(30);
-  
+  ta->AddRows(5);
+  ta->AddColumns(5);
+  if(ta->Rows() != 6) E("number of rows is wrong%lu", ta->Rows())
+  if(ta->Columns() != 10) E("number of columnts is wrong %lu", ta->Rows())
   AUICellData di;
   di.data = "sta";
   ta->Insert(0, 0, &di);
@@ -43,11 +37,26 @@ int main() {
   ta->Insert(2, 2, &di);
   di.data = "qqq";
   ta->Insert(2, 0, &di);
+  return 0;
+}
+
+INT32 AutowidenTest(ATable *ta) {
+	return 0;
+}
+
+
+
+int main() {
+	//char *qqq = new char[1]; // generate error
+  UINT32 delay_ms = 50; // delay before thead calls window to close
+  AUI* au = AUI::Create("table");
+  AWindow* w = au->MainWnd();
+  ATable* ta = ATable::AttachTo(w);
+  INT32 testsfailed = 0;
   
-  ta->Move(0, 0);
+  testsfailed += GeneralTest(ta);
+  testsfailed += AutowidenTest(ta);
   
-  ta->Resize(400, 250);
-    
   std::future<void> handle;
   if(need_delay_exit) {
     handle = std::async(std::launch::async, [=]() {

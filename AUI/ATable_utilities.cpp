@@ -79,7 +79,7 @@ namespace aui {
     Draw();
   }
 
-  void ATable::SetRowName(INT64 rowIdx, const std::string &name) {
+  void ATable::SetRowName(INT64 rowIdx, const std::string name) {
     auto it = mRowH.find(rowIdx);
     if(it != mRowH.end()) {
       it->second.second = name;
@@ -96,7 +96,7 @@ namespace aui {
     }
   }
 
-  void ATable::SetColumnName(INT64 colIdx, std::string &name) {
+  void ATable::SetColumnName(INT64 colIdx, std::string name) {
     // 1. Locate the column in the width/label map
     auto it = mColumnW.find(colIdx);
     if(it != mColumnW.end()) {
@@ -151,12 +151,12 @@ namespace aui {
 
   UINT64 ATable::Rows() {
     D2()
-    return mRows.size();
+    return mRowH.size();
   }
 
   UINT64 ATable::Columns() {
     D3()
-    return mColumns.size();
+    return mColumnW.size();
   }
 
   void ATable::SetRowHeaderWidth(UINT32 width) {

@@ -72,6 +72,13 @@ namespace aui {
     return static_cast<UINT16>(val);
   }
 
+  static __attribute__((always_inline)) inline UINT16 SafeUINT16(INT64 val) {
+      if(val < 0 || val > static_cast<INT64>(std::numeric_limits<UINT16>::max())) [[unlikely]] {
+        E("INT64 to UINT16 conversion error");
+      }
+      return static_cast<UINT16>(val);
+  }
+
   static __attribute__((always_inline)) inline INT32 SafeINT32(UINT32 val) {
     if(val > static_cast<UINT32>(std::numeric_limits<INT32>::max())) [[unlikely]] {
       E("UINT32 to INT32 conversion error");

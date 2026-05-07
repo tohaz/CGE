@@ -4,7 +4,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-make clean
+#make clean
 
 make
 
@@ -65,7 +65,5 @@ else
     echo -e "${RED}Failed Test7==========================================================================================${NC}"
 		exit 1
 fi
-
-
 
 echo -e "${GREEN}+++ALL Success+++${NC}"

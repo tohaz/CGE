@@ -87,14 +87,14 @@ namespace aui {
 
     public:
       virtual ~ATable();
-      static ATable* AttachTo(AWidget* wParent);
-      void Draw();
+      static  ATable* AttachTo(AWidget* wParent);
       void AddColumn();
       void AddRow();
-      void Insert(INT64 row, INT64 col, AUICellData* cell);
-      AUICellData* Get(INT64 row, INT64 col);
-      UINT64 Rows();
       UINT64 Columns();
+      void Draw();
+      AUICellData* Get(INT64 row, INT64 col);
+      void Insert(INT64 row, INT64 col, AUICellData* cell);
+      UINT64 Rows();
       void ScrollDownPx(INT64 px);
       void ScrollUpPx(INT64 px);
       void ScrollLeftPx(INT64 px);
@@ -105,8 +105,8 @@ namespace aui {
       void RemoveRow(INT64 rowIdx);
       void RemoveLastRow();
       void RemoveLastColumn();
-      void SetColumnName(INT64 colIdx, std::string &name);
-      void SetRowName(INT64 rowIdx, const std::string &name);
+      void SetColumnName(INT64 colIdx, std::string name);
+      void SetRowName(INT64 rowIdx, const std::string name);
       void Clear();
       void SetColumnWidth(INT64 colIdx, INT64 width);
       std::string RowName(INT64 rowIdx);

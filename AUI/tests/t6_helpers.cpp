@@ -15,8 +15,7 @@ int main() {
   AUI* au = AUI::Create("helpers");
 //  AWindow* w = au->MainWnd();
   
-  UNUSED UINT16 q = SafeUINT16(1);
-  q = SafeUINT16(0x10000-1);
+  UNUSED UINT16 ui16 = SafeUINT16((UINT32)1);
 
   std::future<void> handle;
   if(need_delay_exit) {

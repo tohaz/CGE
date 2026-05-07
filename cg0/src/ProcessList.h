@@ -7,12 +7,14 @@ namespace cg {
         INT64 mPid;
         std::string mPidStr;
         std::string mPath;
+        std::string mParams;
       protected:
       public:
         ProcessDescr(std::string pidStr, std::string path);
         INT64 Pid();
         std::string PidStr();
         std::string Path();
+        std::string Params();
         ~ProcessDescr();
     };
 
@@ -25,6 +27,8 @@ namespace cg {
       ProcessList();
       std::size_t Size();
       virtual ~ProcessList();
+      auto begin() const { return mProcs.cbegin(); }
+      auto end() const { return mProcs.cend(); }
   };
 
 }

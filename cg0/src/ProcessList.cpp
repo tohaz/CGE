@@ -61,6 +61,7 @@ namespace cg {
             nullPos = processName.find('\0');
             if(nullPos != std::string::npos) {
               processName2 = processName.substr(0, nullPos);
+              UNUSED size_t pos = processName2.find(' ');
             }
           }
           pd = new ProcessDescr(dirName, processName2);
@@ -72,6 +73,7 @@ namespace cg {
         D4("U %s", de->d_name)
       }
     }
+    D1("%lu processes scanned", mProcs.size())
     closedir(dp);
   }
 
@@ -92,5 +94,18 @@ namespace cg {
     D1()
     Clear();
   }
+
+  std::size_t ProcessList::Size() {
+    return mProcs.size();
+  }
+
+  std::string ProcessDescr::Path() {
+    return mPath;
+  }
+
+  std::string ProcessDescr::Params() {
+    return mParams;
+  }
+
 }
 
