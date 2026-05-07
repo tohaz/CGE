@@ -11,7 +11,6 @@ using namespace aui;
 
 INT32 GeneralTest(ATable *ta) {
   ta->Clear();
-  ta->Move(0, 0);
   ta->Resize(400, 250);
 
   ta->AddRow();
@@ -41,6 +40,7 @@ INT32 GeneralTest(ATable *ta) {
 }
 
 INT32 AutowidenTest(ATable *ta) {
+  ta->Move(0, 0);
 	return 0;
 }
 
