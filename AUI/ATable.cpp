@@ -39,6 +39,7 @@ namespace aui {
   void ATable::Draw() {
     if (Wnd() == 0) return;
     AUI *au = AUIPtr();
+    GC gc = GCPtr();
     Display *d = au->Disp();
     // 1. Calculate column ranges
     ATableRangeData1 colStart = Offset2Column(mHOffset);
@@ -52,8 +53,12 @@ namespace aui {
     // 4. Update the BackBuffer if needed
     UpdateBuffer();
     Drawable dest = BB();
+    XSetForeground(d, gc, 0xFFFFFF);
+    // Clear ALL widget space before any
+    XFillRectangle(d, dest, gc, 0, 0, (UINT32)(SizeX()), (UINT32)(SizeY()));
     if (dest == 0) dest = Wnd();
     // 5. Execute Render layers
+    // Prepare Background
     DrawCells(dest, &rowRange, &colRange);
     DrawColumnHeader(dest, colStart, colEnd);
     DrawRowHeader(dest, rowStart, rowEnd);
@@ -65,11 +70,9 @@ namespace aui {
     }
     XSync(d, False);
   }
-
   ATable* ATable::AttachTo(AWidget *wParent) {
     return new ATable(wParent);
   }
-
   void ATable::DrawIntersectionBox(Drawable dest) {
     Display *d = AUIPtr()->Disp();
     GC gc = GCPtr();
@@ -207,9 +210,7 @@ namespace aui {
     Display *d = au->Disp();
     GC gc = GCPtr();
     XFontStruct *font_info = Font();
-    // 1. Prepare Background and Clipping
-    XSetForeground(d, gc, 0xFFFFFF);
-    XFillRectangle(d, dest, gc, (INT32)mRowHeaderWidth, (INT32)mColumnHeaderHeight, (UINT32)(SizeX() - mRowHeaderWidth), (UINT32)(SizeY() - mColumnHeaderHeight));
+//    XFillRectangle(d, dest, gc, 0, 0, SizeX(), SizeY);
     XRectangle globalClip = {
         SafeINT16(mRowHeaderWidth),
         SafeINT16(mColumnHeaderHeight),

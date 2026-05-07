@@ -7,7 +7,7 @@
 #include <cxxabi.h>
 #include <string>
 
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 
 #define UNUSED [[maybe_unused]]
 inline void print_stack();

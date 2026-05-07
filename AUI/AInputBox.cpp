@@ -195,14 +195,14 @@ namespace aui {
   }
 
   void AInputBox::OnFocusIn(UNUSED XEvent *ev) {
-    D()
+    D3()
     mIsFocused = true;
     mCursorVisible = true;
     Draw();
   }
 
   void AInputBox::OnFocusOut(UNUSED XEvent *ev) {
-    D()
+    D3()
     mIsFocused = false;
     mCursorVisible = false;
     Draw();

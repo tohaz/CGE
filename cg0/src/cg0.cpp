@@ -24,8 +24,8 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   wProcess->Resize(640, 450);
   wProcess->DisableResize();
   ATable* ta = ATable::AttachTo(wProcess);
-  ta->AddRows(200);
-  ta->AddColumns(20);
+  ta->AddRows(1);
+  ta->AddColumns(1);
   ta->DisableRowHeader();
   ta->Resize(500, 400);
   ta->Move(10, 40);
@@ -45,7 +45,7 @@ int main() {
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
   bOpenProc->Resize(100, 20);
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
-  ButtonProcessesHandler(0, w, 0);
+  //ButtonProcessesHandler(0, w, 0);
   StopTimer(start);
   cg->ProcessMessages();
   delete cg;
