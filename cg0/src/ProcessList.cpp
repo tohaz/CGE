@@ -26,6 +26,14 @@ namespace cg {
     return mPidStr;
   }
 
+  std::string ProcessDescr::Path() {
+    return mPath;
+  }
+
+  std::string ProcessDescr::Params() {
+    return mParams;
+  }
+
   ProcessDescr::~ProcessDescr() {
     D3()
     mPath.clear();
@@ -97,14 +105,6 @@ namespace cg {
 
   std::size_t ProcessList::Size() {
     return mProcs.size();
-  }
-
-  std::string ProcessDescr::Path() {
-    return mPath;
-  }
-
-  std::string ProcessDescr::Params() {
-    return mParams;
   }
 
 }

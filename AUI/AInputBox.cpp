@@ -171,7 +171,7 @@ namespace aui {
           break;
       }
     }
-    if(initialText != Text()) {
+    if(initialText != Text() && OnValueChanged != nullptr) {
       OnValueChanged(this, mUserDataValueChanged);
     }
     Draw();
@@ -222,18 +222,19 @@ namespace aui {
     Draw();
   }
 
-  AInputBox::~AInputBox() {
-    D3()
-    mStopBlink = true;
-    if(mBlinkThread.joinable())
-      mBlinkThread.join();
-  }
-
   void AInputBox::SetOnValueChangedCB(std::function<void(AWidget *w, void *arbdata)> func, void *data) {
     mUserDataValueChanged = data;
     OnValueChanged = func;
     D1()
   }
+
+  AInputBox::~AInputBox() {
+    OnValueChanged = nullptr;
+    mStopBlink = true;
+    if(mBlinkThread.joinable()) mBlinkThread.join();
+    D3("v")
+  }
+
 
 }
 
