@@ -71,17 +71,15 @@ namespace aui {
       INT64 mScrollGrabOffset = 0;
       bool mRowSelectMode = true; // Toggle for the mode
       INT64 mSelectedRow = -1;    // Track the clicked row
-      bool mAllowColumnResize = true;
-      bool mAllowRowResize = true;
-      // Internal state for the drag operation
       AUIResizeMode mResizeMode = AUIResizeMode::AUINone;
       INT64 mResizeId = -1;
       int mResizeBasePos = 0;
       INT64 mResizeBaseSize = 0;
-      // Cursors (Initialize these in constructor)
       Cursor mHorizCursor = None;
       Cursor mVertCursor = None;
       bool mAutoWiden = false;
+      bool mAllowColumnResize = true;
+      bool mAllowRowResize = true;
       bool mRowHeaderResizeEnabled = true;
       bool mRowHeightResizeEnabled = true;
 

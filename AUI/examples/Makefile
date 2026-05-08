@@ -71,7 +71,7 @@ DEPS := $(patsubst $(SRC_DIR)/%.cpp,$(DEP_DIR)/%.d,$(SRCS))
 # --- Rules ---
 
 # Main target: Build all separate binaries
-all: build_aui_lib $(EXES)
+all: $(EXES)
 
 # Helper targets for easy switching from command line
 release srelease:
@@ -92,6 +92,11 @@ $(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
 ifneq ($(BUILD_MODE), debug)
 	@$(STRIP) --strip-all $@
 endif
+
+$(AUI_LIB): force_look
+	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
+
+.PHONY: force_look
 
 # Ensure build directories exist before compilation starts
 $(BUILD_DIR) $(DEP_DIR):
