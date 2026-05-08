@@ -39,7 +39,6 @@ void UpdateProcTable(UNUSED ATable *ta) {
   D()
 }
 
-
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   D3()
   AUI* au = w->AUIPtr();
@@ -49,7 +48,6 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   wProcess->Resize(640, 450);
   wProcess->DisableResize();
   ATable* ta = ATable::AttachTo(wProcess);
-//  ta->AddRows(1);
   ta->Resize(500, 400);
   ta->Move(10, 40);
   UNUSED AButton* bProcOK = AButton::AttachTo(wProcess, "Choose");
@@ -58,14 +56,13 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   UNUSED AInputBox* ib = AInputBox::AttachTo(wProcess, "");
   ib->SetTitle("Search");
   ib->Move(10, 10);
-  UpdateProcTable(ta);
+//  UpdateProcTable(ta);
 }
 
 int main() {
   time_point<high_resolution_clock> start = high_resolution_clock::now();
   UNUSED AUI* cg = AUI::Create("cg0 main");
   AWindow* w = cg->MainWnd();
-
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
   bOpenProc->Resize(100, 20);
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);

@@ -5,23 +5,21 @@
 
 #include "AUILib.h"
 
-bool need_delay_exit = 0;
+bool need_delay_exit = 1;
 
 using namespace aui;
 
 INT32 GeneralTest(ATable *ta) {
+  AUICellData di;
   ta->Clear();
   ta->Resize(400, 250);
-
+  ta->AddColumn();
+  ta->AddColumn();
   ta->AddRow();
-  for(int i = 0; i < 5; i++) {
-    ta->AddColumn();
-  }
   ta->AddRows(5);
   ta->AddColumns(5);
   if(ta->Rows() != 6) E("number of rows is wrong%lu", ta->Rows())
-  if(ta->Columns() != 10) E("number of columnts is wrong %lu", ta->Rows())
-  AUICellData di;
+  if(ta->Columns() != 7) E("number of columnts is wrong %lu", ta->Rows())
   di.data = "sta";
   ta->Insert(0, 0, &di);
   di.data = "ZZZ";
@@ -40,11 +38,25 @@ INT32 GeneralTest(ATable *ta) {
 }
 
 INT32 AutowidenTest(ATable *ta) {
-  ta->Move(0, 0);
-	return 0;
+  AUICellData di;
+	ta->Clear();
+  ta->AddColumns(5);
+  ta->AddRows(5);
+  ta->SetColumnWidth(0, 1);
+  ta->SetAutoWiden(true);
+  di.data = "qqqqqq";
+  ta->Insert(0, 0, &di);
+  if(ta->GetColumnWidth(0) > 10) {
+    D("Column Autowiden test passed(%ld)\n", ta->GetColumnWidth(0))
+    return 0;
+  }
+  else {
+  	D("Column autowiden test failed")
+  }
+
+
+	return 1;
 }
-
-
 
 int main() {
 	//char *qqq = new char[1]; // generate error
@@ -75,8 +87,8 @@ int main() {
   
   au = nullptr;
   ta = 0;
-
-  return 0;
+  
+  return testsfailed;
 }
 
 

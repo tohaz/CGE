@@ -43,8 +43,10 @@ namespace aui {
   }
 
   void ATable::SetColumnWidth(INT64 colIdx, INT64 width) {
+    D1()
     auto it = mColumnW.find(colIdx);
     if(it != mColumnW.end()) {
+      D1()
       INT64 diff = width - it->second.first;
       it->second.first = width;
       mTotalContentWidth += diff;
@@ -53,6 +55,9 @@ namespace aui {
       if(mHOffset > maxScroll)
         mHOffset = maxScroll;
       Draw();
+    }
+    else {
+      D("column index %ld not found", colIdx)
     }
   }
 
