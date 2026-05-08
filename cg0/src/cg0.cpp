@@ -15,13 +15,14 @@ void StopTimer(time_point<high_resolution_clock> start) {
   D1("init time: %f ms", duration_ms1.count());
 }
 
-void UpdateProcTable(UNUSED ATable *ta) {
+void UpdateProcTable(ATable *ta, UNUSED std::string filter) {
+  D("filter:%s", filter.c_str())
   INT64 row = 0;
   UNUSED AUICellData cell;
   ta->Clear();
   ta->DisableRowHeader();
   ta->AddColumns(2);
-  ta->AddRows(SafeUINT32((UINT64)pr.Size()));
+//  ta->AddRows(SafeUINT32((UINT64)pr.Size()));
   ta->SetColumnName(0, "PID");
   ta->SetColumnName(1, "Path");
   ta->SetColumnWidth(0, 75);
@@ -29,19 +30,23 @@ void UpdateProcTable(UNUSED ATable *ta) {
   ProcessDescr *pd;
   for (UNUSED const auto& [id, value] : pr) {
     pd = value;
-    cell.data = pd->PidStr();
-    cell.hAlign = AUIHAlign::center;
-    ta->Insert(row, 0, &cell);
-    cell.data = pd->Path();
-    cell.hAlign = AUIHAlign::left;
-    ta->Insert(row++, 1, &cell);
+    if(pd->Path().contains(filter) || pd->PidStr().contains(filter)) {
+      ta->AddRow();
+      cell.data = pd->PidStr();
+      cell.hAlign = AUIHAlign::center;
+      ta->Insert(row, 0, &cell);
+      cell.data = pd->Path();
+      cell.hAlign = AUIHAlign::left;
+      ta->Insert(row++, 1, &cell);
+    }
   }
-
-  D()
 }
 
-void InputBoxValueChangedHandler(UNUSED AWidget* w, UNUSED void* d) {
-  D("says hi")
+void InputBoxValueChangedHandler(UNUSED AWidget* w, void* d) {
+  ATable* ta = (ATable*) d;
+  UNUSED AInputBox* ib = (AInputBox*) w;
+  UpdateProcTable(ta, ib->Text());
+  ta->Draw();
 }
 
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
@@ -61,8 +66,8 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   UNUSED AInputBox* ib = AInputBox::AttachTo(wProcess, "");
   ib->SetTitle("Search");
   ib->Move(10, 10);
-  ib->SetOnValueChangedCB(InputBoxValueChangedHandler, 0);
-  UpdateProcTable(ta);
+  ib->SetOnValueChangedCB(InputBoxValueChangedHandler, ta);
+  UpdateProcTable(ta, "");
 }
 
 int main() {

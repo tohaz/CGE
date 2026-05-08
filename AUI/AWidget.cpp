@@ -444,20 +444,20 @@ namespace aui {
   void AWidget::CorrectCoordinates(XEvent& event) {
     // Check negatives
     if(event.xbutton.x < 0) {
-      D1("negative (x=%d) coordinate corrected", event.xbutton.x)
+      D2("negative (x=%d) coordinate corrected", event.xbutton.x)
       event.xbutton.x = 0;
     }
     if(event.xbutton.y < 0) {
-      D1("negative (y=%d) coordinate corrected", event.xbutton.y)
+      D2("negative (y=%d) coordinate corrected", event.xbutton.y)
       event.xbutton.y = 0;
     }
     // Check overflys
     if((UINT64)event.xbutton.x > SizeX()) {
-      D1("overflew (x=%d) coordinate corrected", event.xbutton.x)
+      D2("overflew (x=%d) coordinate corrected", event.xbutton.x)
       event.xbutton.x = (INT32)SizeX();
     }
     if((UINT64)event.xbutton.y > SizeY()) {
-      D1("overflew (y=%d) coordinate corrected", event.xbutton.y)
+      D2("overflew (y=%d) coordinate corrected", event.xbutton.y)
       event.xbutton.y = (INT32)SizeY();
     }
   }
