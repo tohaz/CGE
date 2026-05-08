@@ -74,8 +74,8 @@ int main() {
   for(int i = 0; i < 50; i++) ta->AddRow();
   for(int i = 0; i < 50; i++) ta->AddColumn();
   AUICellData di;
-  di.hal = AUIHAlign::center;
-  di.val = AUIVAlign::center;
+  di.hAlign = AUIHAlign::center;
+  di.vAlign = AUIVAlign::center;
   di.data = "sta";
   ta->Insert(0, 0, &di);
   di.data = "ZZZ";
