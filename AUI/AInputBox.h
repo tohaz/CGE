@@ -21,7 +21,8 @@ namespace aui {
       std::atomic<bool> mStopBlink{false};
       bool mCursorVisible = true;
       bool mIsFocused = false;
-
+      std::function<void(AWidget* w, void* data)> OnValueChanged = nullptr;
+      void* mUserDataValueChanged = nullptr;
 
     protected:
     public:
@@ -37,6 +38,8 @@ namespace aui {
       void OnFocusOut([[maybe_unused]] XEvent* ev);
       void SetInputFilter(std::string f);
       virtual void SetText(std::string value);
+      void SetOnValueChangedCB(std::function<void(AWidget* w, void* arbdata)> func, void* data);
+
   };
 }
 

@@ -259,9 +259,9 @@ namespace aui {
                                   SafeINT32((UINT64)cell.data.length() * 7);
                               INT32 fontAscent = font_info ? (INT32)font_info->ascent : 12;
                               INT32 tx = SafeINT32(x_pos + 4);
-                              if (cell.hal == AUIHAlign::center) {
+                              if (cell.hAlign == AUIHAlign::center) {
                                   tx = SafeINT32(x_pos + (currentW - (INT64)textW) / 2);
-                              } else if (cell.hal == AUIHAlign::right) {
+                              } else if (cell.hAlign == AUIHAlign::right) {
                                   tx = SafeINT32(x_pos + currentW - (INT64)textW - 4);
                               }
                               INT32 ty = SafeINT32(y_pos + (INT64)fontAscent + 2);

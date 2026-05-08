@@ -23,11 +23,11 @@ namespace aui {
 
   typedef struct {
     std::string data = "";
-    AUIHAlign hal = AUIHAlign::center;
-    AUIVAlign val = AUIVAlign::center;
+    AUIHAlign hAlign = AUIHAlign::center;
+    AUIVAlign vAlign = AUIVAlign::center;
   } AUICellData;
 
-//  typedef struct {
+//  typedef1 struct {
 //    std::string name;
 //  } AUIColumnData;
 
@@ -82,7 +82,6 @@ namespace aui {
       bool mAllowRowResize = true;
       bool mRowHeaderResizeEnabled = true;
       bool mRowHeightResizeEnabled = true;
-
     public:
       virtual ~ATable();
       static  ATable* AttachTo(AWidget* wParent);

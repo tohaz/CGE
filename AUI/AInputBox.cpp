@@ -6,63 +6,66 @@
 namespace aui {
 
   AInputBox::AInputBox(AWidget *wParent) {
-      AUI *aui = wParent->AUIPtr();
-      Display* d = aui->Disp();
-      INT32 scr = aui->Scr();
-      SetAUIPtr(aui);
-      SetSize(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
-      SetWndParent(wParent);
-      UINT32 szx = SafeUINT32(SizeX());
-      UINT32 szy = SafeUINT32(SizeY());
-      SetType(AUIWidgetType::defaultInputBox);
-      SetTitle(std::string("InputBox"));
-      SetXY(AUI_DEFAULT_INPUT_X, AUI_DEFAULT_INPUT_Y);
-      SetSizeXY(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
-      SetBGColor(AUI_DEFAULT_INPUT_BG);
-      SetHAlign(AUIHAlign::right);
-      D2("Creating inputbox %ux%u", szx, szy)
-      InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
-          szx, szy, 1,
-          BlackPixel(d, scr), BGColor()));
-      XSelectInput(d, Wnd(), ExposureMask | ButtonReleaseMask| ButtonPressMask | KeyPressMask | FocusChangeMask);
-      D3("inputbox: disp=%lu, wnd=%lu, scr=%d, auiptr %lu", (INT64)d, (INT64)Wnd(), scr, (UINT64)aui)
-      XMapWindow(d, Wnd());
-      aui->AddWidget(this);
-      SetBorderSz(AUI_DEFAULT_INPUT_BORDERW);
-      mFilter = mFilterStr;
+    AUI *aui = wParent->AUIPtr();
+    Display *d = aui->Disp();
+    INT32 scr = aui->Scr();
+    SetAUIPtr(aui);
+    SetSize(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
+    SetWndParent(wParent);
+    UINT32 szx = SafeUINT32(SizeX());
+    UINT32 szy = SafeUINT32(SizeY());
+    SetType(AUIWidgetType::defaultInputBox);
+    SetTitle(std::string("InputBox"));
+    SetXY(AUI_DEFAULT_INPUT_X, AUI_DEFAULT_INPUT_Y);
+    SetSizeXY(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
+    SetBGColor(AUI_DEFAULT_INPUT_BG);
+    SetHAlign(AUIHAlign::right);
+    D2("Creating inputbox %ux%u", szx, szy)
+    InitWidgetProps(
+        XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+            szx, szy, 1, BlackPixel(d, scr), BGColor()));
+    XSelectInput(d, Wnd(),
+        ExposureMask | ButtonReleaseMask | ButtonPressMask | KeyPressMask
+            | FocusChangeMask);
+    D3("inputbox: disp=%lu, wnd=%lu, scr=%d, auiptr %lu", (INT64)d,
+        (INT64)Wnd(), scr, (UINT64)aui)
+    XMapWindow(d, Wnd());
+    aui->AddWidget(this);
+    SetBorderSz(AUI_DEFAULT_INPUT_BORDERW);
+    mFilter = mFilterStr;
 
-      // Start the blink thread
-      INT32 i32szx = SafeINT32(szx);
-      INT32 i32szy = SafeINT32(szy);
-      mBlinkThread = std::thread([this, i32szx, i32szy]() {
-        while (!mStopBlink) {
-          std::this_thread::sleep_for(std::chrono::milliseconds(500));
-          mCursorVisible = !mCursorVisible;
-          Display* d1 = AUIPtr()->Disp();
-          XExposeEvent ev;
-          ev.type = Expose;
-          ev.display = d1;
-          ev.window = Wnd();
-          ev.count = 0;
-          // These fields are technically required for an Expose event
-          ev.x = 0;
-          ev.y = 0;
-          ev.width = i32szx;
-          ev.height = i32szy;
-          XLockDisplay(d1);
-          XSendEvent(d1, Wnd(), False, ExposureMask, (XEvent*)&ev);
-          XFlush(d1);
-          XUnlockDisplay(d1);
-        }
-      });
-    }
+    // Start the blink thread
+    INT32 i32szx = SafeINT32(szx);
+    INT32 i32szy = SafeINT32(szy);
+    mBlinkThread = std::thread([this, i32szx, i32szy]() {
+      while (!mStopBlink) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        mCursorVisible = !mCursorVisible;
+        Display *d1 = AUIPtr()->Disp();
+        XExposeEvent ev;
+        ev.type = Expose;
+        ev.display = d1;
+        ev.window = Wnd();
+        ev.count = 0;
+        // These fields are technically required for an Expose event
+        ev.x = 0;
+        ev.y = 0;
+        ev.width = i32szx;
+        ev.height = i32szy;
+        XLockDisplay(d1);
+        XSendEvent(d1, Wnd(), False, ExposureMask, (XEvent*) &ev);
+        XFlush(d1);
+        XUnlockDisplay(d1);
+      }
+    });
+  }
 
-  AInputBox* AInputBox::AttachTo(AWidget* wParent) {
+  AInputBox* AInputBox::AttachTo(AWidget *wParent) {
     return new AInputBox(wParent);
   }
 
-  AInputBox* AInputBox::AttachTo(AWidget* wParent, std::string val) {
-    AInputBox* ib = AttachTo(wParent);
+  AInputBox* AInputBox::AttachTo(AWidget *wParent, std::string val) {
+    AInputBox *ib = AttachTo(wParent);
     ib->SetText(val);
     return ib;
   }
@@ -80,8 +83,9 @@ namespace aui {
     } else {
       XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
     }
-    INT32 totalW = XTextWidth(f, stringToDraw.c_str(), (int)stringToDraw.size());
-    INT32 textBeforeCursorW = XTextWidth(f, Text().c_str(), (int)mCursorPos);
+    INT32 totalW = XTextWidth(f, stringToDraw.c_str(),
+        (int) stringToDraw.size());
+    INT32 textBeforeCursorW = XTextWidth(f, Text().c_str(), (int) mCursorPos);
     INT32 fontHeight = f->ascent + f->descent;
     INT32 drawX = 0;
     INT32 drawY = 0;
@@ -111,56 +115,66 @@ namespace aui {
       default:
         break;
     }
-    XDrawString(d, w, gc, drawX, drawY, stringToDraw.c_str(), (int)stringToDraw.size());
-    if (mIsFocused && mCursorVisible) {
+    XDrawString(d, w, gc, drawX, drawY, stringToDraw.c_str(),
+        (int) stringToDraw.size());
+    if(mIsFocused && mCursorVisible) {
       int cursorX = drawX + textBeforeCursorW;
       int cursorYTop = drawY - f->ascent;
-      XDrawLine(d, w, gc, cursorX, cursorYTop, cursorX, cursorYTop + fontHeight);
+      XDrawLine(d, w, gc, cursorX, cursorYTop, cursorX,
+          cursorYTop + fontHeight);
     }
     XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
   }
 
   void AInputBox::OnKeyPress(XEvent *ev) {
     mCursorVisible = true;
-        KeySym keysym = XLookupKeysym(&ev->xkey, 0);
-        std::string k = XKeysymToString(keysym);
-        if(std::regex_match(k.c_str(), mFilter)) {
-          Text().insert(mCursorPos++, k);
-          D2("kb input '%s', data '%s'", k.c_str(), Text().c_str())
-        } else {
-          switch(string_to_case.count(k.c_str()) ? string_to_case.at(k.c_str()) : 0) {
-            case 0:
-              D1("Key pressed: '%s' and is filtered", k.c_str());
-              break;
-            case 1:
-              OnBackSpace();
-              break;
-            case 2:
-              D1("space pressed")
-              break;
-            case 3:
-              D1("enter pressed")
-              OnSubmit();
-              break;
-            case 4:
-              D1("NP enter pressed")
-              OnSubmit();
-              break;
-            case 5:
-              if (mCursorPos > 0) mCursorPos--;
-              break;
-            case 6:
-              if (mCursorPos < Text().size()) mCursorPos++;
-              break;
-            case 7:
-              if (mCursorPos < Text().size()) Text().erase(mCursorPos, 1);
-              break;
-            default:
-              E("strange value2(%lu)", string_to_case.at(k.c_str()))
-              break;
-          }
-        }
-        Draw();
+    std::string initialText = Text();
+    KeySym keysym = XLookupKeysym(&ev->xkey, 0);
+    std::string k = XKeysymToString(keysym);
+    if(std::regex_match(k.c_str(), mFilter)) {
+      Text().insert(mCursorPos++, k);
+      D2("kb input '%s', data '%s'", k.c_str(), Text().c_str())
+    } else {
+      switch (string_to_case.count(k.c_str()) ? string_to_case.at(k.c_str()) : 0) {
+        case 0:
+          D1("Key pressed: '%s' and is filtered", k.c_str())
+          ;
+          break;
+        case 1:
+          OnBackSpace();
+          break;
+        case 2:
+          D1("space pressed")
+          break;
+        case 3:
+          D1("enter pressed")
+          OnSubmit();
+          break;
+        case 4:
+          D1("NP enter pressed")
+          OnSubmit();
+          break;
+        case 5:
+          if(mCursorPos > 0)
+            mCursorPos--;
+          break;
+        case 6:
+          if(mCursorPos < Text().size())
+            mCursorPos++;
+          break;
+        case 7:
+          if(mCursorPos < Text().size())
+            Text().erase(mCursorPos, 1);
+          break;
+        default:
+          E("strange value2(%lu)", string_to_case.at(k.c_str()))
+          break;
+      }
+    }
+    if(initialText != Text()) {
+      OnValueChanged(this, mUserDataValueChanged);
+    }
+    Draw();
   }
 
   void AInputBox::OnButtonPress([[maybe_unused]]XEvent *ev) {
@@ -211,7 +225,15 @@ namespace aui {
   AInputBox::~AInputBox() {
     D3()
     mStopBlink = true;
-    if(mBlinkThread.joinable()) mBlinkThread.join();
+    if(mBlinkThread.joinable())
+      mBlinkThread.join();
   }
+
+  void AInputBox::SetOnValueChangedCB(std::function<void(AWidget *w, void *arbdata)> func, void *data) {
+    mUserDataValueChanged = data;
+    OnValueChanged = func;
+    D1()
+  }
+
 }
 

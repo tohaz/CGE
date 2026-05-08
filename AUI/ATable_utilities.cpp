@@ -43,10 +43,10 @@ namespace aui {
   }
 
   void ATable::SetColumnWidth(INT64 colIdx, INT64 width) {
-    D1()
+    D2()
     auto it = mColumnW.find(colIdx);
     if(it != mColumnW.end()) {
-      D1()
+      D2()
       INT64 diff = width - it->second.first;
       it->second.first = width;
       mTotalContentWidth += diff;

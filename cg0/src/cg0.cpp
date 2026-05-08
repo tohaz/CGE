@@ -25,18 +25,23 @@ void UpdateProcTable(UNUSED ATable *ta) {
   ta->SetColumnName(0, "PID");
   ta->SetColumnName(1, "Path");
   ta->SetColumnWidth(0, 75);
-  ta->SetColumnWidth(1, 400);
+  ta->SetColumnWidth(1, 423);
   ProcessDescr *pd;
   for (UNUSED const auto& [id, value] : pr) {
     pd = value;
     cell.data = pd->PidStr();
+    cell.hAlign = AUIHAlign::center;
     ta->Insert(row, 0, &cell);
     cell.data = pd->Path();
-    cell.hal = AUIHAlign::left;
+    cell.hAlign = AUIHAlign::left;
     ta->Insert(row++, 1, &cell);
   }
 
   D()
+}
+
+void InputBoxValueChangedHandler(UNUSED AWidget* w, UNUSED void* d) {
+  D("says hi")
 }
 
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
@@ -56,7 +61,8 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   UNUSED AInputBox* ib = AInputBox::AttachTo(wProcess, "");
   ib->SetTitle("Search");
   ib->Move(10, 10);
-//  UpdateProcTable(ta);
+  ib->SetOnValueChangedCB(InputBoxValueChangedHandler, 0);
+  UpdateProcTable(ta);
 }
 
 int main() {
