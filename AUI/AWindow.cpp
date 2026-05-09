@@ -19,7 +19,7 @@ namespace aui {
   }
 
   void AWindow::InitWindow() {
-    D3("sizeof window %lu", sizeof(AWindow))
+    D1("sizeof window %lu", sizeof(AWindow))
     SetType(AUIWidgetType::defaultWindow);
     SetBGColor(AUI_DEFAULT_WINDOW_BG);
     AUI* cg = AUIPtr();
@@ -76,7 +76,7 @@ namespace aui {
 
   AWindow::~AWindow() {
     D3("entering CGWindow destructor")
-    D3("leaving CGWindow destructor")
+//    D3("leaving CGWindow destructor")
   }
 
 }

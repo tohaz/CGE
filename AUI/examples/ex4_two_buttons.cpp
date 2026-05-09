@@ -21,6 +21,8 @@ int main() {
   AButton* bnt = AButton::AttachTo(w, "Test");
 	bnt->Move(100, 10);
   bnt->SetOnButtonReleaseCB(ButtonTestHandler, nullptr);
+  bnt->SetStyle(AUIWidgetStyle::Simple3D);
+  bnt->SetPressDepth(0);
 
   au->ProcessMessages();
 

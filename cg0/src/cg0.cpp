@@ -1,6 +1,5 @@
 #include <cassert>
 #include <AUILib.h>
-
 #include "ProcessList.h"
 
 using namespace aui;
@@ -8,6 +7,8 @@ using namespace cg;
 using namespace std::chrono;
 
 ProcessList pr;
+
+
 
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
@@ -22,7 +23,6 @@ void UpdateProcTable(ATable *ta, UNUSED std::string filter) {
   ta->Clear();
   ta->DisableRowHeader();
   ta->AddColumns(2);
-//  ta->AddRows(SafeUINT32((UINT64)pr.Size()));
   ta->SetColumnName(0, "PID");
   ta->SetColumnName(1, "Path");
   ta->SetColumnWidth(0, 75);
@@ -49,6 +49,12 @@ void InputBoxValueChangedHandler(UNUSED AWidget* w, void* d) {
   ta->Draw();
 }
 
+void ButtonSelectHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
+  D1()
+  AButton* b = (AButton*) w;
+  b->ParentWidget()->Close();
+}
+
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   D3()
   AUI* au = w->AUIPtr();
@@ -60,13 +66,17 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   ATable* ta = ATable::AttachTo(wProcess);
   ta->Resize(500, 400);
   ta->Move(10, 40);
-  UNUSED AButton* bProcOK = AButton::AttachTo(wProcess, "Choose");
-  bProcOK->Resize(80, 20);
-  bProcOK->Move(530, 10);
-  UNUSED AInputBox* ib = AInputBox::AttachTo(wProcess, "");
+  UNUSED AButton* bSelect = AButton::AttachTo(wProcess, "Select");
+  bSelect->Resize(80, 20);
+  bSelect->Move(530, 10);
+  bSelect->SetOnButtonReleaseCB(ButtonSelectHandler, w);
+  AInputBox* ib = AInputBox::AttachTo(wProcess, "");
   ib->SetTitle("Search");
   ib->Move(10, 10);
+  ib->Resize(100,25);
   ib->SetOnValueChangedCB(InputBoxValueChangedHandler, ta);
+  ib->SetStyle(AUIWidgetStyle::Flat);
+  ib->SetPressDepth(1);
   UpdateProcTable(ta, "");
 }
 
@@ -74,9 +84,19 @@ int main() {
   time_point<high_resolution_clock> start = high_resolution_clock::now();
   UNUSED AUI* cg = AUI::Create("cg0 main");
   AWindow* w = cg->MainWnd();
+  w->EnableResize();
+  w->Resize(1024, 768);
+  w->DisableResize();
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
   bOpenProc->Resize(100, 20);
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
+  bOpenProc->SetStyle(AUIWidgetStyle::Simple3D);
+  bOpenProc->SetPressDepth(0);
+  UNUSED ALabel* lb = ALabel::AttachTo(w, "Select process");
+  lb->Move(120, 8);
+  lb->Resize(1024, 30);
+  lb->SetHAlign(AUIHAlign::left);
+  lb->SetVAlign(AUIVAlign::center);
   //ButtonProcessesHandler(0, w, 0);
   StopTimer(start);
   cg->ProcessMessages();

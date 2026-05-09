@@ -371,6 +371,10 @@ namespace aui {
     if(!aui || Wnd() == 0)
       return;
     Display *d = aui->Disp();
+    if(mRenderPicture != None) {
+      XRenderFreePicture(d, mRenderPicture);
+      mRenderPicture = None;
+    }
     if(mBackBuffer) {
       XFreePixmap(d, mBackBuffer);
       mBackBuffer = 0;
@@ -378,7 +382,12 @@ namespace aui {
     XWindowAttributes watt;
     XGetWindowAttributes(d, Wnd(), &watt);
     if(SizeX() > 0 && SizeY() > 0) {
-      mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()), SafeUINT32(SizeY()), (UINT32)watt.depth);
+      mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
+          SafeUINT32(SizeY()), (UINT32) watt.depth);
+      XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
+      if(fmt) {
+        mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0, nullptr);
+      }
     }
   }
 
@@ -410,7 +419,7 @@ namespace aui {
       }
       else {
           DS()
-          D("resize is disabled for widget, call EnableResize() if needed")
+          D("==========resize is disabled for widget, call EnableResize() if needed")
       }
       Draw();
   }
@@ -484,6 +493,26 @@ namespace aui {
     }
   }
 
+  void AWidget::Close() {
+    mAUI->RemoveWidget(mWindow);
+  }
+
+  void AWidget::SetStyle(AUIWidgetStyle style) {
+      if (mStyle == style) return;
+      mStyle = style;
+      UpdateBuffer(); // Picture пересоздастся в базовом UpdateBuffer
+      Draw();
+  }
+
+  void AWidget::SetPressDepth(int depth) {
+      mDepth = (depth < 0) ? 0 : (depth > 15) ? 15 : depth;
+      Draw();
+  }
+
+  AUIWidgetStyle AWidget::Style() const {
+    return mStyle;
+  }
+
   AWidget::~AWidget() {
     D3("widget '%s' destructor active", mTitle.c_str());
     // 1. CRITICAL: Unregister from the global AUI map FIRST.
@@ -494,6 +523,10 @@ namespace aui {
     // 2. Recursively delete children (Bottom-Up C++ destruction)
     DestroyChildWidgets();
     Display *d = mAUI->Disp();
+    if(mRenderPicture != None) {
+        XRenderFreePicture(d, mRenderPicture);
+        mRenderPicture = None;
+    }
     // 3. Resource Cleanup
     if(mFont != 0) {
       D2("freeing font %lu", (UINT64)mFont);

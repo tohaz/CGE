@@ -60,7 +60,7 @@ else
 endif
 
 CPPFLAGS := -I$(AUI_ROOT)
-LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor
+LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor -lXrender
 
 # Source and Target discovery
 # Every .cpp file becomes a separate executable in $(BUILD_DIR)

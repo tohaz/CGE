@@ -10,6 +10,8 @@
 namespace aui {
 
   class AUI;
+  typedef UINT64 Picture;
+
 
   class AWidget {
     private:
@@ -49,6 +51,9 @@ namespace aui {
       void SetWndParent(AWidget* wParent);
       void UpdateBuffer();
       void SetSize(UINT64 szx, UINT64 szy);
+      Picture mRenderPicture = None;
+      AUIWidgetStyle mStyle = AUIWidgetStyle::Flat;
+      INT32 mDepth = 0;
 
     public:
       AWidget();
@@ -110,7 +115,10 @@ namespace aui {
       void CorrectNegativeCoordinates(XEvent& event);
       void CorrectCoordinateX(INT32 &x);
       void CorrectCoordinateY(INT32 &y);
-
+      void Close();
+      void SetStyle(AUIWidgetStyle style);
+      void SetPressDepth(int depth);
+      AUIWidgetStyle Style() const;
   };
 }
 

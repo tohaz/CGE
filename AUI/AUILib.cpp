@@ -6,7 +6,6 @@
 #include "AWindow.h"
 
 namespace aui {
-
   UINT32 HLColor(UINT32 ci) {
     RGBAColor c;
     c.value = ci;

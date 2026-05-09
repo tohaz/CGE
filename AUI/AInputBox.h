@@ -8,6 +8,7 @@
 #include "AWidget.h"
 
 namespace aui {
+  void draw_3d_baguette(Display *dpy, Window win, GC gc, int x, int y, int w, int h);
 
   class AInputBox : public AWidget{
     private:
@@ -23,6 +24,8 @@ namespace aui {
       bool mIsFocused = false;
       std::function<void(AWidget* w, void* data)> OnValueChanged = nullptr;
       void* mUserDataValueChanged = nullptr;
+      INT32 mInnerInset = 3;
+
 
     protected:
     public:

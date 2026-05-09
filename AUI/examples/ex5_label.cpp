@@ -6,7 +6,7 @@ int main() {
   AUI* au = AUI::Create("ex5");
   AWindow* w = au->MainWnd();
 
-  ALabel* lb = ALabel::AttachTo(w, "Helloworld, but with label");
+  ALabel* lb = ALabel::AttachTo(w, "Helloworld, but with a label");
   lb->Resize(250, 20);
 
   au->ProcessMessages();

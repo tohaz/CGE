@@ -44,17 +44,13 @@ INT32 AutowidenTest(ATable *ta) {
   ta->AddRows(5);
   ta->SetColumnWidth(0, 1);
   ta->SetAutoWiden(true);
-  di.data = "qqqqqq";
+  di.data = "some decently long string";
   ta->Insert(0, 0, &di);
   if(ta->GetColumnWidth(0) > 10) {
     D("Column Autowiden test passed(%ld)\n", ta->GetColumnWidth(0))
     return 0;
   }
-  else {
-  	D("Column autowiden test failed")
-  }
-
-
+	D("Column autowiden test failed")
 	return 1;
 }
 

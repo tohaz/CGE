@@ -3,6 +3,7 @@
 
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
+#include <X11/extensions/Xrender.h>
 #include <sys/types.h>
 #include <cerrno>
 #include <chrono>
@@ -28,8 +29,6 @@
 #include "AWidget.h"
 #include "AWindow.h"
 #include "defaults.h"
-
-
 
 namespace aui {
 #pragma GCC push_options

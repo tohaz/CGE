@@ -64,7 +64,7 @@ else
 endif
 
 CPPFLAGS := -I$(AUI_ROOT)
-LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor
+LIBS     := -lAUI -lX11 -lX11-xcb -lxcb -lxcb-cursor -lXrender
 
 # Source and Object discovery
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)

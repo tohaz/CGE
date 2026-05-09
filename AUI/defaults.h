@@ -10,7 +10,6 @@
 #define DEBUG_LEVEL 1
 
 #define UNUSED [[maybe_unused]]
-inline void print_stack();
 
 inline void print_stack() {
   void* buffer[64];
@@ -162,6 +161,11 @@ enum class AUIVAlign {
   center = 1,
   top = 2,
   bottom = 3
+};
+
+enum class AUIWidgetStyle {
+    Flat = 1,
+    Simple3D = 2
 };
 
 #ifndef AUI_GIT_VERSION

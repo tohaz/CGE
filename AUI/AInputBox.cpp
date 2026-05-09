@@ -23,7 +23,7 @@ namespace aui {
     D2("Creating inputbox %ux%u", szx, szy)
     InitWidgetProps(
         XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
-            szx, szy, 1, BlackPixel(d, scr), BGColor()));
+            szx, szy, 0, BlackPixel(d, scr), BGColor()));
     XSelectInput(d, Wnd(),
         ExposureMask | ButtonReleaseMask | ButtonPressMask | KeyPressMask
             | FocusChangeMask);
@@ -31,7 +31,7 @@ namespace aui {
         (INT64)Wnd(), scr, (UINT64)aui)
     XMapWindow(d, Wnd());
     aui->AddWidget(this);
-    SetBorderSz(AUI_DEFAULT_INPUT_BORDERW);
+    SetBorderSz(0);
     mFilter = mFilterStr;
 
     // Start the blink thread
@@ -71,60 +71,76 @@ namespace aui {
   }
 
   void AInputBox::Draw() {
-    Display *d = AUIPtr()->Disp();
-    Window w = Wnd();
-    GC gc = GCPtr();
-    XFontStruct *f = Font();
-    XClearWindow(d, w);
-    bool showHint = Text().empty() && !mIsFocused;
-    std::string stringToDraw = showHint ? Title() : Text();
-    if(showHint) {
-      XSetForeground(d, gc, 0x000000);
-    } else {
-      XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
-    }
-    INT32 totalW = XTextWidth(f, stringToDraw.c_str(),
-        (int) stringToDraw.size());
-    INT32 textBeforeCursorW = XTextWidth(f, Text().c_str(), (int) mCursorPos);
-    INT32 fontHeight = f->ascent + f->descent;
-    INT32 drawX = 0;
-    INT32 drawY = 0;
-    switch (HAlign()) {
-      case AUIHAlign::left:
-        drawX = 5;
-        break;
-      case AUIHAlign::center:
-        drawX = (SafeINT32(SizeX()) - totalW) / 2;
-        break;
-      case AUIHAlign::right:
-        drawX = SafeINT32(SizeX()) - totalW - 5;
-        break;
-      default:
-        break;
-    }
-    switch (VAlign()) {
-      case AUIVAlign::top:
-        drawY = f->ascent + 5;
-        break;
-      case AUIVAlign::center:
-        drawY = (SafeINT32(SizeY()) + f->ascent - f->descent) / 2;
-        break;
-      case AUIVAlign::bottom:
-        drawY = SafeINT32(SizeY()) - f->descent - 5;
-        break;
-      default:
-        break;
-    }
-    XDrawString(d, w, gc, drawX, drawY, stringToDraw.c_str(),
-        (int) stringToDraw.size());
-    if(mIsFocused && mCursorVisible) {
-      int cursorX = drawX + textBeforeCursorW;
-      int cursorYTop = drawY - f->ascent;
-      XDrawLine(d, w, gc, cursorX, cursorYTop, cursorX,
-          cursorYTop + fontHeight);
-    }
-    XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
+      Display* dpy = AUIPtr()->Disp();
+      Window win = Wnd();
+      GC gc = GCPtr();
+
+      int b = AUI_DEFAULT_INPUT_BORDERW;
+      int w = SafeINT32(SizeX());
+      int h = SafeINT32(SizeY());
+      int offset = b;
+
+      // 1. ОТРИСОВКА РАМКИ
+      if (Style() == AUIWidgetStyle::Simple3D) {
+          // Объявляем массивы точек для каждой стороны (трапеции)
+          XPoint topP[4]    = {{0, 0}, {SafeINT16(w), 0}, {SafeINT16(w - b), SafeINT16(b)}, {SafeINT16(b), SafeINT16(b)}};
+          XPoint leftP[4]   = {{0, 0}, {0, SafeINT16(h)}, {SafeINT16(b), SafeINT16(h - b)}, {SafeINT16(b), SafeINT16(b)}};
+          XPoint bottomP[4] = {{0, SafeINT16(h)}, {SafeINT16(w), SafeINT16(h)}, {SafeINT16(w - b), SafeINT16(h - b)}, {SafeINT16(b), SafeINT16(h - b)}};
+          XPoint rightP[4]  = {{SafeINT16(w), 0}, {SafeINT16(w), SafeINT16(h)}, {SafeINT16(w - b), SafeINT16(h - b)}, {SafeINT16(w - b), SafeINT16(b)}};
+
+          XSetForeground(dpy, gc, 0xFFFFFF); // Свет сверху и слева
+          XFillPolygon(dpy, win, gc, topP, 4, Convex, CoordModeOrigin);
+          XFillPolygon(dpy, win, gc, leftP, 4, Convex, CoordModeOrigin);
+
+          XSetForeground(dpy, gc, 0x808080); // Тень снизу и справа
+          XFillPolygon(dpy, win, gc, bottomP, 4, Convex, CoordModeOrigin);
+          XFillPolygon(dpy, win, gc, rightP, 4, Convex, CoordModeOrigin);
+
+          XSetForeground(dpy, gc, 0x000000); // Внутренняя черная рамка
+          XDrawRectangle(dpy, win, gc, b, b, SafeUINT32(w - 2*b - 1), SafeUINT32(h - 2*b - 1));
+
+          offset = b + 1;
+      } else {
+          XSetForeground(dpy, gc, 0x000000);
+          XFillRectangle(dpy, win, gc, 0, 0, SafeUINT32(w), SafeUINT32(h));
+      }
+
+      // 2. ЗАЛИВКА ФОНА (фон рисуется ПЕРЕД текстом)
+      XSetForeground(dpy, gc, BGColor());
+      XFillRectangle(dpy, win, gc, offset, offset, SafeUINT32(w - 2 * offset), SafeUINT32(h - 2 * offset));
+
+      // 3. ОТРИСОВКА ТЕКСТА
+      if (Font()) {
+          XSetFont(dpy, gc, Font()->fid);
+          XSetForeground(dpy, gc, AUI_DEFAULT_INPUT_FG);
+
+          int textLen = SafeINT32(Text().length());
+          int textW = XTextWidth(Font(), Text().c_str(), textLen);
+          int textH = Font()->ascent + Font()->descent;
+
+          // Горизонтальное выравнивание
+          int textX = offset + mInnerInset;
+          if (HAlign() == AUIHAlign::center) textX = (w - textW) / 2;
+          else if (HAlign() == AUIHAlign::right) textX = w - textW - offset - mInnerInset;
+
+          // Вертикальное центрирование
+          int textY = (h - textH) / 2 + Font()->ascent;
+
+          XDrawString(dpy, win, gc, textX, textY, Text().c_str(), textLen);
+
+          // 4. КУРСОР
+          if (mIsFocused && mCursorVisible) {
+              int cursorX = textX + XTextWidth(Font(), Text().c_str(), SafeINT32(mCursorPos));
+              XSetForeground(dpy, gc, 0x000000);
+              XFillRectangle(dpy, win, gc,
+                             cursorX,
+                             textY - Font()->ascent,
+                             SafeUINT32(mCursorW),
+                             SafeUINT32(textH));
+          }
+      }
   }
+
 
   void AInputBox::OnKeyPress(XEvent *ev) {
     mCursorVisible = true;
