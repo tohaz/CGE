@@ -20,14 +20,14 @@ namespace aui {
     SetSizeXY(AUI_DEFAULT_INPUT_SZX, AUI_DEFAULT_INPUT_SZY);
     SetBGColor(AUI_DEFAULT_INPUT_BG);
     SetHAlign(AUIHAlign::right);
-    D2("Creating inputbox %ux%u", szx, szy)
+    D2("Creating inputbox %ux{}", szx, szy)
     InitWidgetProps(
         XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
             szx, szy, 0, BlackPixel(d, scr), BGColor()));
     XSelectInput(d, Wnd(),
         ExposureMask | ButtonReleaseMask | ButtonPressMask | KeyPressMask
             | FocusChangeMask);
-    D3("inputbox: disp=%lu, wnd=%lu, scr=%d, auiptr %lu", (INT64)d,
+    D3("inputbox: disp={}, wnd={}, scr={}, auiptr {}", (INT64)d,
         (INT64)Wnd(), scr, (UINT64)aui)
     XMapWindow(d, Wnd());
     aui->AddWidget(this);
@@ -169,11 +169,11 @@ namespace aui {
     std::string k = XKeysymToString(keysym);
     if(std::regex_match(k.c_str(), mFilter)) {
       Text().insert(mCursorPos++, k);
-      D2("kb input '%s', data '%s'", k.c_str(), Text().c_str())
+      D2("kb input '{}', data '{}'", k.c_str(), Text().c_str());
     } else {
       switch (string_to_case.count(k.c_str()) ? string_to_case.at(k.c_str()) : 0) {
         case 0:
-          D1("Key pressed: '%s' and is filtered", k.c_str())
+          D1("Key pressed: '{}' and is filtered", k.c_str());
           ;
           break;
         case 1:
@@ -203,7 +203,7 @@ namespace aui {
             Text().erase(mCursorPos, 1);
           break;
         default:
-          E("strange value2(%lu)", string_to_case.at(k.c_str()))
+          E("strange value2({})", string_to_case.at(k.c_str()))
           break;
       }
     }
@@ -214,12 +214,12 @@ namespace aui {
   }
 
   void AInputBox::OnButtonPress([[maybe_unused]]XEvent *ev) {
-    D3("Requesting focus for window %lu", (UINT64)Wnd())
+    D3("Requesting focus for window {}", (UINT64)Wnd())
     XSetInputFocus(AUIPtr()->Disp(), Wnd(), RevertToParent, CurrentTime);
   }
 
   void AInputBox::OnButtonRelease([[maybe_unused]]XEvent *ev) {
-    D3()
+    D3();
   }
 
   void AInputBox::SetInputFilter(std::string f) {
@@ -232,7 +232,7 @@ namespace aui {
     if(Text().size() > 0 && mCursorPos > 0) {
       Text().erase(mCursorPos - 1, 1);
       mCursorPos--;
-      D2("deleting character, new pos %lu", mCursorPos)
+      D2("deleting character, new pos {}", mCursorPos)
     } else {
       D2("data empty or cursor at start")
     }

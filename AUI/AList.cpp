@@ -42,29 +42,29 @@ namespace aui {
     GC gc = GCPtr();
     XFontStruct *fo = Font();
     Display *d = AUIPtr()->Disp();
-    D2("list size in strings %lu, offset %ld", numStringsData, mVOffset)
+    D2("list size in strings {}, offset {}", numStringsData, mVOffset)
     XTextExtents(fo, "123456789WTL", 12, &direction, &ascent, &descent,
         &overall);
-    D3("text extents direction %u, ascent %u, descent %u", direction, ascent,
+    D3("text extents direction {}, ascent {}, descent {}", direction, ascent,
         descent)
     mTextY = SafeUINT64(ascent + descent);
     if(mData.size() > 0) {
       if(mTextY == 0)
-        E("font reported zero height");
+        {E("font reported zero height");}
       numStringsMax = sizeY / mTextY + 1;
-      D2("num strings to display max %lu", numStringsMax)
+      D2("num strings to display max {}", numStringsMax)
       if(numStringsMax > numStringsData) {
         numStringsMax = numStringsData;
-        D2("reducing number of displayed strings to %lu", numStringsMax)
+        D2("reducing number of displayed strings to {}", numStringsMax)
       } else
-        D2("not reducing number of displayed strings, data %lu", numStringsData)
+        D2("not reducing number of displayed strings, data {}", numStringsData)
       UINT64 sBegin = 0; // index of first string to draw
       UINT64 sEnd = 0; // last to draw
       if(mVOffset > 0) {
         sBegin = SafeUINT64(mVOffset) / mTextY;
-        D2("applying offset %lu, begin string %lu", mVOffset, sBegin)
+        D2("applying offset {}, begin string {}", mVOffset, sBegin);
       } else
-        D2("not applying offset")
+        D2("not applying offset");
       if(sBegin > numStringsData - 1) {
         D2("scroll down limit")
         sBegin = numStringsData - 1;
@@ -74,7 +74,7 @@ namespace aui {
       if(sEnd > numStringsData - 1) {
         sEnd = numStringsData - 1;
       }
-      D3("drawing strings from %lu to %lu", sBegin, sEnd)
+      D3("drawing strings from {} to {}", sBegin, sEnd)
       XClearWindow(d, wi);
       for (UINT64 i = sBegin; i <= sEnd; i++) {
         if(mTag[i])
@@ -98,7 +98,7 @@ namespace aui {
           XTextWidth(f, s.c_str(), static_cast<int>(s.size())));
       if(width > mMaxWidthPx) {
         mMaxWidthPx = width;
-        D2("New max width: %lu px", mMaxWidthPx)
+        D2("New max width: {} px", mMaxWidthPx)
       }
     } else {
       E("AList::AddItem - Font not initialized");

@@ -90,7 +90,7 @@ namespace aui {
       std::string ColumnName(INT64 colIdx);
       UINT64 Columns();
       void AddRows(UINT32 number);
-      void AddRow();
+      INT64 AddRow();
       void Clear();
       void DisableRowHeader();
       void Draw();
@@ -120,6 +120,9 @@ namespace aui {
       void OnButtonRelease(XEvent *ev);
       void OnMouseMove(XEvent *ev);
       void SetCursorPosition(INT64 row, INT64 column);
+      INT64 CursorRow();
+      INT64 CursorColumn();
+      std::string CursorData();
 
   };
 }

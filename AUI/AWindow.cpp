@@ -19,13 +19,13 @@ namespace aui {
   }
 
   void AWindow::InitWindow() {
-    D3("sizeof window %lu", sizeof(AWindow))
+    D3("sizeof window {}", sizeof(AWindow))
     SetType(AUIWidgetType::defaultWindow);
     SetBGColor(AUI_DEFAULT_WINDOW_BG);
     AUI* cg = AUIPtr();
     Display* d = cg->Disp();
     INT32 scr = cg->Scr();
-    D3("wnd %lu, disp %lu, screen %lu", (UINT64)Wnd(), (UINT64)d, (UINT64)scr)
+    D3("wnd {}, disp {}, screen {}", (UINT64)Wnd(), (UINT64)d, (UINT64)scr)
     SetSizeXY(AUI_DEFAULT_WINDOW_SZX, AUI_DEFAULT_WINDOW_SZY);
     if(!ParentWidget()) {
       D3("creating rooted window")

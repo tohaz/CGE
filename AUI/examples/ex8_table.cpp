@@ -7,7 +7,7 @@ using namespace std::chrono;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start;
-  D("time: %f ms", duration_ms1.count());
+  D("time: {} ms", duration_ms1.count());
 }
 
 void AddRowHandler(UNUSED XEvent* ev, UNUSED AWidget* w, void* d) {
@@ -117,7 +117,7 @@ int main() {
   bD->SetOnButtonReleaseCB(MoveDownHandler, ta);
   bD->Move(373, 290);
 
-  D1("table size [%lu, %lu]", ta->Rows(), ta->Columns())
+  D1("table size [{}, {}]", ta->Rows(), ta->Columns())
 
   StopTimer(start);
   au->ProcessMessages();

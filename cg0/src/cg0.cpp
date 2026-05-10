@@ -11,11 +11,11 @@ ProcessList pr;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
-  D1("init time: %f ms", duration_ms1.count());
+  D1("init time: {} ms", duration_ms1.count());
 }
 
 void UpdateProcTable(ATable *ta, UNUSED std::string filter) {
-  D("filter:%s", filter.c_str())
+  D("filter:{}", filter.c_str())
   INT64 row = 0;
   UNUSED AUICellData cell;
   ta->Clear();
@@ -26,10 +26,11 @@ void UpdateProcTable(ATable *ta, UNUSED std::string filter) {
   ta->SetColumnWidth(0, 75);
   ta->SetColumnWidth(1, 423);
   ProcessDescr *pd;
-  for (UNUSED const auto& [id, value] : pr) {
+  for (const auto& [id, value] : pr) {
     pd = value;
     if(pd->Path().contains(filter) || pd->PidStr().contains(filter)) {
-      ta->AddRow();
+      INT64 realIdx = ta->AddRow();
+      D("Inserting row: realIdx={}, manualRow={}", realIdx, row);
       cell.data = pd->PidStr();
       cell.hAlign = AUIHAlign::center;
       ta->Insert(row, 0, &cell);
@@ -50,13 +51,16 @@ void InputBoxValueChangedHandler(UNUSED AWidget* w, void* d) {
 void ButtonSelectHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   D1()
   AButton* b = (AButton*) w;
+  ATable* ta = (ATable*)d;
+  std::string zzz = ta->CursorData();
+  D1("cursor data '{}'", zzz.c_str())
   b->ParentWidget()->Close();
 }
 
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   D3()
   AUI* au = w->AUIPtr();
-  UNUSED AWindow* wProcess = AWindow::AttachTo(au, "Open process");
+  AWindow* wProcess = AWindow::AttachTo(au, "Open process");
   wProcess->Move(1000, 500);
   wProcess->EnableResize();
   wProcess->Resize(640, 450);
@@ -64,10 +68,10 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   ATable* ta = ATable::AttachTo(wProcess);
   ta->Resize(500, 400);
   ta->Move(10, 40);
-  UNUSED AButton* bSelect = AButton::AttachTo(wProcess, "Select");
+  AButton* bSelect = AButton::AttachTo(wProcess, "Select");
   bSelect->Resize(80, 20);
   bSelect->Move(530, 10);
-  bSelect->SetOnButtonReleaseCB(ButtonSelectHandler, w);
+  bSelect->SetOnButtonReleaseCB(ButtonSelectHandler, ta);
   AInputBox* ib = AInputBox::AttachTo(wProcess, "");
   ib->SetTitle("Search");
   ib->Move(10, 10);

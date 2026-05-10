@@ -34,7 +34,7 @@ BASE_FLAGS := -fmax-errors=15 -std=c++26 -pedantic -pedantic-errors -Wall -Wextr
               -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-promo \
               -Wstrict-null-sentinel -Wswitch-default -Wundef -Wfloat-equal \
               -Wconversion -Wsign-conversion -MMD -MP
-
+              
 GIT_VERSION := $(shell git describe --always --dirty --tags 2>/dev/null || echo "unknown")
 BASE_FLAGS  += -DAUI_GIT_VERSION=\"$(GIT_VERSION)\"              
               

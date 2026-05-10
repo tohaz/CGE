@@ -26,14 +26,14 @@ namespace aui {
   }
 
   AUI::AUI() {
-    D3("AUI sizeof %lu", sizeof(AUI))
+    D3("AUI sizeof {}", sizeof(AUI))
     mDisplay = XOpenDisplay(NULL);
     XInitThreads();
-    if (mDisplay == NULL) E("Cannot open default display")
-    D3("opened display %lu", (UINT64)mDisplay)
+    if(mDisplay == NULL) {E("Cannot open default display")}
+    D3("opened display {}", (UINT64)mDisplay)
     mScreen = DefaultScreen(mDisplay);
     CreateMainWindow();
-    D3("init finished, widget size %lu, short size %lu, int %lu, long %lu, float %lu, double %lu, ptr %lu",
+    D("init finished, widget size {}, short size {}, int {}, long {}, float {}, double {}, ptr {}",
         sizeof(AWidget),
         sizeof(short), sizeof(int), sizeof(long),
         sizeof(float), sizeof(double), sizeof(void*))
@@ -91,25 +91,25 @@ namespace aui {
             }
             break;
           case NoExpose:
-            D3("NoExpose event for widget %lu", (UINT64)targetWin)
+            D3("NoExpose event for widget {}", (UINT64)targetWin)
             break;
           case ButtonPress:
-            D3("ButtonPress event for widget %lu", (UINT64)targetWin)
+            D3("ButtonPress event for widget {}", (UINT64)targetWin)
             widget->CorrectCoordinates(event);
             widget->OnButtonPress(&event);
 
             break;
           case ButtonRelease:
-            D3("ButtonRelease event for widget %lu", (UINT64)targetWin)
+            D3("ButtonRelease event for widget {}", (UINT64)targetWin)
             widget->CorrectCoordinates(event);
             widget->OnButtonRelease(&event);
             break;
           case MotionNotify:
-            D3("MotionNotify event for widget %lu", (UINT64)targetWin)
+            D3("MotionNotify event for widget {}", (UINT64)targetWin)
             widget->OnMouseMove(&event);
             break;
           case KeyPress:
-            D2("KeyPress event for widget %lu", (UINT64)targetWin)
+            D2("KeyPress event for widget {}", (UINT64)targetWin)
             widget->OnKeyPress(&event);
             break;
           case FocusIn:
@@ -122,25 +122,25 @@ namespace aui {
             break;
           case ClientMessage:
             if(targetWin == mMainWnd->Wnd()) {
-              D1("Shutting down AUI (version '%s')", AUI_GIT_VERSION)
+              D1("Shutting down AUI (version '{}')", AUI_GIT_VERSION)
               ExitAUI();
               return;
             } else {
-              D2("Closing secondary window %lu", (UINT64)targetWin)
+              D2("Closing secondary window {}", (UINT64)targetWin)
               RemoveWidget(targetWin);
             }
             break;
           case ConfigureNotify:
-            D3("ConfigureNotify for widget %lu", (UINT64)targetWin)
+            D3("ConfigureNotify for widget {}", (UINT64)targetWin)
             break;
           case UnmapNotify:
           case MapNotify:
           case ReparentNotify:
-            D3("System notification %d for window %lu", event.type,
+            D3("System notification %d for window {}", event.type,
                 (UINT64)targetWin)
             break;
           default:
-            D("Event %d not processed for widget", event.type)
+            D("Event {} not processed for widget", event.type)
             break;
         }
       }
@@ -152,7 +152,7 @@ namespace aui {
           }
         }
         else {
-          D2("Event %d for non-registered window %lu", event.type,
+          D2("Event {} for non-registered window {}", event.type,
               (UINT64)targetWin)
         }
       }
@@ -173,7 +173,7 @@ namespace aui {
   void AUI::AddWidget(AWidget *w) {
     AWidget* wp = w->ParentWidget();
     mWidg.insert({w->Wnd(), w});
-    D2("adding widget type %u, reg sz=%lu, wnd %lu", (UINT32)w->Type(), mWidg.size(), w->Wnd())
+    D2("adding widget type {}, reg sz={}, wnd {}", (UINT32)w->Type(), mWidg.size(), w->Wnd())
     if(wp != 0) {
       D3("widg has parent")
       wp->AddWidgetChild(w);
@@ -201,13 +201,13 @@ namespace aui {
     }
     else {
       DS1()
-      E("attempt to erase missing key %lu", (UINT64)w)
+      E("attempt to erase missing key {}", (UINT64)w)
     }
   }
 
   void AUI::CloseDisplay() {
     if(mDisplay != 0) {
-      D2("freeing display %lu", (UINT64)mDisplay)
+      D2("freeing display {}", (UINT64)mDisplay)
       XCloseDisplay(mDisplay);
       mDisplay = 0;
     }
@@ -224,7 +224,7 @@ namespace aui {
   void AUI::RemoveWidget(Window w) {
     // 1. Check if it exists in the global map
     if(!mWidg.contains(w)) {
-      D2("Attempted to remove non-registered window %lu", (UINT64)w);
+      D2("Attempted to remove non-registered window {}", (UINT64)w);
       return;
     }
     AWidget *wi = mWidg[w];
@@ -264,12 +264,12 @@ namespace aui {
     if(CGXEventNames.contains(uEv)) {
       return CGXEventNames.at(uEv).c_str();
     }
-    E("unknown event encountered: %d", ev);
+    E("unknown event encountered: {}", ev);
     return "unknown";
   }
 
   std::string AUI::NumberToBaseString(UINT64 n) {
-    D3("entering with '%lu', alphabet len '%lu'", n, mAlphabetLen)
+    D3("entering with '{}', alphabet len '{}'", n, mAlphabetLen)
     std::string result = "";
     do {
       result += BaseAlphabet[n % mAlphabetLen];
@@ -281,7 +281,7 @@ namespace aui {
       }
     } while (true);
     std::reverse(result.begin(), result.end());
-    D3("'%s'", result.c_str())
+    D3("'{}'", result.c_str())
     return result;
   }
 
@@ -289,7 +289,7 @@ namespace aui {
     D3("============AUI destructor starts");
     UNUSED size_t threadId = std::hash<std::thread::id> { }(
         std::this_thread::get_id());
-    D2("ExitAUI called from thread %lu", (UINT64)threadId);
+    D2("ExitAUI called from thread {}", (UINT64)threadId);
     mShouldExit = true;
     // 1. Delete the Main Window first.
     // This triggers recursive destruction of all children via ~AWidget.

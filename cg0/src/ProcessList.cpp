@@ -5,12 +5,12 @@
 namespace cg {
   ProcessDescr::ProcessDescr(UNUSED std::string pidStr, UNUSED std::string path) {
     D3("===New descriptor");
-    D3("%s %s", path.c_str(), pidStr.c_str());
+    D3("{} {}", path.c_str(), pidStr.c_str());
     mPath = path;
     mPidStr = pidStr;
     try {
         mPid = std::stoll(mPidStr);
-        D4("Value: %ld", mPid);
+        D4("Value: {}", mPid);
     } catch (const std::out_of_range& e) {
         E("Number too large for 64-bit int!")
     } catch (const std::invalid_argument& e) {
@@ -52,7 +52,7 @@ namespace cg {
     UNUSED size_t nullPos = 0;
     UNUSED ProcessDescr *pd = nullptr;
     if(dp == nullptr) {
-      E("Error opening /proc dir: %d", errno)
+      E("Error opening /proc dir: {}", errno)
       return;
     }
     while((de = readdir(dp)) != nullptr) {
@@ -78,10 +78,10 @@ namespace cg {
         }
       }
       else {
-        D4("U %s", de->d_name)
+        D4("U {}", de->d_name)
       }
     }
-    D1("%lu processes scanned", mProcs.size())
+    D1("{} processes scanned", mProcs.size())
     closedir(dp);
   }
 

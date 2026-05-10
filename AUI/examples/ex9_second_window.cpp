@@ -7,7 +7,7 @@ using namespace std::chrono;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start;
-  D("time: %f ms", duration_ms1.count());
+  D("time: {} ms", duration_ms1.count());
 }
 
 int main() {

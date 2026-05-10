@@ -24,7 +24,7 @@ namespace aui {
     AUIPtr()->AddWidget(this);
     SetText(inText);
     SetBorderSz(AUI_DEFAULT_LABEL_BORDERW);
-    D3("label: disp=%lu, wnd=%lu, scr=%d", (INT64) d, (INT64) w, scr)
+    D3("label: disp={}, wnd={}, scr={}", (INT64) d, (INT64) w, scr)
   }
 
   ALabel* ALabel::AttachTo(AWidget *w, std::string inText) {
@@ -32,7 +32,7 @@ namespace aui {
   }
 
   void ALabel::Draw() {
-    D2("label:%s", Text().c_str())
+    D2("label:{}", Text().c_str())
     Display *d = AUIPtr()->Disp();
     Window wi = Wnd();
     XFontStruct *f = Font();

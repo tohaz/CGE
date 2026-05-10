@@ -145,7 +145,7 @@ namespace aui {
   }
 
   AButton::~AButton() {
-    D3("v")
+    D3("v");
   }
 
 }

@@ -25,7 +25,7 @@ INT32 TestAWidgetResizeBuffer(AButton* wid) {
   }
   // Test 3: Check internal dimensions
   if (wid->SizeX() != oldSizeX + 20 || wid->SizeY() != oldSizeY + 20) {
-    D("Test failed: Internal dimensions not updated. Expected %lu, got %lu", 
+    D("Test failed: Internal dimensions not updated. Expected {}, got {}",
       oldSizeX + 20, wid->SizeX());
     return 3;
   }
@@ -72,7 +72,7 @@ INT32 TestAWidgetProperties(AButton* wid) {
     UINT32 testColor = 0xFF55AA;
     wid->SetBGColor(testColor);
     if (wid->BGColor() != testColor) {
-        D("Test failed: BGColor mismatch. Expected 0x%X, got 0x%X", testColor, wid->BGColor());
+        D("Test failed: BGColor mismatch. Expected 0x%X, got 0x{}", testColor, wid->BGColor());
         return 3;
     }
     // 3. Test Simple3D Style

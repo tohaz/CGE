@@ -1,11 +1,12 @@
 #ifndef DEFAULTS_H_
 #define DEFAULTS_H_
 
-
-#include <unordered_map>
 #include <execinfo.h>
 #include <cxxabi.h>
+#include <print>
 #include <string>
+#include <unordered_map>
+
 
 #define DEBUG_LEVEL 1
 
@@ -172,67 +173,85 @@ enum class AUIWidgetStyle {
 #define AUI_GIT_VERSION "Not a controlled build"
 #endif
 
-#define E(format, ...) {printf("Error|%d%s|%s(%d):" format "\n", 0, __FILE__, __func__, __LINE__, ##__VA_ARGS__);exit(1);}
+// DD stands for Debug Do. D1-D4 and W() are removed on release build (DEBUG_LEVEL 0)
 
-#define D(format, ...) printf("%s|%s(%d):" format "\n", __FILE__, __func__, __LINE__, ##__VA_ARGS__);
+#ifndef DEBUG_LEVEL
+    #define DEBUG_LEVEL 0
+#endif
 
+/**
+ * INTERNAL_PRINT
+ * Internal helper to format the output string.
+ */
 #if DEBUG_LEVEL > 0
-#define W() printf("W%s|%s(%d)\n", __FILE__, __func__, __LINE__);
+    #define INTERNAL_PRINT(prefix, lvl, fmt, ...) \
+        try { \
+            std::println("{}{} {}|{}({}): " fmt, prefix, lvl, __FILE__, __func__, __LINE__ __VA_OPT__(,) __VA_ARGS__); \
+        } catch (const std::exception& __debug_e) { \
+            std::print("!!! DEBUG FORMAT ERROR at {}|{}({}): ", __FILE__, __func__, __LINE__); \
+            std::println("{} !!!", __debug_e.what()); \
+        }
+
+    // Default debug macro (Level 1)
+    #define D(fmt, ...) do { INTERNAL_PRINT("D", 1, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
+
+    // E() - Fatal Error: Prints, dumps stack, and exits.
+    #define E(fmt, ...) do { \
+        INTERNAL_PRINT("E", 1, fmt __VA_OPT__(,) __VA_ARGS__); \
+        print_stack(); \
+        exit(1); \
+    } while (0);
+
+    // DD() - Executes any code only in debug builds
+    #define DD(...) do { __VA_ARGS__; } while (0);
+
+    // W() - Lightweight marker
+    #define W() do { try { std::println("W {}|{}({})", __FILE__, __func__, __LINE__); } catch(...) {} } while (0);
+
+    // DS() - Global Stack Trace
+    #define DS() do { D("\n---Trace at {}:{}---", __FILE__, __LINE__) print_stack(); } while (0);
+
+#else
+    // RELEASE MODE (DEBUG_LEVEL 0)
+    #define D(...)  do {} while (0);
+    #define E(...)  do {} while (0);
+    #define DD(...) do {} while (0);
+    #define W()     do {} while (0);
+    #define DS()    do {} while (0);
 #endif
 
-#if DEBUG_LEVEL == 0
-#define D1(...) {}
-#define D2(...) {}
-#define D3(...) {}
-#define D4(...) {}
-#define DS1(...) {}
-#define DS2(...) {}
-#define DS3(...) {}
-#define W() {}
+/**
+ * LOG LEVELS D1-D4
+ */
+#if DEBUG_LEVEL >= 1
+    #define D1(fmt, ...) D(fmt __VA_OPT__(,) __VA_ARGS__)
+    #define DS1() DS()
+#else
+    #define D1(...)  do {} while (0);
+    #define DS1()    do {} while (0);
 #endif
 
-#if DEBUG_LEVEL == 1
-#define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D2(...) {}
-#define D3(...) {}
-#define D4(...) {}
-#define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS2(...) {}
-#define DS3(...) {}
+#if DEBUG_LEVEL >= 2
+    #define D2(fmt, ...) do { INTERNAL_PRINT("D", 2, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
+    #define DS2() DS()
+#else
+    #define D2(...)  do {} while (0);
+    #define DS2()    do {} while (0);
 #endif
 
-#if DEBUG_LEVEL == 2
-#define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D2(format, ...) printf("D%d%s|%s(%d):" format "\n", 2, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D3(...) {}
-#define D4(...) {}
-#define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS2(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS3(...) {}
+#if DEBUG_LEVEL >= 3
+    #define D3(fmt, ...) do { INTERNAL_PRINT("D", 3, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
+    #define DS3() DS()
+#else
+    #define D3(...)  do {} while (0);
+    #define DS3()    do {} while (0);
 #endif
 
-#if DEBUG_LEVEL == 3
-#define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D2(format, ...) printf("D%d%s|%s(%d):" format "\n", 2, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D3(format, ...) printf("D%d%s|%s(%d):" format "\n", 3, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D4(...) {}
-#define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS2(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS3(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
+#if DEBUG_LEVEL >= 4
+    #define D4(fmt, ...) do { INTERNAL_PRINT("D", 4, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
+#else
+    #define D4(...)  do {} while (0);
 #endif
-
-#if DEBUG_LEVEL == 4
-#define D1(format, ...) printf("D%d%s|%s(%d):" format "\n", 1, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D2(format, ...) printf("D%d%s|%s(%d):" format "\n", 2, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D3(format, ...) printf("D%d%s|%s(%d):" format "\n", 3, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define D4(format, ...) printf("D%d%s|%s(%d):" format "\n", 3, __FILE__, __func__, __LINE__, ##__VA_ARGS__);
-#define DS1(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS2(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#define DS3(...) {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
-#endif
-
-// -rdynamic must be added to linker options(and -g to compiler)
-#define DS() {D("\n---Trace at %s:%d---", __FILE__, __LINE__);print_stack();}
 
 const static std::unordered_map<std::string,UINT64> string_to_case{
    {"BackSpace", 1},
@@ -246,4 +265,5 @@ const static std::unordered_map<std::string,UINT64> string_to_case{
 
 static std::string BaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-#endif
+#endif // DEFAULTS_H_
+

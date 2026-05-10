@@ -57,7 +57,7 @@ namespace aui {
       Draw();
     }
     else {
-      D("column index %ld not found", colIdx)
+      D("column index {} not found", colIdx)
     }
   }
 
@@ -97,7 +97,7 @@ namespace aui {
       }
       Draw();
     } else {
-      E("Attempted to set name for non-existent row: %ld", rowIdx);
+      E("Attempted to set name for non-existent row: {}", rowIdx);
     }
   }
 
@@ -118,18 +118,18 @@ namespace aui {
       }
       Draw();
     } else {
-      E("Attempted to set name for non-existent column: %ld", colIdx);
+      E("Attempted to set name for non-existent column: {}", colIdx);
     }
   }
 
   void ATable::PrintDebugState() {
     D1("ATable Debug State");
-    D1("Widget Size: %lux%lu", SizeX(), SizeY());
-    D1("Content Size: TotalW=%ld, TotalH=%ld", mTotalContentWidth,
+    D1("Widget Size: {}x{}", SizeX(), SizeY());
+    D1("Content Size: TotalW={}, TotalH={}", mTotalContentWidth,
         mTotalContentHeight);
-    D1("Offsets: HOffset=%ld, VOffset=%ld", mHOffset, mVOffset);
-    D1("Headers: RowW=%d, ColH=%d", mRowHeaderWidth, mColumnHeaderHeight);
-    D1("Scroll Mode: %d", (INT32)mCurrentScrollMode);
+    D1("Offsets: HOffset={}, VOffset={}", mHOffset, mVOffset);
+    D1("Headers: RowW={}, ColH={}", mRowHeaderWidth, mColumnHeaderHeight);
+    D1("Scroll Mode: {}", (INT32)mCurrentScrollMode);
     D1("--------------------------");
   }
 
@@ -165,7 +165,7 @@ namespace aui {
   }
 
   void ATable::SetRowHeaderWidth(UINT32 width) {
-    D3("setting row header width=%u", width)
+    D3("setting row header width={}", width)
     mRowHeaderWidth = width;
     Draw();
   }

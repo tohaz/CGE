@@ -8,12 +8,12 @@
 using namespace aui;
 
 void ButtonCloseHandler(XEvent* ev, AWidget* w, void* d) {
-  D("user quit callback fired, bye world %lu %lu", (UINT64)ev, (UINT64)d)
+  D("user quit callback fired, bye world {} {}", (UINT64)ev, (UINT64)d)
   w->AUIPtr()->ExitAUI();
 }
 
 void ButtonTestHandler(XEvent* ev, AWidget* w, void* d) {
-  D("user callback fired, congrats %lu %lu %lu", (UINT64)ev, (UINT64)w, (UINT64)d)
+  D("user callback fired, congrats %lu {} {}", (UINT64)ev, (UINT64)w, (UINT64)d)
 }
 
 INT32 TestStyleAndDepth(AButton* btn) {

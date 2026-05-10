@@ -23,7 +23,7 @@ namespace aui {
             BGColor()));
     Window w = Wnd();
     XSelectInput(d, w,
-        ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
+    ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
     XMapWindow(d, w);
     xcb_connection_t *conn = XGetXCBConnection(d);
     xcb_cursor_context_t *ctx;
@@ -77,10 +77,13 @@ namespace aui {
           (UINT32) SizeY(), 0, 0);
     }
     XSync(d, False);
+
   }
+
   ATable* ATable::AttachTo(AWidget *wParent) {
     return new ATable(wParent);
   }
+
   void ATable::DrawIntersectionBox(Drawable dest) {
     Display *d = AUIPtr()->Disp();
     GC gc = GCPtr();
@@ -153,7 +156,7 @@ namespace aui {
     }
   }
 
-  void ATable::AddRow() {
+  INT64 ATable::AddRow() {
     UINT64 lastK = 0;
     if(!mRows.empty()) {
       lastK = static_cast<UINT64>(mRows.rbegin()->first) + 1;
@@ -174,6 +177,7 @@ namespace aui {
         lastLen = label.length();
       }
     }
+    return signedKey;
   }
 
   void ATable::ScrollUpPx(INT64 px) {
@@ -414,10 +418,13 @@ namespace aui {
         return;
       }
       auto [row, col] = ScreenToCell(x, y);
-      mCursorRow = row;
-      mCursorCol = col;
-      mSelectedRow = row;
-      Draw();
+      if(row != -1 && col != -1) {
+        D1("setting cursor RC[{},{}]", row, col)
+        mCursorRow = row;
+        mCursorCol = col;
+        mSelectedRow = row;
+        Draw();
+      }
     }
   }
 
@@ -430,24 +437,42 @@ namespace aui {
   }
 
   std::pair<INT64, INT64> ATable::ScreenToCell(INT32 x, INT32 y) {
-    INT64 targetRow = -1, targetCol = -1;
-    // Map Y to Row
-    INT64 currY = mColumnHeaderHeight - mVOffset;
-    for (auto const& [id, data] : mRowH) {
-      if(y >= currY && y < currY + data.first) {
-        targetRow = id;
-        break;
-      }
-      currY += data.first;
+    // 1. Basic boundary check: Ignore clicks on headers or scrollbar areas
+    if(x < (INT32) mRowHeaderWidth || y < (INT32) mColumnHeaderHeight
+        || x > (INT32) (SizeX() - AUI_TABLE_SCROLL_THICK)
+        || y > (INT32) (SizeY() - AUI_TABLE_SCROLL_THICK)) {
+      return {-1, -1};
     }
-    // Map X to Column
-    INT64 currX = mRowHeaderWidth - mHOffset;
-    for (auto const& [id, data] : mColumnW) {
-      if(x >= currX && x < currX + data.first) {
-        targetCol = id;
+    // 2. Get the first visible cell indices based on current scroll offsets
+    // This prevents iterating through thousands of off-screen cells
+    auto colStart = Offset2Column(mHOffset);
+    auto rowStart = Offset2Row(mVOffset);
+    INT64 targetRow = -1, targetCol = -1;
+    // 3. Find Row: Start searching from the first visible row index
+    INT64 currY = (INT64) mColumnHeaderHeight - rowStart.offset;
+    auto itRow = mRowH.lower_bound(rowStart.cell);
+    for (; itRow != mRowH.end(); ++itRow) {
+      if(y >= currY && y < currY + itRow->second.first) {
+        targetRow = itRow->first;
         break;
       }
-      currX += data.first;
+      currY += itRow->second.first;
+      // Optimization: stop if we've passed the click point
+      if(currY > y)
+        break;
+    }
+    // 4. Find Column: Start searching from the first visible column index
+    INT64 currX = (INT64) mRowHeaderWidth - colStart.offset;
+    auto itCol = mColumnW.lower_bound(colStart.cell);
+    for (; itCol != mColumnW.end(); ++itCol) {
+      if(x >= currX && x < currX + itCol->second.first) {
+        targetCol = itCol->first;
+        break;
+      }
+      currX += itCol->second.first;
+      // Optimization: stop if we've passed the click point
+      if(currX > x)
+        break;
     }
     return {targetRow, targetCol};
   }
@@ -702,7 +727,7 @@ namespace aui {
   }
 
   ATableRangeData1 ATable::Offset2ColumnRange(ATableRangeData1 startColumn,
-      INT64 width) {
+  INT64 width) {
     ATableRangeData1 endc = startColumn;
     auto it = mColumnW.find(startColumn.cell);
     if(it != mColumnW.end()) {
@@ -822,10 +847,36 @@ namespace aui {
     }
   }
 
-  void ATable::SetCursorPosition(long row, long column) {
+  void ATable::SetCursorPosition(INT64 row, INT64 column) {
     mCursorRow = row;
     mCursorCol = column;
     Draw();
+  }
+
+  INT64 ATable::CursorRow() {
+    return mCursorRow;
+  }
+
+  INT64 ATable::CursorColumn() {
+    return mCursorCol;
+  }
+
+  std::string ATable::CursorData() {
+    D1("get data for RC cursor [{},{}]", mCursorRow, mCursorCol);
+    // 1. Look for the row map
+    auto itRow = mRows.find(mCursorRow);
+    if(itRow == mRows.end()) {
+      D1("Not found cursor row {}", mCursorRow);
+      return "";
+    }
+    // 2. Look for the specific column in that row
+    auto itCol = itRow->second.find(mCursorCol);
+    if(itCol == itRow->second.end()) {
+      D1("Not found cursor column {}", mCursorCol);
+      return "";
+    }
+    // 3. Return the data safely
+    return itCol->second.data;
   }
 
   ATable::~ATable() {
@@ -857,11 +908,10 @@ namespace aui {
       D3("not freeing vertical cursor via xcb")
     }
     xcb_flush(conn);
-
     mRows.clear();
     mColumns.clear();
     mRowH.clear();
     mColumnW.clear();
-
   }
 }
+

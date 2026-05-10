@@ -3,7 +3,7 @@
 using namespace aui;
 
 void ButtonCloseHandler(XEvent* ev, AWidget* w, void* d) {
-  D("user callback fired congrats %lu %lu", (UINT64)ev, (UINT64)d)
+  D("user callback fired congrats {} {}", (UINT64)ev, (UINT64)d)
 	w->AUIPtr()->ExitAUI();
 }
 

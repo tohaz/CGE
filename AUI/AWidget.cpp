@@ -7,14 +7,14 @@
 namespace aui {
 
   AWidget::AWidget() {
-    D3("sizeof widget %lu", sizeof(AWidget))
+    D3("sizeof widget {}", sizeof(AWidget))
 //    OnButtonPressCB = [this](XEvent* ev, CGWidget* w, void *data) {
 //      D1("default OnButtonPressCB callback fired")
 //    };
   }
 
   void AWidget::InitWidgetProps(Window w) {
-    D3("set window %lu", (UINT64) w)
+    D3("set window {}", (UINT64) w)
     Display *d = mAUI->Disp();
     if(mWindow == 0)
       mWindow = w;
@@ -27,13 +27,13 @@ namespace aui {
     if(mFont == 0) {
       mFont = XLoadQueryFont(d, AUI_DEFAULT_FONT);
       if(!mFont) {
-        D("Cannot open font %s, using 'fixed' instead", AUI_DEFAULT_FONT)
+        D("Cannot open font {}, using 'fixed' instead", AUI_DEFAULT_FONT)
         mFont = XLoadQueryFont(d, "fixed");
 
         if(!mFont)
-          E("Cannot open 'fixed' font either, exit.")
+          {E("Cannot open 'fixed' font either, exit.")}
       } else
-        D3("opened font with description:%s, id %lu", AUI_DEFAULT_FONT,
+        D3("opened font with description:{}, id {}", AUI_DEFAULT_FONT,
             (UINT64)mFont)
       XSetFont(d, mGC, mFont->fid);
     } else
@@ -60,7 +60,7 @@ namespace aui {
   }
 
   void AWidget::SetTitle(std::string newTitle) {
-    D3("setting title to %s", newTitle.c_str())
+    D3("setting title to {}", newTitle.c_str())
     mTitle = newTitle;
   }
 
@@ -154,13 +154,13 @@ namespace aui {
   }
 
   AWidget* AWidget::ParentWidget() {
-    D3("wndparent get %lu", (UINT64) mWindowParent)
+    D3("wndparent get {}", (UINT64) mWindowParent)
     return mWindowParent;
   }
 
   void AWidget::SetWndParent(AWidget *newParent) {
     mWindowParent = newParent;
-    D3("wmdparent set %lu", (UINT64) mWindowParent)
+    D3("wmdparent set {}", (UINT64) mWindowParent)
   }
 
   void AWidget::AddWidgetChild(AWidget *newChild) {
@@ -169,7 +169,7 @@ namespace aui {
 
   void AWidget::DestroyChildWidgets() {
     if(mWidg.size() > 0) {
-      D2(">widget '%s' has children", mTitle.c_str());
+      D2(">widget '{}' has children", mTitle.c_str());
       while (!mWidg.empty()) {
         auto it = mWidg.begin();
         AWidget *child = (AWidget*) it->second;
@@ -184,7 +184,7 @@ namespace aui {
         }
       }
     } else {
-      D2(">widget '%s' doesn't have children", mTitle.c_str());
+      D2(">widget '{}' doesn't have children", mTitle.c_str());
     }
   }
 
@@ -356,7 +356,7 @@ namespace aui {
   }
 
   void AWidget::PrintDimensions() {
-    D("x=%ld,y=%ld,szX=%lu,szY=%lu", mX, mY, mSzX, mSzY)
+    D("x={},y={},szX={},szY={}", mX, mY, mSzX, mSzY)
   }
 
   Pixmap AWidget::BB() {
@@ -450,11 +450,11 @@ namespace aui {
 
   void AWidget::CorrectNegativeCoordinates(XEvent &event) {
     if(event.xbutton.x < 0) {
-      D1("negative (x=%d) coordinate corrected", event.xbutton.x)
+      D1("negative (x={}) coordinate corrected", event.xbutton.x)
       event.xbutton.x = 0;
     }
     if(event.xbutton.y < 0) {
-      D1("negative (y=%d) coordinate corrected", event.xbutton.y)
+      D1("negative (y={}) coordinate corrected", event.xbutton.y)
       event.xbutton.y = 0;
     }
   }
@@ -462,42 +462,42 @@ namespace aui {
   void AWidget::CorrectCoordinates(XEvent &event) {
     // Check negatives
     if(event.xbutton.x < 0) {
-      D2("negative (x=%d) coordinate corrected", event.xbutton.x)
+      D2("negative (x={}) coordinate corrected", event.xbutton.x)
       event.xbutton.x = 0;
     }
     if(event.xbutton.y < 0) {
-      D2("negative (y=%d) coordinate corrected", event.xbutton.y)
+      D2("negative (y={}) coordinate corrected", event.xbutton.y)
       event.xbutton.y = 0;
     }
     // Check overflys
     if((UINT64) event.xbutton.x > SizeX()) {
-      D2("overflew (x=%d) coordinate corrected", event.xbutton.x)
+      D2("overflew (x={}) coordinate corrected", event.xbutton.x)
       event.xbutton.x = (INT32) SizeX();
     }
     if((UINT64) event.xbutton.y > SizeY()) {
-      D2("overflew (y=%d) coordinate corrected", event.xbutton.y)
+      D2("overflew (y={}) coordinate corrected", event.xbutton.y)
       event.xbutton.y = (INT32) SizeY();
     }
   }
 
   void AWidget::CorrectCoordinateX(INT32 &x) {
     if(x < 0) {
-      D1("negative (x=%d) coordinate corrected", x)
+      D1("negative (x={}) coordinate corrected", x)
       x = 0;
     }
     if(x > SafeINT32(SizeX())) {
-      D1("overflew (x=%d) coordinate corrected", x)
+      D1("overflew (x={}) coordinate corrected", x)
       x = SafeINT32(SizeX());
     }
   }
 
   void AWidget::CorrectCoordinateY(INT32 &y) {
     if(y < 0) {
-      D1("negative (x=%d) coordinate corrected", y)
+      D1("negative (x={}) coordinate corrected", y)
       y = 0;
     }
     if(y > SafeINT32(SizeY())) {
-      D1("overflew (y=%d) coordinate corrected", y)
+      D1("overflew (y={}) coordinate corrected", y)
       y = SafeINT32(SizeY());
     }
   }
@@ -514,7 +514,7 @@ namespace aui {
     if(mStyle == AUIWidgetStyle::Flat && mRenderPicture != None) {
       XRenderFreePicture(d, mRenderPicture);
       mRenderPicture = None; // Reset to None to pass the integrity test
-      D("XRender Picture freed for widget '%s' (Style: Flat)", Title().c_str());
+      D("XRender Picture freed for widget '{}' (Style: Flat)", Title().c_str());
     }
     UpdateBuffer();
     Draw();
@@ -534,7 +534,7 @@ namespace aui {
   }
 
   AWidget::~AWidget() {
-    D3("widget '%s' destructor active", mTitle.c_str());
+    D3("widget '{}' destructor active", mTitle.c_str());
     // 1. CRITICAL: Unregister from the global AUI map FIRST.
     // Use the actual mWindow ID before we potentially lose it.
     if(mAUI && mWindow != 0) {
@@ -549,35 +549,35 @@ namespace aui {
     }
     // 3. Resource Cleanup
     if(mFont != 0) {
-      D2("freeing font %lu", (UINT64)mFont);
+      D2("freeing font {}", (UINT64)mFont);
       XFreeFont(d, mFont);
       mFont = 0;
     } else {
-      D2("widget '%s' has no font to free", mTitle.c_str());
+      D2("widget '{}' has no font to free", mTitle.c_str());
     }
     if(mGC != 0) {
-      D2("freeing GC %lu", (UINT64)mGC);
+      D2("freeing GC {}", (UINT64)mGC);
       XFreeGC(d, mGC);
       mGC = 0;
     } else {
-      D2("widget '%s' has no GC to free", mTitle.c_str());
+      D2("widget '{}' has no GC to free", mTitle.c_str());
     }
     if(mBackBuffer) {
       D2("freeing backbuffer");
       XFreePixmap(d, mBackBuffer);
       mBackBuffer = 0;
     } else {
-      D2("widget '%s' has no backbuffer to free", mTitle.c_str());
+      D2("widget '{}' has no backbuffer to free", mTitle.c_str());
     }
     // 4. X11 Window Destruction
     // We only call XDestroyWindow if this object is the one initiating the kill.
     // If mWindow is already 0, it means a parent handled the X server side.
     if(mWindow != 0) {
-      D2("destroying window %lu", (UINT64)mWindow);
+      D2("destroying window {}", (UINT64)mWindow);
       XDestroyWindow(d, mWindow);
       mWindow = 0;
     }
-    D2("<widget '%s' destructor ends", mTitle.c_str());
+    D2("<widget '{}' destructor ends", mTitle.c_str());
   }
 
 }

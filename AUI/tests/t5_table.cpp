@@ -18,8 +18,8 @@ INT32 GeneralTest(ATable *ta) {
   ta->AddRow();
   ta->AddRows(5);
   ta->AddColumns(5);
-  if(ta->Rows() != 6) E("number of rows is wrong%lu", ta->Rows())
-  if(ta->Columns() != 7) E("number of columnts is wrong %lu", ta->Rows())
+  if(ta->Rows() != 6) E("number of rows is wrong{}", ta->Rows())
+  if(ta->Columns() != 7) E("number of columnts is wrong {}", ta->Rows())
   di.data = "sta";
   ta->Insert(0, 0, &di);
   di.data = "ZZZ";
@@ -47,7 +47,7 @@ INT32 AutowidenTest(ATable *ta) {
   di.data = "some decently long string";
   ta->Insert(0, 0, &di);
   if(ta->GetColumnWidth(0) > 10) {
-    D("Column Autowiden test passed(%ld)\n", ta->GetColumnWidth(0))
+    D("Column Autowiden test passed({})\n", ta->GetColumnWidth(0))
     return 0;
   }
 	D("Column autowiden test failed")
