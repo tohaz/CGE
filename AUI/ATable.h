@@ -119,6 +119,8 @@ namespace aui {
       void OnButtonPress(XEvent *ev);
       void OnButtonRelease(XEvent *ev);
       void OnMouseMove(XEvent *ev);
+      void SetCursorPosition(INT64 row, INT64 column);
+
   };
 }
 

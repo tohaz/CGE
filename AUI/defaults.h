@@ -169,7 +169,7 @@ enum class AUIWidgetStyle {
 };
 
 #ifndef AUI_GIT_VERSION
-#define AUI_GIT_VERSION "Not a controled build"
+#define AUI_GIT_VERSION "Not a controlled build"
 #endif
 
 #define E(format, ...) {printf("Error|%d%s|%s(%d):" format "\n", 0, __FILE__, __func__, __LINE__, ##__VA_ARGS__);exit(1);}

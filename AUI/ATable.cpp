@@ -421,7 +421,7 @@ namespace aui {
     }
   }
 
-  void aui::ATable::OnButtonRelease(XEvent *ev) {
+  void ATable::OnButtonRelease(XEvent *ev) {
     mCurrentScrollMode = AUIScrollMode::AUINone;
     mResizeMode = AUIResizeMode::AUINone;
     mResizeId = -1;
@@ -452,7 +452,7 @@ namespace aui {
     return {targetRow, targetCol};
   }
 
-  void aui::ATable::DrawScrollbars(Drawable dest) {
+  void ATable::DrawScrollbars(Drawable dest) {
     Display *d = AUIPtr()->Disp();
     GC gc = GCPtr();
     double viewH =
@@ -822,6 +822,12 @@ namespace aui {
     }
   }
 
+  void ATable::SetCursorPosition(long row, long column) {
+    mCursorRow = row;
+    mCursorCol = column;
+    Draw();
+  }
+
   ATable::~ATable() {
     AUI *au = AUIPtr();
     UNUSED Display *d = au->Disp();
@@ -858,5 +864,4 @@ namespace aui {
     mColumnW.clear();
 
   }
-
 }
