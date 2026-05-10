@@ -14,7 +14,7 @@ int main() {
   AUI* au = AUI::Create("ex6");
   AWindow* w = au->MainWnd();
   w->EnableResize();
-  w->Resize(380, 170);
+  w->Resize(390, 220);
   w->DisableResize();
 
   ALabel* lb = ALabel::AttachTo(w, "Helloworld, but with an input box.");
@@ -39,6 +39,16 @@ int main() {
   AInputBox* ib = AInputBox::AttachTo(w, (char*)"");
   ib->SetTitle((char *) "Edit Me");
   ib->SetOnSubmitCB(InputSubmitHandler, lbo3);
+
+  ALabel* lbo4 = ALabel::AttachTo(w, "PS. This is a new style inputbox VVV");
+  lbo4->Resize(350, 20);
+  lbo4->Move(15, 155);
+  lbo4->SetHAlign(AUIHAlign::left);
+
+  AInputBox* ib2 = AInputBox::AttachTo(w, (char*)"test");
+  ib2->SetTitle((char *) "Edit Me2");
+  ib2->Move(290, 180);
+  ib2->SetStyle(AUIWidgetStyle::Simple3D);
 
   au->ProcessMessages();
   delete au;

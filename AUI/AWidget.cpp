@@ -16,24 +16,28 @@ namespace aui {
   void AWidget::InitWidgetProps(Window w) {
     D3("set window %lu", (UINT64) w)
     Display *d = mAUI->Disp();
-    if(mWindow == 0) mWindow = w;
-    else E("attempt to reset window")
+    if(mWindow == 0)
+      mWindow = w;
+    else
+      E("attempt to reset window")
     if(mGC == 0) {
       mGC = XCreateGC(d, mWindow, 0, NULL);
-    }
-    else E("GC is already set")
+    } else
+      E("GC is already set")
     if(mFont == 0) {
       mFont = XLoadQueryFont(d, AUI_DEFAULT_FONT);
-      if (!mFont) {
+      if(!mFont) {
         D("Cannot open font %s, using 'fixed' instead", AUI_DEFAULT_FONT)
         mFont = XLoadQueryFont(d, "fixed");
 
-        if (!mFont) E("Cannot open 'fixed' font either, exit.")
-      }
-      else D3("opened font with description:%s, id %lu", AUI_DEFAULT_FONT, (UINT64)mFont)
+        if(!mFont)
+          E("Cannot open 'fixed' font either, exit.")
+      } else
+        D3("opened font with description:%s, id %lu", AUI_DEFAULT_FONT,
+            (UINT64)mFont)
       XSetFont(d, mGC, mFont->fid);
-    }
-    else E("Font is already set")
+    } else
+      E("Font is already set")
     XSetWindowAttributes swa;
     swa.bit_gravity = ForgetGravity;
     XChangeWindowAttributes(d, mWindow, CWBitGravity, &swa);
@@ -94,14 +98,14 @@ namespace aui {
     if(mSzX > 0xFFFFFFFF) {
       E("SizeX overflow")
     }
-    return (UINT32)mSzX;
+    return (UINT32) mSzX;
   }
 
   UINT32 AWidget::SizeYUI32() {
     if(mSzY > 0xFFFFFFFF) {
       E("SizeY overflow")
     }
-    return (UINT32)mSzY;
+    return (UINT32) mSzY;
   }
 
   void AWidget::SetSizeXY(UINT64 newSzX, UINT64 newSzY) {
@@ -122,7 +126,7 @@ namespace aui {
   }
 
   const CHAR8* AWidget::TextPtr() {
-    return (const CHAR8*)mText.c_str();
+    return (const CHAR8*) mText.c_str();
   }
 
   std::string& AWidget::Text() {
@@ -132,7 +136,6 @@ namespace aui {
   std::string& AWidget::Title() {
     return mTitle;
   }
-
 
   XFontStruct* AWidget::Font() {
     return mFont;
@@ -155,7 +158,7 @@ namespace aui {
     return mWindowParent;
   }
 
-  void AWidget::SetWndParent(AWidget* newParent) {
+  void AWidget::SetWndParent(AWidget *newParent) {
     mWindowParent = newParent;
     D3("wmdparent set %lu", (UINT64) mWindowParent)
   }
@@ -169,7 +172,7 @@ namespace aui {
       D2(">widget '%s' has children", mTitle.c_str());
       while (!mWidg.empty()) {
         auto it = mWidg.begin();
-        AWidget* child = (AWidget*) it->second;
+        AWidget *child = (AWidget*) it->second;
         // 1. Remove from the local parent map first to prevent re-entry/infinite loops
         mWidg.erase(it);
         if(child) {
@@ -186,33 +189,33 @@ namespace aui {
   }
 
   void AWidget::DisableResize() {
-      D3();
-      mResizeEnabled = false;
-      XSizeHints *hints = XAllocSizeHints();
-      // Use the current size as both min and max
-      hints->min_width = hints->max_width = SafeINT32(mSzX);
-      hints->min_height = hints->max_height = SafeINT32(mSzY);
-      hints->base_width = SafeINT32(mSzX);
-      hints->base_height = SafeINT32(mSzY);
-      hints->flags = PMinSize | PMaxSize | PBaseSize; // Set flags explicitly
-      XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
-      XFree(hints);
+    D3();
+    mResizeEnabled = false;
+    XSizeHints *hints = XAllocSizeHints();
+    // Use the current size as both min and max
+    hints->min_width = hints->max_width = SafeINT32(mSzX);
+    hints->min_height = hints->max_height = SafeINT32(mSzY);
+    hints->base_width = SafeINT32(mSzX);
+    hints->base_height = SafeINT32(mSzY);
+    hints->flags = PMinSize | PMaxSize | PBaseSize; // Set flags explicitly
+    XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
+    XFree(hints);
   }
 
   void AWidget::EnableResize() {
-      D3();
-      mResizeEnabled = true;
-      XSizeHints *hints = XAllocSizeHints();
-      hints->min_width = 100;
-      hints->min_height = 100;
-      // Instead of clearing flags, set a massive MaxSize
-      hints->max_width = 10000;
-      hints->max_height = 10000;
-      hints->base_width = SafeINT32(mSzX);
-      hints->base_height = SafeINT32(mSzY);
-      hints->flags = PMinSize | PMaxSize | PBaseSize;
-      XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
-      XFree(hints);
+    D3();
+    mResizeEnabled = true;
+    XSizeHints *hints = XAllocSizeHints();
+    hints->min_width = 100;
+    hints->min_height = 100;
+    // Instead of clearing flags, set a massive MaxSize
+    hints->max_width = 10000;
+    hints->max_height = 10000;
+    hints->base_width = SafeINT32(mSzX);
+    hints->base_height = SafeINT32(mSzY);
+    hints->flags = PMinSize | PMaxSize | PBaseSize;
+    XSetWMNormalHints(mAUI->Disp(), mWindow, hints);
+    XFree(hints);
   }
 
   void AWidget::Move(UINT32 x, UINT32 y) {
@@ -226,8 +229,7 @@ namespace aui {
     Window wnd = w->Wnd();
     if(mWidg.contains(wnd)) {
       mWidg.erase(wnd);
-    }
-    else {
+    } else {
       E("attempt to remove child that is not registered")
     }
   }
@@ -237,13 +239,14 @@ namespace aui {
   }
 
   void AWidget::SetBorderSz(unsigned int borderSz) {
-    if (!mAUI || mWindow == 0) {
-        mBorderSz = borderSz; // Сохраняем для инициализации
-        return;
+    if(!mAUI || mWindow == 0) {
+      mBorderSz = borderSz; // Сохраняем для инициализации
+      return;
     }
-    if (mBorderSz == borderSz) return;
+    if(mBorderSz == borderSz)
+      return;
     mBorderSz = borderSz;
-    Display* d = mAUI->Disp();
+    Display *d = mAUI->Disp();
 
     XSetWindowBorderWidth(d, mWindow, mBorderSz);
     XSync(d, False);
@@ -253,18 +256,22 @@ namespace aui {
     return mBorderSz;
   }
 
-  void AWidget::SetOnButtonPressCB(std::function<void(XEvent *ev, AWidget *w, void *arbdata)> func, void *data) {
+  void AWidget::SetOnButtonPressCB(
+      std::function<void(XEvent *ev, AWidget *w, void *arbdata)> func,
+      void *data) {
     OnButtonPressCB = func;
     mUserDataButtonPress = data;
   }
 
-  void AWidget::SetOnButtonReleaseCB(std::function<void(XEvent *ev, AWidget *w, void *arbdata)> func, void *data) {
+  void AWidget::SetOnButtonReleaseCB(
+      std::function<void(XEvent *ev, AWidget *w, void *arbdata)> func,
+      void *data) {
     OnButtonReleaseCB = func;
     mUserDataButtonRelease = data;
-   }
+  }
 
-  void AWidget::SetOnSubmitCB(std::function<void(AWidget *w, void *arbdata)> func,
-    void *data) {
+  void AWidget::SetOnSubmitCB(
+      std::function<void(AWidget *w, void *arbdata)> func, void *data) {
     OnSubmitCB = func;
     mUserDataSubmit = data;
   }
@@ -274,8 +281,7 @@ namespace aui {
     if(OnFocusInCB == 0) {
       D3("CB is not set")
       return;
-    }
-    else {
+    } else {
       D3("CB is set")
       OnFocusInCB(ev, this, mUserDataFocusIn);
     }
@@ -286,8 +292,7 @@ namespace aui {
     if(OnFocusOutCB == 0) {
       D3("CB is not set")
       return;
-    }
-    else {
+    } else {
       D3("CB is set")
       OnFocusOutCB(ev, this, mUserDataFocusOut);
     }
@@ -298,8 +303,7 @@ namespace aui {
     if(OnButtonPressCB == 0) {
       D2("CB is not set")
       return;
-    }
-    else {
+    } else {
       D2("CB is set")
       OnButtonPressCB(ev, this, mUserDataButtonPress);
     }
@@ -309,8 +313,7 @@ namespace aui {
     if(OnButtonReleaseCB == 0) {
       D3("CB is not set")
       return;
-    }
-    else {
+    } else {
       D3("CB is set")
       OnButtonReleaseCB(ev, this, mUserDataButtonRelease);
     }
@@ -320,8 +323,7 @@ namespace aui {
     if(OnMouseMoveCB == 0) {
       D3("CB is not set")
       return;
-    }
-    else {
+    } else {
       D3("CB is set")
       OnMouseMoveCB(ev, this, mUserDataMouseMove);
     }
@@ -331,8 +333,7 @@ namespace aui {
     if(OnSubmitCB == 0) {
       D3("CB is not set")
       return;
-    }
-    else {
+    } else {
       D3("CB is set")
       OnSubmitCB(this, mUserDataSubmit);
     }
@@ -371,57 +372,65 @@ namespace aui {
     if(!aui || Wnd() == 0)
       return;
     Display *d = aui->Disp();
+    // 1. Cleanup old XRender resource
     if(mRenderPicture != None) {
       XRenderFreePicture(d, mRenderPicture);
       mRenderPicture = None;
     }
+    // 2. Cleanup old Pixmap
     if(mBackBuffer) {
       XFreePixmap(d, mBackBuffer);
       mBackBuffer = 0;
     }
     XWindowAttributes watt;
     XGetWindowAttributes(d, Wnd(), &watt);
+    // 3. Reallocate Pixmap if dimensions are valid
     if(SizeX() > 0 && SizeY() > 0) {
       mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
           SafeUINT32(SizeY()), (UINT32) watt.depth);
-      XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
-      if(fmt) {
-        mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0, nullptr);
+      // 4. Recreate Picture ONLY if the current style is Simple3D
+      if(mStyle == AUIWidgetStyle::Simple3D) {
+        XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
+        if(fmt) {
+          mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0,
+              nullptr);
+          D3("XRender Picture created for buffer");
+        }
       }
     }
   }
 
   void AWidget::Resize(UINT32 szx, UINT32 szy) {
-      if(szx == mSzX && szy == mSzY) {
-          D3()
-          return;
+    if(szx == mSzX && szy == mSzY) {
+      D3()
+      return;
+    }
+    if(mResizeEnabled) {
+      mSzX = szx;
+      mSzY = szy;
+      Display *d = mAUI->Disp();
+      XResizeWindow(d, mWindow, szx, szy);
+      // --- NEW: Sync hints with WM so it re-aligns the X button ---
+      XSizeHints *hints = XAllocSizeHints();
+      if(hints) {
+        hints->flags = PMinSize | PBaseSize;
+        hints->min_width = 100; // Or a reasonable minimum
+        hints->min_height = 100;
+        hints->base_width = SafeINT32(szx);
+        hints->base_height = SafeINT32(szy);
+        XSetWMNormalHints(d, mWindow, hints);
+        XFree(hints);
       }
-      if(mResizeEnabled) {
-          mSzX = szx;
-          mSzY = szy;
-          Display* d = mAUI->Disp();
-          XResizeWindow(d, mWindow, szx, szy);
-          // --- NEW: Sync hints with WM so it re-aligns the X button ---
-          XSizeHints *hints = XAllocSizeHints();
-          if (hints) {
-              hints->flags = PMinSize | PBaseSize;
-              hints->min_width = 100; // Or a reasonable minimum
-              hints->min_height = 100;
-              hints->base_width = SafeINT32(szx);
-              hints->base_height = SafeINT32(szy);
-              XSetWMNormalHints(d, mWindow, hints);
-              XFree(hints);
-          }
-          // Force the server to process the resize and hint update
-          // before we try to Draw()
-          XSync(d, False);
-          UpdateBuffer();
-      }
-      else {
-          DS()
-          D("==========resize is disabled for widget, call EnableResize() if needed")
-      }
-      Draw();
+      // Force the server to process the resize and hint update
+      // before we try to Draw()
+      XSync(d, False);
+      UpdateBuffer();
+    } else {
+      DS()
+      D(
+          "==========resize is disabled for widget, call EnableResize() if needed")
+    }
+    Draw();
   }
 
   void AWidget::ResizeX(UINT32 szx) {
@@ -439,7 +448,7 @@ namespace aui {
     mSzY = y;
   }
 
-  void AWidget::CorrectNegativeCoordinates(XEvent& event) {
+  void AWidget::CorrectNegativeCoordinates(XEvent &event) {
     if(event.xbutton.x < 0) {
       D1("negative (x=%d) coordinate corrected", event.xbutton.x)
       event.xbutton.x = 0;
@@ -450,7 +459,7 @@ namespace aui {
     }
   }
   // Xlib sends negative and too large positive coordinates...
-  void AWidget::CorrectCoordinates(XEvent& event) {
+  void AWidget::CorrectCoordinates(XEvent &event) {
     // Check negatives
     if(event.xbutton.x < 0) {
       D2("negative (x=%d) coordinate corrected", event.xbutton.x)
@@ -461,17 +470,17 @@ namespace aui {
       event.xbutton.y = 0;
     }
     // Check overflys
-    if((UINT64)event.xbutton.x > SizeX()) {
+    if((UINT64) event.xbutton.x > SizeX()) {
       D2("overflew (x=%d) coordinate corrected", event.xbutton.x)
-      event.xbutton.x = (INT32)SizeX();
+      event.xbutton.x = (INT32) SizeX();
     }
-    if((UINT64)event.xbutton.y > SizeY()) {
+    if((UINT64) event.xbutton.y > SizeY()) {
       D2("overflew (y=%d) coordinate corrected", event.xbutton.y)
-      event.xbutton.y = (INT32)SizeY();
+      event.xbutton.y = (INT32) SizeY();
     }
   }
 
- void AWidget::CorrectCoordinateX(INT32 &x) {
+  void AWidget::CorrectCoordinateX(INT32 &x) {
     if(x < 0) {
       D1("negative (x=%d) coordinate corrected", x)
       x = 0;
@@ -498,19 +507,30 @@ namespace aui {
   }
 
   void AWidget::SetStyle(AUIWidgetStyle style) {
-      if (mStyle == style) return;
-      mStyle = style;
-      UpdateBuffer(); // Picture пересоздастся в базовом UpdateBuffer
-      Draw();
+    if(mStyle == style)
+      return;
+    mStyle = style;
+    Display *d = AUIPtr()->Disp();
+    if(mStyle == AUIWidgetStyle::Flat && mRenderPicture != None) {
+      XRenderFreePicture(d, mRenderPicture);
+      mRenderPicture = None; // Reset to None to pass the integrity test
+      D("XRender Picture freed for widget '%s' (Style: Flat)", Title().c_str());
+    }
+    UpdateBuffer();
+    Draw();
   }
 
   void AWidget::SetPressDepth(int depth) {
-      mDepth = (depth < 0) ? 0 : (depth > 15) ? 15 : depth;
-      Draw();
+    mDepth = (depth < 0) ? 0 : (depth > 15) ? 15 : depth;
+    Draw();
   }
 
   AUIWidgetStyle AWidget::Style() const {
     return mStyle;
+  }
+
+  Picture AWidget::GetRenderPicture() const {
+    return mRenderPicture;
   }
 
   AWidget::~AWidget() {
@@ -524,8 +544,8 @@ namespace aui {
     DestroyChildWidgets();
     Display *d = mAUI->Disp();
     if(mRenderPicture != None) {
-        XRenderFreePicture(d, mRenderPicture);
-        mRenderPicture = None;
+      XRenderFreePicture(d, mRenderPicture);
+      mRenderPicture = None;
     }
     // 3. Resource Cleanup
     if(mFont != 0) {

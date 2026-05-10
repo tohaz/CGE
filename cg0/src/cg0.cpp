@@ -8,8 +8,6 @@ using namespace std::chrono;
 
 ProcessList pr;
 
-
-
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
@@ -82,7 +80,7 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
 
 int main() {
   time_point<high_resolution_clock> start = high_resolution_clock::now();
-  UNUSED AUI* cg = AUI::Create("cg0 main");
+  AUI* cg = AUI::Create("cg0 main");
   AWindow* w = cg->MainWnd();
   w->EnableResize();
   w->Resize(1024, 768);
@@ -92,7 +90,7 @@ int main() {
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
   bOpenProc->SetStyle(AUIWidgetStyle::Simple3D);
   bOpenProc->SetPressDepth(0);
-  UNUSED ALabel* lb = ALabel::AttachTo(w, "Select process");
+  ALabel* lb = ALabel::AttachTo(w, "Select process");
   lb->Move(120, 8);
   lb->Resize(1024, 30);
   lb->SetHAlign(AUIHAlign::left);

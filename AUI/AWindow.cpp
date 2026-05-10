@@ -19,7 +19,7 @@ namespace aui {
   }
 
   void AWindow::InitWindow() {
-    D1("sizeof window %lu", sizeof(AWindow))
+    D3("sizeof window %lu", sizeof(AWindow))
     SetType(AUIWidgetType::defaultWindow);
     SetBGColor(AUI_DEFAULT_WINDOW_BG);
     AUI* cg = AUIPtr();

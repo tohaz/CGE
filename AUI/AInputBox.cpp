@@ -33,7 +33,6 @@ namespace aui {
     aui->AddWidget(this);
     SetBorderSz(0);
     mFilter = mFilterStr;
-
     // Start the blink thread
     INT32 i32szx = SafeINT32(szx);
     INT32 i32szy = SafeINT32(szy);
@@ -71,76 +70,97 @@ namespace aui {
   }
 
   void AInputBox::Draw() {
-      Display* dpy = AUIPtr()->Disp();
-      Window win = Wnd();
+      AUI *aui = AUIPtr();
+      if (!aui || Wnd() == 0 || GCPtr() == 0) return;
+      // Ensure backbuffer and XRender picture are initialized
+      if (!BB()) UpdateBuffer();
+      Display *d = aui->Disp();
+      Pixmap bb = BB();
       GC gc = GCPtr();
-
-      int b = AUI_DEFAULT_INPUT_BORDERW;
-      int w = SafeINT32(SizeX());
-      int h = SafeINT32(SizeY());
-      int offset = b;
-
-      // 1. ОТРИСОВКА РАМКИ
-      if (Style() == AUIWidgetStyle::Simple3D) {
-          // Объявляем массивы точек для каждой стороны (трапеции)
-          XPoint topP[4]    = {{0, 0}, {SafeINT16(w), 0}, {SafeINT16(w - b), SafeINT16(b)}, {SafeINT16(b), SafeINT16(b)}};
-          XPoint leftP[4]   = {{0, 0}, {0, SafeINT16(h)}, {SafeINT16(b), SafeINT16(h - b)}, {SafeINT16(b), SafeINT16(b)}};
-          XPoint bottomP[4] = {{0, SafeINT16(h)}, {SafeINT16(w), SafeINT16(h)}, {SafeINT16(w - b), SafeINT16(h - b)}, {SafeINT16(b), SafeINT16(h - b)}};
-          XPoint rightP[4]  = {{SafeINT16(w), 0}, {SafeINT16(w), SafeINT16(h)}, {SafeINT16(w - b), SafeINT16(h - b)}, {SafeINT16(w - b), SafeINT16(b)}};
-
-          XSetForeground(dpy, gc, 0xFFFFFF); // Свет сверху и слева
-          XFillPolygon(dpy, win, gc, topP, 4, Convex, CoordModeOrigin);
-          XFillPolygon(dpy, win, gc, leftP, 4, Convex, CoordModeOrigin);
-
-          XSetForeground(dpy, gc, 0x808080); // Тень снизу и справа
-          XFillPolygon(dpy, win, gc, bottomP, 4, Convex, CoordModeOrigin);
-          XFillPolygon(dpy, win, gc, rightP, 4, Convex, CoordModeOrigin);
-
-          XSetForeground(dpy, gc, 0x000000); // Внутренняя черная рамка
-          XDrawRectangle(dpy, win, gc, b, b, SafeUINT32(w - 2*b - 1), SafeUINT32(h - 2*b - 1));
-
-          offset = b + 1;
+      XFontStruct *f = Font();
+      UINT32 szx = SafeUINT32(SizeX());
+      UINT32 szy = SafeUINT32(SizeY());
+      // 1. Determine whether to draw the actual Text or the Hint (Title)
+      bool showHint = Text().empty() && !mIsFocused;
+      std::string sDraw = showHint ? Title() : Text();
+      // 2. Render background based on Style
+      if (mStyle == AUIWidgetStyle::Simple3D && mRenderPicture != None) {
+          // --- STYLE: Simple3D (Sunken Effect) ---
+          // Fill the outer area with widget background color
+          XSetForeground(d, gc, BGColor());
+          XFillRectangle(d, bb, gc, 0, 0, szx, szy);
+          // Draw inner shadow to create the "hole" effect
+          XRenderColor hole_shadow = {0x1111, 0x1111, 0x1111, 0xAAAA};
+          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &hole_shadow, 0, 0, szx, szy);
+          // Draw the white input field with a subtle vertical gradient
+          XLinearGradient gradient;
+          gradient.p1 = {0, 0};
+          gradient.p2 = {0, XDoubleToFixed(static_cast<double>(szy))};
+          XRenderColor colors[] = {
+              {0xEEEE, 0xEEEE, 0xEEEE, 0xFFFF}, // Slightly grey top
+              {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}  // Pure white bottom
+          };
+          XFixed stops[] = {XDoubleToFixed(0.0), XDoubleToFixed(1.0)};
+          Picture grad_pix = XRenderCreateLinearGradient(d, &gradient, stops, colors, 2);
+          int inset = mDepth;
+          unsigned int shrink = static_cast<unsigned int>(inset * 2);
+          // Composite the gradient field into the "hole"
+          XRenderComposite(d, PictOpSrc, grad_pix, None, mRenderPicture, 0, 0, 0, 0,
+                           inset, inset,
+                           (szx > shrink ? szx - shrink : 1),
+                           (szy > shrink ? szy - shrink : 1));
+          XRenderFreePicture(d, grad_pix);
       } else {
-          XSetForeground(dpy, gc, 0x000000);
-          XFillRectangle(dpy, win, gc, 0, 0, SafeUINT32(w), SafeUINT32(h));
+          // --- STYLE: Flat ---
+          XSetForeground(d, gc, BGColor());
+          XFillRectangle(d, bb, gc, 0, 0, szx, szy);
+
+          // Draw standard flat black border
+          XSetForeground(d, gc, BlackPixel(d, aui->Scr()));
+          XDrawRectangle(d, bb, gc, 0, 0, szx - 1, szy - 1);
       }
-
-      // 2. ЗАЛИВКА ФОНА (фон рисуется ПЕРЕД текстом)
-      XSetForeground(dpy, gc, BGColor());
-      XFillRectangle(dpy, win, gc, offset, offset, SafeUINT32(w - 2 * offset), SafeUINT32(h - 2 * offset));
-
-      // 3. ОТРИСОВКА ТЕКСТА
-      if (Font()) {
-          XSetFont(dpy, gc, Font()->fid);
-          XSetForeground(dpy, gc, AUI_DEFAULT_INPUT_FG);
-
-          int textLen = SafeINT32(Text().length());
-          int textW = XTextWidth(Font(), Text().c_str(), textLen);
-          int textH = Font()->ascent + Font()->descent;
-
-          // Горизонтальное выравнивание
-          int textX = offset + mInnerInset;
-          if (HAlign() == AUIHAlign::center) textX = (w - textW) / 2;
-          else if (HAlign() == AUIHAlign::right) textX = w - textW - offset - mInnerInset;
-
-          // Вертикальное центрирование
-          int textY = (h - textH) / 2 + Font()->ascent;
-
-          XDrawString(dpy, win, gc, textX, textY, Text().c_str(), textLen);
-
-          // 4. КУРСОР
-          if (mIsFocused && mCursorVisible) {
-              int cursorX = textX + XTextWidth(Font(), Text().c_str(), SafeINT32(mCursorPos));
-              XSetForeground(dpy, gc, 0x000000);
-              XFillRectangle(dpy, win, gc,
-                             cursorX,
-                             textY - Font()->ascent,
-                             SafeUINT32(mCursorW),
-                             SafeUINT32(textH));
-          }
+      // 3. Set text color (Grey for Hint, Black for Input)
+      if (showHint) {
+          XSetForeground(d, gc, 0xAAAAAA);
+      } else {
+          XSetForeground(d, gc, BlackPixel(d, aui->Scr()));
       }
+      // 4. Calculate text positioning
+      INT32 totalW = XTextWidth(f, sDraw.c_str(), (int)sDraw.size());
+      int cur_inset = (mStyle == AUIWidgetStyle::Simple3D) ? mDepth : 0;
+
+      INT32 drawX = 0, drawY = 0;
+      // Horizontal alignment logic
+      if (HAlign() == AUIHAlign::left) {
+          drawX = cur_inset + 5;
+      } else if (HAlign() == AUIHAlign::center) {
+          drawX = (SafeINT32(szx) - totalW) / 2;
+      } else {
+          drawX = SafeINT32(szx) - totalW - cur_inset - 5;
+      }
+      // Vertical alignment logic
+      if (VAlign() == AUIVAlign::top) {
+          drawY = f->ascent + cur_inset + 2;
+      } else if (VAlign() == AUIVAlign::center) {
+          drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
+      } else {
+          drawY = SafeINT32(szy) - f->descent - cur_inset - 2;
+      }
+      // 5. Draw the actual string (Hint or Text)
+      XSetForeground(d, gc, 0x8800);
+      if (!sDraw.empty()) {
+          XDrawString(d, bb, gc, drawX, drawY, sDraw.c_str(), (int)sDraw.size());
+      }
+      // 6. Draw cursor if focused and visible (blink logic)
+      if (mIsFocused && mCursorVisible) {
+          int cursorX = drawX + XTextWidth(f, Text().c_str(), (int)mCursorPos);
+          XSetForeground(d, gc, BlackPixel(d, aui->Scr()));
+          XDrawLine(d, bb, gc, cursorX, drawY - f->ascent, cursorX, drawY + f->descent);
+      }
+      // 7. Transfer final image from Pixmap to Window
+      XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
+      XFlush(d);
   }
-
 
   void AInputBox::OnKeyPress(XEvent *ev) {
     mCursorVisible = true;
@@ -214,7 +234,7 @@ namespace aui {
       mCursorPos--;
       D2("deleting character, new pos %lu", mCursorPos)
     } else {
-      D1("data empty or cursor at start")
+      D2("data empty or cursor at start")
     }
   }
 
@@ -238,7 +258,8 @@ namespace aui {
     Draw();
   }
 
-  void AInputBox::SetOnValueChangedCB(std::function<void(AWidget *w, void *arbdata)> func, void *data) {
+  void AInputBox::SetOnValueChangedCB(
+      std::function<void(AWidget *w, void *arbdata)> func, void *data) {
     mUserDataValueChanged = data;
     OnValueChanged = func;
     D1()
@@ -247,10 +268,10 @@ namespace aui {
   AInputBox::~AInputBox() {
     OnValueChanged = nullptr;
     mStopBlink = true;
-    if(mBlinkThread.joinable()) mBlinkThread.join();
+    if(mBlinkThread.joinable())
+      mBlinkThread.join();
     D3("v")
   }
-
 
 }
 

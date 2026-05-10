@@ -35,86 +35,78 @@ namespace aui {
   }
 
   void AButton::Draw() {
-      AUI *cg = AUIPtr();
-      if (!cg || Wnd() == 0 || GCPtr() == 0) return;
-      if (!BB()) UpdateBuffer();
-
-      Display *d = cg->Disp();
-      Pixmap bb = BB();
-      GC gc = GCPtr();
-      XFontStruct *f = Font();
-      UINT32 szx = SafeUINT32(SizeX());
-      UINT32 szy = SafeUINT32(SizeY());
-
-      // Предварительный расчет координат текста
-      INT32 totalW = XTextWidth(f, Text().c_str(), (int)Text().size());
-      INT32 drawX = 0, drawY = 0;
-
-      if (HAlign() == AUIHAlign::center) drawX = (SafeINT32(szx) - totalW) / 2;
-      else if (HAlign() == AUIHAlign::left) drawX = 5;
-      else drawX = SafeINT32(szx) - totalW - 5;
-
-      if (VAlign() == AUIVAlign::center) drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
-      else if (VAlign() == AUIVAlign::top) drawY = f->ascent + 5;
-      else drawY = SafeINT32(szy) - f->descent - 5;
-
-      if (mStyle == AUIWidgetStyle::Simple3D && mRenderPicture != None) {
-          // --- РЕЖИМ: Simple3D ---
-          bool pressed = IsHL();
-          int offset = pressed ? mDepth : 0;
-          unsigned int shrink = pressed ? static_cast<unsigned int>(mDepth * 2) : 0;
-
-          // Фон кнопки (динамический)
-          XSetForeground(d, gc, BGColor());
-          XFillRectangle(d, bb, gc, 0, 0, szx, szy);
-
-          if (!pressed) {
-              // Внешние тени
-              XRenderColor shadow = {0, 0, 0, 0x6666};
-              for (int i = 1; i <= mDepth; ++i)
-                  XRenderFillRectangle(d, PictOpOver, mRenderPicture, &shadow, i, i, szx, szy);
-          } else {
-              // Внутренняя тень при нажатии
-              XRenderColor hole = {0, 0, 0, 0x8888};
-              XRenderFillRectangle(d, PictOpOver, mRenderPicture, &hole, 0, 0, szx, szy);
-          }
-
-          // Градиент тела кнопки
-          XLinearGradient gradient;
-          gradient.p1 = {0, 0};
-          gradient.p2 = {0, XDoubleToFixed(static_cast<double>(szy))};
-
-          XRenderColor c_top = pressed ? XRenderColor{0x2222,0x2222,0x2222,0xFFFF} : XRenderColor{0x7777,0x7777,0x7777,0xFFFF};
-          XRenderColor c_bot = pressed ? XRenderColor{0x4444,0x4444,0x4444,0xFFFF} : XRenderColor{0x5555,0x5555,0x5555,0xFFFF};
-          XRenderColor colors[] = { c_top, c_bot };
-          XFixed stops[] = { XDoubleToFixed(0.0), XDoubleToFixed(1.0) };
-
-          Picture grad = XRenderCreateLinearGradient(d, &gradient, stops, colors, 2);
-          XRenderComposite(d, PictOpSrc, grad, None, mRenderPicture, 0, 0, 0, 0,
-                           offset, offset,
-                           (szx > shrink ? szx - shrink : 1),
-                           (szy > shrink ? szy - shrink : 1));
-          XRenderFreePicture(d, grad);
-
-          // Текст
-          XSetForeground(d, gc, 0xAAAAAA);
-          XDrawString(d, bb, gc, drawX + offset, drawY + offset, TextPtr(), (int)Text().length());
+    AUI *cg = AUIPtr();
+    if(!cg || Wnd() == 0 || GCPtr() == 0)
+      return;
+    if(!BB())
+      UpdateBuffer();
+    Display *d = cg->Disp();
+    Pixmap bb = BB();
+    GC gc = GCPtr();
+    XFontStruct *f = Font();
+    UINT32 szx = SafeUINT32(SizeX());
+    UINT32 szy = SafeUINT32(SizeY());
+    INT32 totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
+    INT32 drawX = 0, drawY = 0;
+    if(HAlign() == AUIHAlign::center)
+      drawX = (SafeINT32(szx) - totalW) / 2;
+    else if(HAlign() == AUIHAlign::left)
+      drawX = 5;
+    else
+      drawX = SafeINT32(szx) - totalW - 5;
+    if(VAlign() == AUIVAlign::center)
+      drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
+    else if(VAlign() == AUIVAlign::top)
+      drawY = f->ascent + 5;
+    else
+      drawY = SafeINT32(szy) - f->descent - 5;
+    if(mStyle == AUIWidgetStyle::Simple3D && mRenderPicture != None) {
+      bool pressed = IsHL();
+      int offset = pressed ? mDepth : 0;
+      unsigned int shrink = pressed ? static_cast<unsigned int>(mDepth * 2) : 0;
+      XSetForeground(d, gc, BGColor());
+      XFillRectangle(d, bb, gc, 0, 0, szx, szy);
+      if(!pressed) {
+        XRenderColor shadow = { 0, 0, 0, 0x6666 };
+        for (int i = 1; i <= mDepth; ++i)
+          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &shadow, i, i,
+              szx, szy);
       } else {
-          // --- РЕЖИМ: Flat ---
-          XSetForeground(d, gc, IsHL() ? HLColor(BGColor()) : BGColor());
-          XFillRectangle(d, bb, gc, 0, 0, szx, szy);
-
-          XSetForeground(d, gc, BlackPixel(d, cg->Scr()));
-          XDrawRectangle(d, bb, gc, 0, 0, szx - 1, szy - 1);
-
-          XDrawString(d, bb, gc, drawX, drawY, TextPtr(), (int)Text().length());
+        XRenderColor hole = { 0, 0, 0, 0x8888 };
+        XRenderFillRectangle(d, PictOpOver, mRenderPicture, &hole, 0, 0, szx,
+            szy);
       }
+      XLinearGradient gradient;
+      gradient.p1 = { 0, 0 };
+      gradient.p2 = { 0, XDoubleToFixed(static_cast<double>(szy)) };
 
-      XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
-      XFlush(d);
+      XRenderColor c_top = pressed ? XRenderColor { 0xAAAA, 0xAAAA, 0xAAAA, 0xFFFF } :
+                                     XRenderColor { 0xEEEE, 0xEEEE, 0xEEEE, 0xFFFF };
+      XRenderColor c_bot = pressed ? XRenderColor { 0x5555, 0x5555, 0x5555, 0xFFFF } :
+                                     XRenderColor { 0x8888, 0x8888, 0x8888, 0xFFFF };
+      XRenderColor colors[] = { c_top, c_bot };
+      XFixed stops[] = { XDoubleToFixed(0.0), XDoubleToFixed(1.0) };
+      Picture grad = XRenderCreateLinearGradient(d, &gradient, stops, colors,
+          2);
+      XRenderComposite(d, PictOpSrc, grad, None, mRenderPicture, 0, 0, 0, 0,
+          offset, offset, (szx > shrink ? szx - shrink : 1),
+          (szy > shrink ? szy - shrink : 1));
+      XRenderFreePicture(d, grad);
+      XSetForeground(d, gc, 0x333333);
+      XDrawString(d, bb, gc, drawX + offset, drawY + offset, TextPtr(),
+          (int) Text().length());
+    } else {
+      // Flat ---
+      XSetForeground(d, gc, IsHL() ? HLColor(BGColor()) : BGColor());
+      XFillRectangle(d, bb, gc, 0, 0, szx, szy);
+      XSetForeground(d, gc, BlackPixel(d, cg->Scr()));
+      XDrawRectangle(d, bb, gc, 0, 0, szx - 1, szy - 1);
+      XDrawString(d, bb, gc, drawX, drawY, TextPtr(), (int) Text().length());
+    }
+    XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
+    XFlush(d);
   }
 
-  //
   void AButton::OnButtonPress([[maybe_unused]]XEvent *ev) {
     if(!IsHL()) {
       HL(true);

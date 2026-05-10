@@ -26,7 +26,6 @@ namespace aui {
       void* mUserDataValueChanged = nullptr;
       INT32 mInnerInset = 3;
 
-
     protected:
     public:
       static AInputBox* AttachTo(AWidget* wParent);
@@ -42,7 +41,6 @@ namespace aui {
       void SetInputFilter(std::string f);
       virtual void SetText(std::string value);
       void SetOnValueChangedCB(std::function<void(AWidget* w, void* arbdata)> func, void* data);
-
   };
 }
 

@@ -16,8 +16,6 @@ namespace aui {
       void Draw();
       void OnButtonPress(XEvent* ev);
       void OnButtonRelease(XEvent* ev);
-//      void SetButtonStyle(AUIWidgetStyle style);
-//      void SetPressDepth(INT32 depth);
   };
 }
 

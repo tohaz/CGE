@@ -58,9 +58,15 @@ namespace aui {
     public:
       AWidget();
       virtual ~AWidget();
+      virtual void Draw();
       AUI* AUIPtr();
       Window Wnd();
       AUIWidgetType Type();
+      void CorrectCoordinates(XEvent& event);
+      void CorrectNegativeCoordinates(XEvent& event);
+      void CorrectCoordinateX(INT32 &x);
+      void CorrectCoordinateY(INT32 &y);
+      void Close();
       void SetTitle(std::string newTitle);
       void SetText(std::string newText);
       void SetType(AUIWidgetType inType);
@@ -79,7 +85,6 @@ namespace aui {
       std::string& Title();
       XFontStruct* Font();
       GC GCPtr();
-      virtual void Draw();
       virtual void OnButtonPress(XEvent* ev);
       virtual void OnButtonRelease(XEvent* ev);
       virtual void OnFocusIn(XEvent* ev);
@@ -111,14 +116,11 @@ namespace aui {
       void PrintDimensions();
       Pixmap BB();
       void SetBB(Pixmap backBuffer);
-      void CorrectCoordinates(XEvent& event);
-      void CorrectNegativeCoordinates(XEvent& event);
-      void CorrectCoordinateX(INT32 &x);
-      void CorrectCoordinateY(INT32 &y);
-      void Close();
       void SetStyle(AUIWidgetStyle style);
       void SetPressDepth(int depth);
       AUIWidgetStyle Style() const;
+      Picture GetRenderPicture() const;
+
   };
 }
 
