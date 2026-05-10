@@ -258,11 +258,10 @@ namespace aui {
     Draw();
   }
 
-  void AInputBox::SetOnValueChangedCB(
-      std::function<void(AWidget *w, void *arbdata)> func, void *data) {
+  void AInputBox::SetOnValueChangedCB(std::function<void(AWidget *w, void *arbdata)> func, void *data) {
     mUserDataValueChanged = data;
     OnValueChanged = func;
-    D1()
+    D4()
   }
 
   AInputBox::~AInputBox() {

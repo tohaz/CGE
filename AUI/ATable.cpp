@@ -861,21 +861,33 @@ namespace aui {
     return mCursorCol;
   }
 
-  std::string ATable::CursorData() {
+  std::string ATable::DataAt(INT64 row, INT64 col) {
+    D1("get data for RC [{},{}]", row, col);
+    auto itRow = mRows.find(row);
+    if(itRow == mRows.end()) {
+      D1("Not found row {}", row);
+      return "";
+    }
+    auto itCol = itRow->second.find(col);
+    if(itCol == itRow->second.end()) {
+      D1("Not found column {}", col);
+      return "";
+    }
+    return itCol->second.data;
+  }
+
+  std::string ATable::DataAtCursor() {
     D1("get data for RC cursor [{},{}]", mCursorRow, mCursorCol);
-    // 1. Look for the row map
     auto itRow = mRows.find(mCursorRow);
     if(itRow == mRows.end()) {
       D1("Not found cursor row {}", mCursorRow);
       return "";
     }
-    // 2. Look for the specific column in that row
     auto itCol = itRow->second.find(mCursorCol);
     if(itCol == itRow->second.end()) {
       D1("Not found cursor column {}", mCursorCol);
       return "";
     }
-    // 3. Return the data safely
     return itCol->second.data;
   }
 

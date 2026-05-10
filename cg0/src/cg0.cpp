@@ -29,8 +29,8 @@ void UpdateProcTable(ATable *ta, UNUSED std::string filter) {
   for (const auto& [id, value] : pr) {
     pd = value;
     if(pd->Path().contains(filter) || pd->PidStr().contains(filter)) {
-      INT64 realIdx = ta->AddRow();
-      D("Inserting row: realIdx={}, manualRow={}", realIdx, row);
+      UNUSED INT64 realIdx = ta->AddRow();
+      D2("Inserting row: realIdx={}, manualRow={}", realIdx, row);
       cell.data = pd->PidStr();
       cell.hAlign = AUIHAlign::center;
       ta->Insert(row, 0, &cell);
@@ -52,8 +52,8 @@ void ButtonSelectHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   D1()
   AButton* b = (AButton*) w;
   ATable* ta = (ATable*)d;
-  std::string zzz = ta->CursorData();
-  D1("cursor data '{}'", zzz.c_str())
+  std::string zzz = ta->DataAt(ta->CursorRow(), 0);
+  D1("cursor data '{}', row is {}", zzz.c_str(), ta->CursorRow())
   b->ParentWidget()->Close();
 }
 

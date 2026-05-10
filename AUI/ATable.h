@@ -122,8 +122,8 @@ namespace aui {
       void SetCursorPosition(INT64 row, INT64 column);
       INT64 CursorRow();
       INT64 CursorColumn();
-      std::string CursorData();
-
+      std::string DataAtCursor();
+      std::string DataAt(INT64 row, INT64 col);
   };
 }
 

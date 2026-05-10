@@ -7,7 +7,6 @@
 #include <string>
 #include <unordered_map>
 
-
 #define DEBUG_LEVEL 1
 
 #define UNUSED [[maybe_unused]]
@@ -86,7 +85,6 @@ union RGBAColor {
     operator UINT32() const { return value; }
     void Clear() { value = 0; }
 };
-//#pragma GCC diagnostic pop
 
 // CGWindow
 #define AUI_DEFAULT_WINDOW_TITLE "aui dummy title, set me plz"
@@ -172,13 +170,10 @@ enum class AUIWidgetStyle {
 #ifndef AUI_GIT_VERSION
 #define AUI_GIT_VERSION "Not a controlled build"
 #endif
-
 // DD stands for Debug Do. D1-D4 and W() are removed on release build (DEBUG_LEVEL 0)
-
 #ifndef DEBUG_LEVEL
     #define DEBUG_LEVEL 0
 #endif
-
 /**
  * INTERNAL_PRINT
  * Internal helper to format the output string.
@@ -191,26 +186,20 @@ enum class AUIWidgetStyle {
             std::print("!!! DEBUG FORMAT ERROR at {}|{}({}): ", __FILE__, __func__, __LINE__); \
             std::println("{} !!!", __debug_e.what()); \
         }
-
     // Default debug macro (Level 1)
     #define D(fmt, ...) do { INTERNAL_PRINT("D", 1, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
-
     // E() - Fatal Error: Prints, dumps stack, and exits.
     #define E(fmt, ...) do { \
         INTERNAL_PRINT("E", 1, fmt __VA_OPT__(,) __VA_ARGS__); \
         print_stack(); \
         exit(1); \
     } while (0);
-
     // DD() - Executes any code only in debug builds
     #define DD(...) do { __VA_ARGS__; } while (0);
-
     // W() - Lightweight marker
     #define W() do { try { std::println("W {}|{}({})", __FILE__, __func__, __LINE__); } catch(...) {} } while (0);
-
     // DS() - Global Stack Trace
     #define DS() do { D("\n---Trace at {}:{}---", __FILE__, __LINE__) print_stack(); } while (0);
-
 #else
     // RELEASE MODE (DEBUG_LEVEL 0)
     #define D(...)  do {} while (0);
@@ -223,14 +212,16 @@ enum class AUIWidgetStyle {
 /**
  * LOG LEVELS D1-D4
  */
+// --- LEVEL 1 ---
 #if DEBUG_LEVEL >= 1
-    #define D1(fmt, ...) D(fmt __VA_OPT__(,) __VA_ARGS__)
+    #define D1(fmt, ...) do { INTERNAL_PRINT("D", 1, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
     #define DS1() DS()
 #else
     #define D1(...)  do {} while (0);
     #define DS1()    do {} while (0);
 #endif
 
+// --- LEVEL 2 ---
 #if DEBUG_LEVEL >= 2
     #define D2(fmt, ...) do { INTERNAL_PRINT("D", 2, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
     #define DS2() DS()
@@ -239,6 +230,7 @@ enum class AUIWidgetStyle {
     #define DS2()    do {} while (0);
 #endif
 
+// --- LEVEL 3 ---
 #if DEBUG_LEVEL >= 3
     #define D3(fmt, ...) do { INTERNAL_PRINT("D", 3, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
     #define DS3() DS()
@@ -247,12 +239,12 @@ enum class AUIWidgetStyle {
     #define DS3()    do {} while (0);
 #endif
 
+// --- LEVEL 4 ---
 #if DEBUG_LEVEL >= 4
     #define D4(fmt, ...) do { INTERNAL_PRINT("D", 4, fmt __VA_OPT__(,) __VA_ARGS__); } while (0);
 #else
     #define D4(...)  do {} while (0);
 #endif
-
 const static std::unordered_map<std::string,UINT64> string_to_case{
    {"BackSpace", 1},
    {"space", 2},
