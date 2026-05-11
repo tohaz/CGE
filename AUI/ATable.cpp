@@ -77,7 +77,7 @@ namespace aui {
           (UINT32) SizeY(), 0, 0);
     }
     XSync(d, False);
-
+    D1("draw {}", mDebugDrawCounter++)
   }
 
   ATable* ATable::AttachTo(AWidget *wParent) {
@@ -862,7 +862,7 @@ namespace aui {
   }
 
   std::string ATable::DataAt(INT64 row, INT64 col) {
-    D1("get data for RC [{},{}]", row, col);
+    D1("get data for RC[{},{}]", row, col);
     auto itRow = mRows.find(row);
     if(itRow == mRows.end()) {
       D1("Not found row {}", row);

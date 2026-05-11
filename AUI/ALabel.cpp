@@ -77,4 +77,19 @@ namespace aui {
   ALabel::~ALabel() {
   }
 
+  ALabel& ALabel::operator =(UNUSED const std::string &newValue) {
+    SetText(newValue);
+    return *this;
+  }
+
+  ALabel& ALabel::operator+=(const std::string& text) {
+    this->AddText(text);
+    return *this;
+  }
+
+  ALabel& ALabel::operator+=(const char* text) {
+    this->AddText(text);
+    return *this;
+  }
+
 }

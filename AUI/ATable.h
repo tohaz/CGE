@@ -82,6 +82,7 @@ namespace aui {
       bool mAllowRowResize = true;
       bool mRowHeaderResizeEnabled = true;
       bool mRowHeightResizeEnabled = true;
+      INT64 mDebugDrawCounter = 0;
     public:
       virtual ~ATable();
       static  ATable* AttachTo(AWidget* wParent);

@@ -54,6 +54,14 @@ INT32 AutowidenTest(ATable *ta) {
 	return 1;
 }
 
+INT32 AddRowTest(ATable *ta) {
+	ta->Clear();
+	ta->AddRow();
+	D()
+	return 0;
+}
+
+
 int main() {
 	//char *qqq = new char[1]; // generate error
   UINT32 delay_ms = 50; // delay before thead calls window to close
@@ -64,6 +72,7 @@ int main() {
   
   testsfailed += GeneralTest(ta);
   testsfailed += AutowidenTest(ta);
+  testsfailed += AddRowTest(ta);
   
   std::future<void> handle;
   if(need_delay_exit) {

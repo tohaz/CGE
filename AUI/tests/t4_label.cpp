@@ -17,6 +17,8 @@ int main() {
   AWindow* w = au->MainWnd();
   ALabel* lb = ALabel::AttachTo(w, "test");
   lb->Resize(250, 20);
+  *lb = "test2";
+  *lb += "_1";
 
   auto handle = std::async(std::launch::async, [=]() {
     std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));

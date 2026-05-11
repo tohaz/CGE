@@ -69,6 +69,7 @@ namespace aui {
       void Close();
       void SetTitle(std::string newTitle);
       void SetText(std::string newText);
+      void AddText(std::string newText);
       void SetType(AUIWidgetType inType);
       void SetXY(INT64 newX, INT64 newY);
       void SetSizeXY(UINT64 newSzX, UINT64 newSzY);

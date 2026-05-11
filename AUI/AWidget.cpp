@@ -69,6 +69,11 @@ namespace aui {
     Draw();
   }
 
+  void AWidget::AddText(std::string newText) {
+    mText += newText;
+    Draw();
+  }
+
   void AWidget::SetType(AUIWidgetType inType) {
     mType = inType;
   }
