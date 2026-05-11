@@ -79,7 +79,6 @@ namespace aui {
       XLinearGradient gradient;
       gradient.p1 = { 0, 0 };
       gradient.p2 = { 0, XDoubleToFixed(static_cast<double>(szy)) };
-
       XRenderColor c_top = pressed ? XRenderColor { 0xAAAA, 0xAAAA, 0xAAAA, 0xFFFF } :
                                      XRenderColor { 0xEEEE, 0xEEEE, 0xEEEE, 0xFFFF };
       XRenderColor c_bot = pressed ? XRenderColor { 0x5555, 0x5555, 0x5555, 0xFFFF } :

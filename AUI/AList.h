@@ -16,7 +16,6 @@ namespace aui {
       bool mScrollbarsEnabled = false;
       void DrawScrollbars();
       void DrawScrollbarsArrorws();
-      void DrawScrollbarsIndicators();
       UINT64 mArwSz1 = AUI_LIST_ARROWSZ1; //Arrow size along the arrow line >=== [---]
       UINT64 mArwSz2 = AUI_LIST_ARROWSZ2; // and against it                 >=== IIIII
       bool mSrollbarTopHL = false;
@@ -24,7 +23,7 @@ namespace aui {
       bool mSrollbarLeftHL = false;
       bool mSrollbarRightHL = false;
       bool mSingleSelect = true;
-      UINT64 mSelectIndex = 0; // first element is 1, not 0
+      UINT64 mCursorIndex = 0; // first element is 1, not 0
       bool mIsFocused = false;
       bool mIsDraggingV = false;
       bool mIsDraggingH = false;
@@ -53,6 +52,10 @@ namespace aui {
       void EnableScrollbars();
       void ShowVerticalScroll(bool thumb, bool arrows);
       void ShowHorizontalScroll(bool thumb, bool arrows);
+      void SetCursorPosition(UINT64 line);
+      UINT64 CursorPos();
+      std::string DataAtCursor();
+      std::string DataAt(UINT64 line);
   };
 }
 

@@ -323,12 +323,12 @@ namespace aui {
         // We only process selection if the click was NOT inside an active scrollbar area
         if(lx > 0 && lx < (sizeX - mArwSz2) && ly > 0
             && ly < (sizeY - mArwSz2)) {
-          mSelectIndex = IndexFromY(SafeUINT32(ly));
-          if(mSelectIndex > 0 && mSelectIndex <= mData.size()) {
+          mCursorIndex = IndexFromY(SafeUINT32(ly));
+          if(mCursorIndex > 0 && mCursorIndex <= mData.size()) {
             if(mSingleSelect) {
               std::fill(mTag.begin(), mTag.end(), false);
             }
-            mTag[mSelectIndex - 1] = !mTag[mSelectIndex - 1];
+            mTag[mCursorIndex - 1] = !mTag[mCursorIndex - 1];
             Draw();
           }
         }
@@ -512,9 +512,30 @@ namespace aui {
     }
   }
 
+  void AList::SetCursorPosition(UINT64 line) {
+    mCursorIndex = line;
+    Draw();
+  }
+
+  std::string AList::DataAtCursor() {
+    return mData[mCursorIndex];
+  }
+
+  std::string AList::DataAt(UINT64 line) {
+    return mData[line];
+  }
+
+  UINT64 AList::CursorPos() {
+    return mCursorIndex;
+  }
+
+
+
   AList::~AList() {
     mData.clear();
     mTag.clear();
   }
+
+
 }
 
