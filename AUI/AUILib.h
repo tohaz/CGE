@@ -178,6 +178,9 @@ namespace aui {
   class AWidget;
   class AWindow;
   UINT32 HLColor(UINT32 ci);
+  UINT32 HoverColor(UINT32 ci);
+  XRenderColor ScaleAndBlend(uint8_t base, uint8_t target, double t);
+  UINT32 GetBlendedColor(UINT32 baseColor, uint8_t target, double t);
 
   class AUI {
     private:

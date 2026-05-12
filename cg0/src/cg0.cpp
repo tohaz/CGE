@@ -11,11 +11,25 @@ INT32 gPID = 0;
 std::string gPath = "";
 std::string gPIDStr = "";
 ALabel* gLB = nullptr;
+AButton* bSearch = nullptr;
 
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
   D1("init time: {} ms", duration_ms1.count()); // @suppress("Function cannot be instantiated")
+}
+
+void ShowSearchUI(UNUSED AWidget *w) {
+  D("widget is {}", (UINT64)w)
+//  gSearch = AWindow::AttachTo(w->ParentWidget(), "search");
+  if(bSearch == nullptr) {
+    bSearch = AButton::AttachTo(w, "Search");
+    bSearch->Hide();
+    bSearch->Show();
+    bSearch->Move(10, 730);
+  }
+//  bOpenProc->Resize(200, 50);
+
 }
 
 void ButtonSelectHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
@@ -46,6 +60,7 @@ void ButtonSelectHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
     gPID = 0;
   }
   D1("cursor PID data '{}', row is {}", gPath.c_str(), ta->CursorRow())
+  ShowSearchUI(b->AUIPtr()->MainWnd());
   b->ParentWidget()->Close();
 }
 
@@ -103,8 +118,8 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   ib->Move(10, 10);
   ib->Resize(100,25);
   ib->SetOnValueChangedCB(InputBoxValueChangedHandler, ta);
-  ib->SetStyle(AUIWidgetStyle::Flat);
-  ib->SetPressDepth(1);
+  ib->SetStyle(AUIWidgetStyle::Simple3D);
+  ib->SetPressDepth(3);
   UpdateProcTable(ta, "");
 }
 
@@ -116,7 +131,7 @@ int main() {
   w->Resize(1024, 768);
   w->DisableResize();
   AButton* bOpenProc = AButton::AttachTo(w, "Processes");
-  bOpenProc->Resize(100, 20);
+  bOpenProc->Resize(100, 26);
   bOpenProc->SetOnButtonReleaseCB(ButtonProcessesHandler, w);
   bOpenProc->SetStyle(AUIWidgetStyle::Simple3D);
   bOpenProc->SetPressDepth(0);

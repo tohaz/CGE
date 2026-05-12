@@ -1,11 +1,31 @@
 #include "AUILib.h"
 
-//
-
 #include "AWidget.h"
 #include "AWindow.h"
 
 namespace aui {
+
+  UINT32 GetBlendedColor(UINT32 baseColor, uint8_t target, double t) {
+      RGBAColor c;
+      c.value = baseColor;
+
+      c.rgba.r = static_cast<uint8_t>(c.rgba.r + (target - c.rgba.r) * t);
+      c.rgba.g = static_cast<uint8_t>(c.rgba.g + (target - c.rgba.g) * t);
+      c.rgba.b = static_cast<uint8_t>(c.rgba.b + (target - c.rgba.b) * t);
+
+      return c.value;
+  }
+
+  XRenderColor ScaleAndBlend(uint8_t base, uint8_t target, double t) {
+    // Linear interpolation: base + (target - base) * t
+    uint8_t blended8 = static_cast<uint8_t>(base + (static_cast<double>(target) - base) * t);
+
+    // Manual scale to 16-bit to avoid any compiler warnings
+    uint16_t val16 = static_cast<uint16_t>((static_cast<uint32_t>(blended8) << 8) | blended8);
+
+    return XRenderColor { val16, val16, val16, 0xFFFF }; // We'll set R, G, B separately
+  }
+
   UINT32 HLColor(UINT32 ci) {
     RGBAColor c;
     c.value = ci;
@@ -22,6 +42,30 @@ namespace aui {
       c.rgba.g = (c.rgba.g < (255 - AUI_HL_SHIFT)) ? static_cast<uint8_t>(c.rgba.g + AUI_HL_SHIFT) : static_cast<uint8_t>(255);
       c.rgba.b = (c.rgba.b < (255 - AUI_HL_SHIFT)) ? static_cast<uint8_t>(c.rgba.b + AUI_HL_SHIFT) : static_cast<uint8_t>(255);
       }
+    return c.value;
+  }
+
+  // A milder version of HLColor for hovering
+  UINT32 HoverColor(UINT32 ci) {
+    RGBAColor c;
+    c.value = ci;
+    // We use a smaller shift for a subtle "glow"
+    const uint8_t hover_shift = 12;
+    UINT32 overall = static_cast<UINT32>(c.rgba.r)
+        + static_cast<UINT32>(c.rgba.g) + static_cast<UINT32>(c.rgba.b);
+
+    if(overall > 384) { // Brighter background -> darken slightly
+      c.rgba.r = (c.rgba.r > hover_shift) ? c.rgba.r - hover_shift : 0;
+      c.rgba.g = (c.rgba.g > hover_shift) ? c.rgba.g - hover_shift : 0;
+      c.rgba.b = (c.rgba.b > hover_shift) ? c.rgba.b - hover_shift : 0;
+    } else { // Darker background -> brighten slightly
+      c.rgba.r =
+          (c.rgba.r < (255 - hover_shift)) ? c.rgba.r + hover_shift : 255;
+      c.rgba.g =
+          (c.rgba.g < (255 - hover_shift)) ? c.rgba.g + hover_shift : 255;
+      c.rgba.b =
+          (c.rgba.b < (255 - hover_shift)) ? c.rgba.b + hover_shift : 255;
+    }
     return c.value;
   }
 
@@ -64,7 +108,6 @@ namespace aui {
   Display* AUI::Disp() {
     return mDisplay;
   }
-
 
   void AUI::ProcessMessages() {
     XEvent event;
@@ -120,6 +163,14 @@ namespace aui {
             D3()
             widget->OnFocusOut(&event);
             break;
+          case EnterNotify:
+            D3()
+            widget->OnMouseEnter(&event);
+            break;
+          case LeaveNotify:
+            D3()
+            widget->OnMouseLeave(&event);
+            break;
           case ClientMessage:
             if(targetWin == mMainWnd->Wnd()) {
               D1("Shutting down AUI (version '{}')", AUI_GIT_VERSION)
@@ -134,7 +185,9 @@ namespace aui {
             D3("ConfigureNotify for widget {}", (UINT64)targetWin)
             break;
           case UnmapNotify:
+            break;
           case MapNotify:
+            break;
           case ReparentNotify:
             D3("System notification %d for window {}", event.type,
                 (UINT64)targetWin)

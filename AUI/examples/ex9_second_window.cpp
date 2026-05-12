@@ -18,7 +18,7 @@ int main() {
   w->EnableResize();
   w->Resize(540, 380);
   w->DisableResize();
-	UNUSED AWindow* wS = AWindow::AttachTo(au, "Open process");
+	UNUSED AWindow* wS = AWindow::AttachTo(au, "second window");
   ALabel* lb = ALabel::AttachTo(wS, "Close main window while not ");
   lb->Move(10, 10);
   lb->Resize(300, 20);

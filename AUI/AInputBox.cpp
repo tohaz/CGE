@@ -32,6 +32,7 @@ namespace aui {
     XMapWindow(d, Wnd());
     aui->AddWidget(this);
     SetBorderSz(0);
+    SetPressDepth(0);
     mFilter = mFilterStr;
     // Start the blink thread
     INT32 i32szx = SafeINT32(szx);
@@ -72,7 +73,6 @@ namespace aui {
   void AInputBox::Draw() {
       AUI *aui = AUIPtr();
       if (!aui || Wnd() == 0 || GCPtr() == 0) return;
-      // Ensure backbuffer and XRender picture are initialized
       if (!BB()) UpdateBuffer();
       Display *d = aui->Disp();
       Pixmap bb = BB();
@@ -80,84 +80,79 @@ namespace aui {
       XFontStruct *f = Font();
       UINT32 szx = SafeUINT32(SizeX());
       UINT32 szy = SafeUINT32(SizeY());
-      // 1. Determine whether to draw the actual Text or the Hint (Title)
+      // 1. Determine visual state
       bool showHint = Text().empty() && !mIsFocused;
       std::string sDraw = showHint ? Title() : Text();
-      // 2. Render background based on Style
+      // Use mDepth for all calculations
+      INT32 cur_depth = mDepth;
+      // 2. Render Background and 3D Frame
       if (mStyle == AUIWidgetStyle::Simple3D && mRenderPicture != None) {
-          // --- STYLE: Simple3D (Sunken Effect) ---
-          // Fill the outer area with widget background color
+          // Fill base frame area
           XSetForeground(d, gc, BGColor());
           XFillRectangle(d, bb, gc, 0, 0, szx, szy);
-          // Draw inner shadow to create the "hole" effect
-          XRenderColor hole_shadow = {0x1111, 0x1111, 0x1111, 0xAAAA};
-          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &hole_shadow, 0, 0, szx, szy);
-          // Draw the white input field with a subtle vertical gradient
+          // Draw Sunken "Slopes" using mDepth as thickness
+          XRenderColor inner_shadow = {0x0000, 0x0000, 0x0000, 0x7777};
+          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &inner_shadow, 0, 0,
+                               szx, SafeUINT32(cur_depth)); // Top slope
+          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &inner_shadow, 0, 0,
+                               SafeUINT32(cur_depth), szy); // Left slope
+          // Draw light accents on the very outer edges
+          XRenderColor outer_light = {0xFFFF, 0xFFFF, 0xFFFF, 0x5555};
+          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &outer_light,
+                               0, SafeINT32(szy) - 1, szx, 1);
+          XRenderFillRectangle(d, PictOpOver, mRenderPicture, &outer_light,
+                               SafeINT32(szx) - 1, 0, 1, szy);
+          // Render Input Field (White Gradient) shifted by cur_depth
           XLinearGradient gradient;
           gradient.p1 = {0, 0};
           gradient.p2 = {0, XDoubleToFixed(static_cast<double>(szy))};
-          XRenderColor colors[] = {
-              {0xEEEE, 0xEEEE, 0xEEEE, 0xFFFF}, // Slightly grey top
-              {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF}  // Pure white bottom
-          };
+          // Adjust field color based on Hover/Focus
+          UINT32 fieldBase = 0xFFFFFF;
+          if (!mIsFocused && mIsHovered) fieldBase = GetBlendedColor(0xFFFFFF, 0, 0.04);
+          RGBAColor cl; cl.value = fieldBase;
+          UINT16 r16 = static_cast<UINT16>((static_cast<UINT32>(cl.rgba.r) << 8) | cl.rgba.r);
+          UINT16 g16 = static_cast<UINT16>((static_cast<UINT32>(cl.rgba.g) << 8) | cl.rgba.g);
+          UINT16 b16 = static_cast<UINT16>((static_cast<UINT32>(cl.rgba.b) << 8) | cl.rgba.b);
+          XRenderColor colors[] = { {r16, g16, b16, 0xFFFF}, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF} };
           XFixed stops[] = {XDoubleToFixed(0.0), XDoubleToFixed(1.0)};
           Picture grad_pix = XRenderCreateLinearGradient(d, &gradient, stops, colors, 2);
-          int inset = mDepth;
-          unsigned int shrink = static_cast<unsigned int>(inset * 2);
-          // Composite the gradient field into the "hole"
+
+          unsigned int shrink = static_cast<unsigned int>(cur_depth * 2);
           XRenderComposite(d, PictOpSrc, grad_pix, None, mRenderPicture, 0, 0, 0, 0,
-                           inset, inset,
+                           cur_depth, cur_depth,
                            (szx > shrink ? szx - shrink : 1),
                            (szy > shrink ? szy - shrink : 1));
           XRenderFreePicture(d, grad_pix);
       } else {
-          // --- STYLE: Flat ---
-          XSetForeground(d, gc, BGColor());
+          // Flat style: Background and 1px border
+          XSetForeground(d, gc, mIsHovered ? GetBlendedColor(BGColor(), 255, 0.05) : BGColor());
           XFillRectangle(d, bb, gc, 0, 0, szx, szy);
-
-          // Draw standard flat black border
-          XSetForeground(d, gc, BlackPixel(d, aui->Scr()));
+          XSetForeground(d, gc, mIsFocused ? 0x0000FF : BlackPixel(d, aui->Scr()));
           XDrawRectangle(d, bb, gc, 0, 0, szx - 1, szy - 1);
       }
-      // 3. Set text color (Grey for Hint, Black for Input)
-      if (showHint) {
-          XSetForeground(d, gc, 0xAAAAAA);
-      } else {
-          XSetForeground(d, gc, BlackPixel(d, aui->Scr()));
-      }
-      // 4. Calculate text positioning
+      // 3. Text Positioning (Respecting cur_depth to prevent overlap with slopes)
       INT32 totalW = XTextWidth(f, sDraw.c_str(), (int)sDraw.size());
-      int cur_inset = (mStyle == AUIWidgetStyle::Simple3D) ? mDepth : 0;
-
       INT32 drawX = 0, drawY = 0;
-      // Horizontal alignment logic
+      INT32 horizontalMargin = cur_depth + 5;
       if (HAlign() == AUIHAlign::left) {
-          drawX = cur_inset + 5;
+          drawX = horizontalMargin;
       } else if (HAlign() == AUIHAlign::center) {
           drawX = (SafeINT32(szx) - totalW) / 2;
       } else {
-          drawX = SafeINT32(szx) - totalW - cur_inset - 5;
+          drawX = SafeINT32(szx) - totalW - horizontalMargin;
       }
-      // Vertical alignment logic
-      if (VAlign() == AUIVAlign::top) {
-          drawY = f->ascent + cur_inset + 2;
-      } else if (VAlign() == AUIVAlign::center) {
-          drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
-      } else {
-          drawY = SafeINT32(szy) - f->descent - cur_inset - 2;
-      }
-      // 5. Draw the actual string (Hint or Text)
-      XSetForeground(d, gc, 0x8800);
+      drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
+      // 4. Draw Text
+      XSetForeground(d, gc, showHint ? 0xAAAAAA : BlackPixel(d, aui->Scr()));
       if (!sDraw.empty()) {
           XDrawString(d, bb, gc, drawX, drawY, sDraw.c_str(), (int)sDraw.size());
       }
-      // 6. Draw cursor if focused and visible (blink logic)
+      // 5. Draw Cursor (Positioned relative to drawX)
       if (mIsFocused && mCursorVisible) {
           int cursorX = drawX + XTextWidth(f, Text().c_str(), (int)mCursorPos);
           XSetForeground(d, gc, BlackPixel(d, aui->Scr()));
           XDrawLine(d, bb, gc, cursorX, drawY - f->ascent, cursorX, drawY + f->descent);
       }
-      // 7. Transfer final image from Pixmap to Window
       XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
       XFlush(d);
   }

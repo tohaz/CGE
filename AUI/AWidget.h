@@ -21,13 +21,13 @@ namespace aui {
       XFontStruct* mFont = 0;
       AUI* mAUI = 0;
       std::string mTitle = "set title plz", mText = "set me";
-      AUIWidgetType mType = AUIWidgetType::unset;
       INT64 mX = 10, mY = 10;
       UINT64 mSzX = 10, mSzY = 10;
       RGBAColor mBGColor = {0};
       std::map<Window, AWidget*> mWidg;
       bool mHL = false;
       bool mResizeEnabled = true;
+      AUIWidgetType mType = AUIWidgetType::unset;
       AUIHAlign mHAlign = AUIHAlign::center;
       AUIVAlign mVAlign = AUIVAlign::center;
       UINT32 mBorderSz = AUI_DEFAULT_LABEL_BORDERW;
@@ -54,6 +54,7 @@ namespace aui {
       Picture mRenderPicture = None;
       AUIWidgetStyle mStyle = AUIWidgetStyle::Flat;
       INT32 mDepth = 0;
+      bool mIsHovered = false;
 
     public:
       AWidget();
@@ -92,6 +93,8 @@ namespace aui {
       virtual void OnFocusOut(XEvent* ev);
       virtual void OnKeyPress(XEvent* ev);
       virtual void OnMouseMove(XEvent* ev);
+      virtual void OnMouseEnter(XEvent* ev);
+      virtual void OnMouseLeave(XEvent* ev);
       virtual void OnSubmit();
       AWidget* ParentWidget();
       bool IsHL();
@@ -118,9 +121,12 @@ namespace aui {
       Pixmap BB();
       void SetBB(Pixmap backBuffer);
       void SetStyle(AUIWidgetStyle style);
-      void SetPressDepth(int depth);
+      void SetPressDepth(INT32 depth);
+      INT32 PressDepth();
       AUIWidgetStyle Style() const;
       Picture GetRenderPicture() const;
+      void Hide();
+      void Show();
 
   };
 }

@@ -344,6 +344,14 @@ namespace aui {
     }
   }
 
+  void AWidget::OnMouseEnter(UNUSED XEvent *ev) {
+    D("Default fired")
+  }
+
+  void AWidget::OnMouseLeave(UNUSED XEvent *ev) {
+    D("Default fired")
+  }
+
   AUIHAlign AWidget::HAlign() const {
     return mHAlign;
   }
@@ -538,6 +546,36 @@ namespace aui {
     return mRenderPicture;
   }
 
+  /**
+   * Unmaps the window from the X server, making it invisible.
+   * The window still exists in memory but stops receiving input events.
+   */
+  void AWidget::Hide() {
+    if (mAUI && mWindow) {
+      // Remove window from the screen
+      XUnmapWindow(mAUI->Disp(), mWindow);
+      // Flush the output buffer to apply changes immediately
+      XFlush(mAUI->Disp());
+    }
+  }
+
+  /**
+   * Maps the window to the X server, making it visible.
+   * Triggers a redraw to ensure content is displayed correctly.
+   */
+  void AWidget::Show() {
+    if (mAUI && mWindow) {
+      // Make window visible on the screen
+      XMapWindow(mAUI->Disp(), mWindow);
+      // Explicitly redraw to populate the window from the back buffer
+      Draw();
+    }
+  }
+
+  INT32 AWidget::PressDepth() {
+    return mDepth;
+  }
+
   AWidget::~AWidget() {
     D3("widget '{}' destructor active", mTitle.c_str());
     // 1. CRITICAL: Unregister from the global AUI map FIRST.
@@ -586,3 +624,4 @@ namespace aui {
   }
 
 }
+

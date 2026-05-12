@@ -96,7 +96,8 @@ union RGBAColor {
 #define AUI_DEFAULT_BUTTON_Y 10
 #define AUI_DEFAULT_BUTTON_SZX 80
 #define AUI_DEFAULT_BUTTON_SZY 30
-#define AUI_DEFAULT_BUTTON_BORDERW 3
+// disabled for now as it conflicts with content drawing
+//#define AUI_DEFAULT_BUTTON_BORDERW 3
 #define AUI_DEFAULT_BUTTON_BG 0xCCCCCC
 // CGInput
 #define AUI_DEFAULT_INPUT_X 15

@@ -61,6 +61,9 @@ int main() {
   bnt->Move(100, 10);
   bnt->Resize(100, 30);
   bnt->SetOnButtonReleaseCB(ButtonTestHandler, nullptr);
+  bnt->Hide();
+  bnt->Show();
+  
 
   testsfailed += TestStyleAndDepth(bnt);
 

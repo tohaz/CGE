@@ -16,6 +16,9 @@ namespace aui {
       void Draw();
       void OnButtonPress(XEvent* ev);
       void OnButtonRelease(XEvent* ev);
+      void OnMouseEnter(XEvent* ev);
+      void OnMouseLeave(XEvent* ev);
+
   };
 }
 
