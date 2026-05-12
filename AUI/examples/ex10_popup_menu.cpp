@@ -3,21 +3,6 @@
 
 using namespace aui;
 
-// Helper to create an empty item to satisfy strict compiler
-AMenuItem createEmptyItem() {
-  return AMenuItem{
-    .text = "",
-    .hotkey = "",
-    .action = nullptr,
-    .subItems = {},
-    .isSeparator = false,
-    .isCheckable = false,
-    .isChecked = false,
-    .isEnabled = true,
-    .icon = None
-  };
-}
-
 std::vector<AMenuItem> createExampleItems(AUI* au) {
   std::vector<AMenuItem> items;
   // Item 1
@@ -25,14 +10,12 @@ std::vector<AMenuItem> createExampleItems(AUI* au) {
   hello.text = "Hello World";
   hello.action = []() { D("Menu Action: Hello clicked!"); };
   items.push_back(hello);
-
   // Submenu
   std::vector<AMenuItem> subItems;
   AMenuItem sub1 = createEmptyItem();
   sub1.text = "Sub Item 1";
   sub1.action = []() { D("Sub 1"); };
   subItems.push_back(sub1);
-
   AMenuItem tools = createEmptyItem();
   tools.text = "Tools";
   tools.subItems = subItems;
@@ -46,7 +29,6 @@ std::vector<AMenuItem> createExampleItems(AUI* au) {
   quit.text = "Exit Application";
   quit.action = [au]() { au->ExitAUI(); };
   items.push_back(quit);
-
   return items;
 }
 
