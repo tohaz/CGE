@@ -77,7 +77,7 @@ namespace aui {
           (UINT32) SizeY(), 0, 0);
     }
     XSync(d, False);
-    D1("draw {}", mDebugDrawCounter++)
+    D2("draw {}", mDebugDrawCounter++)
   }
 
   ATable* ATable::AttachTo(AWidget *wParent) {

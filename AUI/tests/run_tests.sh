@@ -72,4 +72,12 @@ else
 		exit 1
 fi
 
+valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t9_popup_menu
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}+++Test 9 Success+++${NC}"
+else
+    echo -e "${RED}Failed Test9==========================================================================================${NC}"
+		exit 1
+fi
+
 echo -e "${GREEN}+++ALL Success+++${NC}"

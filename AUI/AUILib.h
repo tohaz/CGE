@@ -28,6 +28,7 @@
 #include "ATable.h"
 #include "AWidget.h"
 #include "AWindow.h"
+#include "APopupMenu.h"
 #include "defaults.h"
 
 namespace aui {
@@ -177,6 +178,7 @@ namespace aui {
 
   class AWidget;
   class AWindow;
+  class APopupMenu;
   UINT32 HLColor(UINT32 ci);
   UINT32 HoverColor(UINT32 ci);
   XRenderColor ScaleAndBlend(uint8_t base, uint8_t target, double t);
@@ -198,6 +200,7 @@ namespace aui {
 //      std::unordered_map<Window, CGWidget*> mWidg;
       std::map<Window, AWidget*> mWidg;
       UINT64 mAlphabetLen = BaseAlphabet.length();
+      APopupMenu* mActiveRootMenu = nullptr;
     protected:
 
     public:

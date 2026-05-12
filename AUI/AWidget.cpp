@@ -382,33 +382,35 @@ namespace aui {
 
   void AWidget::UpdateBuffer() {
     AUI *aui = AUIPtr();
-    if(!aui || Wnd() == 0)
-      return;
+    if(!aui || Wnd() == 0) return;
     Display *d = aui->Disp();
-    // 1. Cleanup old XRender resource
-    if(mRenderPicture != None) {
-      XRenderFreePicture(d, mRenderPicture);
-      mRenderPicture = None;
-    }
-    // 2. Cleanup old Pixmap
-    if(mBackBuffer) {
-      XFreePixmap(d, mBackBuffer);
-      mBackBuffer = 0;
-    }
+
+    // Get ACTUAL window attributes
     XWindowAttributes watt;
     XGetWindowAttributes(d, Wnd(), &watt);
-    // 3. Reallocate Pixmap if dimensions are valid
-    if(SizeX() > 0 && SizeY() > 0) {
-      mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
-          SafeUINT32(SizeY()), (UINT32) watt.depth);
-      // 4. Recreate Picture ONLY if the current style is Simple3D
-      if(mStyle == AUIWidgetStyle::Simple3D) {
-        XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
-        if(fmt) {
-          mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0,
-              nullptr);
-          D3("XRender Picture created for buffer");
-        }
+
+    D("UpdateBuffer for '{}': WindowDepth={}, VisualID=0x{:x}",
+       mTitle, (int)watt.depth, (UINT64)watt.visual->visualid);
+
+    if(mBackBuffer) {
+      XFreePixmap(d, mBackBuffer);
+    }
+
+    // Create Pixmap using the window's EXACT depth
+    mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
+                                 SafeUINT32(SizeY()), (unsigned int)watt.depth);
+
+    D("Created Pixmap ID: {}", (UINT64)mBackBuffer);
+
+    if(mStyle == AUIWidgetStyle::Simple3D) {
+      if(mRenderPicture != None) XRenderFreePicture(d, mRenderPicture);
+
+      XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
+      if(fmt) {
+        mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0, nullptr);
+        D("XRender Picture created: ID={}", (UINT64)mRenderPicture);
+      } else {
+        E("XRender failed to find format for VisualID 0x{:x}", (UINT64)watt.visual->visualid);
       }
     }
   }

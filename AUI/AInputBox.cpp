@@ -116,7 +116,6 @@ namespace aui {
           XRenderColor colors[] = { {r16, g16, b16, 0xFFFF}, {0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF} };
           XFixed stops[] = {XDoubleToFixed(0.0), XDoubleToFixed(1.0)};
           Picture grad_pix = XRenderCreateLinearGradient(d, &gradient, stops, colors, 2);
-
           unsigned int shrink = static_cast<unsigned int>(cur_depth * 2);
           XRenderComposite(d, PictOpSrc, grad_pix, None, mRenderPicture, 0, 0, 0, 0,
                            cur_depth, cur_depth,
@@ -266,6 +265,5 @@ namespace aui {
       mBlinkThread.join();
     D3("v")
   }
-
 }
 

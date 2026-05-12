@@ -140,7 +140,6 @@ namespace aui {
             D3("ButtonPress event for widget {}", (UINT64)targetWin)
             widget->CorrectCoordinates(event);
             widget->OnButtonPress(&event);
-
             break;
           case ButtonRelease:
             D3("ButtonRelease event for widget {}", (UINT64)targetWin)
@@ -160,7 +159,22 @@ namespace aui {
             widget->OnFocusIn(&event);
             break;
           case FocusOut:
-            D3()
+            D2("FocusOut detected for window {}", (UINT64)targetWin);
+
+            if (mMainWnd && targetWin == mMainWnd->Wnd()) {
+              for (auto const& [id, ww] : mWidg) {
+                // Check if it's our popup menu type (1007 according to your defaults.h)
+                if (ww->Type() == AUIWidgetType::defaultPopupMenu) {
+                  APopupMenu* menu = static_cast<APopupMenu*>(ww);
+                  if (menu->IsGrabbed()) {
+                    // This line MUST appear in the log
+                    D1("Global Focus loss, dismissing menu chain");
+                    menu->Dismiss();
+                    // Dismiss calls Hide() and XUngrabPointer
+                  }
+                }
+              }
+            }
             widget->OnFocusOut(&event);
             break;
           case EnterNotify:
@@ -182,9 +196,33 @@ namespace aui {
             }
             break;
           case ConfigureNotify:
-            D3("ConfigureNotify for widget {}", (UINT64)targetWin)
+            D3("ConfigureNotify for window {}", (UINT64)targetWin);
+
+            // If the MAIN window is being moved or resized by the user/WM
+            if (mMainWnd && targetWin == mMainWnd->Wnd()) {
+              // Find any active popup menu and dismiss it
+              for (auto const& [id, ww] : mWidg) {
+                if (ww->Type() == AUIWidgetType::defaultPopupMenu) {
+                  APopupMenu* menu = static_cast<APopupMenu*>(ww);
+                  if (menu->IsGrabbed()) {
+                    D2("Main window moved, dismissing menu");
+                    menu->Dismiss();
+                    break;
+                  }
+                }
+              }
+            }
             break;
           case UnmapNotify:
+            D3("UnmapNotify for window {}", (UINT64)targetWin);
+            // If the main window is minimized/hidden, close the menus
+            if (mMainWnd && targetWin == mMainWnd->Wnd()) {
+              for (auto const& [id, ww] : mWidg) {
+                if (ww->Type() == AUIWidgetType::defaultPopupMenu) {
+                  static_cast<APopupMenu*>(ww)->Dismiss();
+                }
+              }
+            }
             break;
           case MapNotify:
             break;
@@ -198,6 +236,18 @@ namespace aui {
         }
       }
       else {
+        if (event.type == ButtonPress) {
+          for (auto const& [id, ww] : mWidg) {
+            if (ww->Type() == AUIWidgetType::defaultPopupMenu) {
+              APopupMenu* menu = static_cast<APopupMenu*>(ww);
+              if (menu->IsGrabbed()) {
+                D2("Click on non-registered window, dismissing menu");
+                menu->Dismiss();
+                break;
+              }
+            }
+          }
+        }
         if(event.type == Expose && mMainWnd && targetWin == mMainWnd->Wnd()) {
           if(event.xexpose.count == 0) {
             D3("Expose event for MAIN window")

@@ -134,7 +134,7 @@ int main() {
 	//char *qqq = new char[1]; // generate error
   UINT32 delay_ms = 50; // delay before thead calls window to close
 	INT32 testsfailed = 0;
-  AUI* au = AUI::Create("wudget");
+  AUI* au = AUI::Create("AWidget class test");
   
   AWindow* w = au->MainWnd();
   AButton* bn = AButton::AttachTo(w, "Close");

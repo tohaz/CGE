@@ -529,8 +529,6 @@ namespace aui {
     return mCursorIndex;
   }
 
-
-
   AList::~AList() {
     mData.clear();
     mTag.clear();

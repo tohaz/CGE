@@ -71,7 +71,7 @@ namespace aui {
     else
       drawY = SafeINT32(szy) - f->descent - 5;
     if(mStyle == AUIWidgetStyle::Simple3D && mRenderPicture != None) {
-      D("drawing 3d style {}", (UINT64)this)
+      D2("drawing 3d style {}", (UINT64)this)
       bool pressed = IsHL();
       int offset = pressed ? mDepth : 0;
       unsigned int shrink = pressed ? static_cast<unsigned int>(mDepth * 2) : 0;
@@ -100,7 +100,6 @@ namespace aui {
           c_top.green = ScaleAndBlend(cl.rgba.g, 0, 0.2).green;
           c_top.blue  = ScaleAndBlend(cl.rgba.b, 0, 0.2).blue;
           c_top.alpha = 0xFFFF;
-
           c_bot.red   = ScaleAndBlend(cl.rgba.r, 255, 0.1).red;
           c_bot.green = ScaleAndBlend(cl.rgba.g, 255, 0.1).green;
           c_bot.blue  = ScaleAndBlend(cl.rgba.b, 255, 0.1).blue;
@@ -111,7 +110,6 @@ namespace aui {
           c_top.green = ScaleAndBlend(cl.rgba.g, 255, intensity).green;
           c_top.blue  = ScaleAndBlend(cl.rgba.b, 255, intensity).blue;
           c_top.alpha = 0xFFFF;
-
           c_bot.red   = ScaleAndBlend(cl.rgba.r, 0, intensity).red;
           c_bot.green = ScaleAndBlend(cl.rgba.g, 0, intensity).green;
           c_bot.blue  = ScaleAndBlend(cl.rgba.b, 0, intensity).blue;
@@ -141,7 +139,7 @@ namespace aui {
     }
     XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
     XFlush(d);
-    D("button style {} {}", (UINT64)this, (UINT64)Style())
+    D2("button style {} {}", (UINT64)this, (UINT64)Style())
   }
 
   void AButton::OnButtonPress([[maybe_unused]]XEvent *ev) {
