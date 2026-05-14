@@ -58,18 +58,45 @@ namespace aui {
         // Medium priority: Mouse is just hovering over it
         drawColor = GetBlendedColor(BGColor(), 255, 0.50);
     }
-    if(HAlign() == AUIHAlign::center)
-      drawX = (SafeINT32(szx) - totalW) / 2;
-    else if(HAlign() == AUIHAlign::left)
-      drawX = 5;
-    else
-      drawX = SafeINT32(szx) - totalW - 5;
-    if(VAlign() == AUIVAlign::center)
-      drawY = (SafeINT32(szy) + f->ascent - f->descent) / 2;
-    else if(VAlign() == AUIVAlign::top)
-      drawY = f->ascent + 5;
-    else
-      drawY = SafeINT32(szy) - f->descent - 5;
+    if (!Font()) {
+        D1("[AUI WARNING] Font() pointer is NULL!");
+    }
+    int direction, ascent, descent;
+    XCharStruct overall;
+    XTextExtents(f, TextPtr(), (int)Text().length(), &direction, &ascent, &descent, &overall);
+    INT32 calculatedCenter = (SafeINT32(szx) - totalW) / 2;
+    if (calculatedCenter < 5) calculatedCenter = 5;
+    // 2. Расчет координат с защитой от вылета за границы
+    if (HAlign() == AUIHAlign::center) {
+        drawX = (SafeINT32(szx) - totalW) / 2;
+        if (drawX < 0) drawX = 5; // Защитный фолбек, если текст шире кнопки
+    }
+    else if (HAlign() == AUIHAlign::left) {
+        drawX = 5;
+    }
+    else {
+        drawX = SafeINT32(szx) - totalW - 5;
+    }
+
+    if (drawX < 0) {
+        drawX = 5;
+    }
+    D3("[AUI CENTERING] Text: '{}' | EnumHAlign: {} | Button Width: {} | Measured Text Width: {} | Result drawX: {} | IdealCenter: {}",
+       Text().c_str(),
+       static_cast<int>(HAlign()),
+       szx,
+       totalW,
+       drawX,
+       calculatedCenter);
+    if (VAlign() == AUIVAlign::center) {
+        drawY = (SafeINT32(szy) + overall.ascent - overall.descent) / 2;
+    }
+    else if (VAlign() == AUIVAlign::top) {
+        drawY = overall.ascent + 5;
+    }
+    else {
+        drawY = SafeINT32(szy) - overall.descent - 5;
+    }
     if(mStyle == AUIWidgetStyle::Simple3D && mRenderPicture != None) {
       D2("drawing 3d style {}", (UINT64)this)
       bool pressed = IsHL();
@@ -148,31 +175,31 @@ namespace aui {
       Draw();
       XSync(AUIPtr()->Disp(), False);
     }
+    AWidget::OnButtonPress(ev);
   }
 
   void AButton::OnButtonRelease(XEvent *ev) {
-    AUI *cg = AUIPtr();
-    if(!cg->IsWindowRegistered(ev->xexpose.window))
+    AUI *au = AUIPtr();
+    if(!au || !au->IsWindowRegistered(ev->xany.window))
       return;
-    INT32 root_x, root_y, win_x, win_y;
-    Window root_window, child_window;
-    UINT32 mask = 0;
-    Display *d = cg->Disp();
-    Window w = Wnd();
-    root_window = cg->MainWnd()->Wnd();
-    XQueryPointer(d, w, &root_window, &child_window, &root_x, &root_y, &win_x,
-        &win_y, &mask);
-    if((win_x < (INT64) SizeX()) && (win_y < (INT64) SizeY()) && (win_x >= 0)
-        && (win_y >= 0)) {
-      AWidget::OnButtonRelease(ev);
-    }
-    // Re-verify window existence after potential user-code execution
-    if(!cg->IsWindowRegistered(ev->xexpose.window))
-      return;
+    INT64 win_x = ev->xbutton.x;
+    INT64 win_y = ev->xbutton.y;
+    // 1. Calculate hit test before any state modifications
+    bool inside = (win_x >= 0 && win_y >= 0 && win_x < (INT64) SizeX()
+        && win_y < (INT64) SizeY());
+    // 2. Reset the highlight state safely
     if(IsHL()) {
       HL(false);
+      // Redraw only if the click released outside.
+      // If inside, the widget might be destroyed in the next step, making Draw() dangerous.
       Draw();
+      XFlush(au->Disp());
     }
+    if(inside) {
+      AWidget::OnButtonRelease(ev);
+      return;
+    }
+    AWidget::OnButtonRelease(ev);
   }
 
   AButton* AButton::AttachTo(AWidget *w, std::string inText) {
@@ -192,5 +219,4 @@ namespace aui {
   AButton::~AButton() {
     D3("v");
   }
-
 }

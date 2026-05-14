@@ -149,7 +149,8 @@ enum class AUIWidgetType {
   defaultLabel = 1004,
   defaultInputBox = 1005,
   defaultTable = 1006,
-  defaultPopupMenu = 1007
+  defaultPopupMenu = 1007,
+  defaultModalWindow = 1008
 };
 
 enum class AUIHAlign {

@@ -86,25 +86,22 @@ namespace aui {
     public:
       virtual ~ATable();
       static  ATable* AttachTo(AWidget* wParent);
+      UINT64 Columns();
+      AUICellData* Get(INT64 row, INT64 col);
+      INT64 ColumnWidth(INT64 id) const;
+      INT64 RowHeight(INT64 id) const;
+      INT64 CursorRow();
+      INT64 CursorColumn();
+      INT64 AddRow();
+      UINT64 Rows();
+      std::string RowName(INT64 rowIdx);
       void AddColumn();
       void AddColumns(UINT32 number);
-      std::string ColumnName(INT64 colIdx);
-      UINT64 Columns();
       void AddRows(UINT32 number);
-      INT64 AddRow();
       void Clear();
       void DisableRowHeader();
       void Draw();
-      AUICellData* Get(INT64 row, INT64 col);
-      INT64 GetColumnWidth(INT64 id) const;
-      INT64 GetRowHeight(INT64 id) const;
       void Insert(INT64 row, INT64 col, AUICellData* cell);
-      void RemoveColumn(INT64 colIdx);
-      void RemoveRow(INT64 rowIdx);
-      void RemoveLastRow();
-      void RemoveLastColumn();
-      UINT64 Rows();
-      std::string RowName(INT64 rowIdx);
       void SetAutoWiden(bool enable);
       void SetColumnName(INT64 colIdx, std::string name);
       void SetColumnWidth(INT64 colIdx, INT64 width);
@@ -121,10 +118,13 @@ namespace aui {
       void OnButtonRelease(XEvent *ev);
       void OnMouseMove(XEvent *ev);
       void SetCursorPosition(INT64 row, INT64 column);
-      INT64 CursorRow();
-      INT64 CursorColumn();
+      void RemoveColumn(INT64 colIdx);
+      void RemoveRow(INT64 rowIdx);
+      void RemoveLastRow();
+      void RemoveLastColumn();
       std::string DataAtCursor();
       std::string DataAt(INT64 row, INT64 col);
+      std::string ColumnName(INT64 colIdx);
   };
 }
 

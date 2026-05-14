@@ -129,7 +129,7 @@ namespace aui {
     UINT64 y_pos = SafeUINT64(
         static_cast<INT64>(mColumnHeaderHeight) - rowStartData.offset);
     for (INT64 i = rowStartData.cell; i <= rowEndData.cell; i++) {
-      UINT64 currentH = SafeUINT64(GetRowHeight(i));
+      UINT64 currentH = SafeUINT64(RowHeight(i));
       if(currentH > 0 && y_pos + currentH > mColumnHeaderHeight
           && y_pos < SizeY()) {
         XSetForeground(d, gc, 0xCCCCCC);
@@ -218,7 +218,7 @@ namespace aui {
                   (INT32) mRows[row][col].data.length()) :
               (INT32) mRows[row][col].data.length() * 7;
       INT32 padding = 15;
-      if((INT64) textW + padding > GetColumnWidth(col)) {
+      if((INT64) textW + padding > ColumnWidth(col)) {
         INT64 newW = (INT64) textW + padding;
         mTotalContentWidth += (newW - mColumnW[col].first);
         mColumnW[col].first = newW;
@@ -239,7 +239,7 @@ namespace aui {
         (INT64) SizeY() - (INT64) mColumnHeaderHeight) };
     INT64 y_pos = (INT64) mColumnHeaderHeight - rowRange->offset;
     for (INT64 r = rowRange->cell; r <= rowRange->cell2; ++r) {
-      INT64 currentH = GetRowHeight(r);
+      INT64 currentH = RowHeight(r);
       if(currentH <= 0)
         continue;
       if(y_pos >= (INT64) SizeY())
@@ -255,7 +255,7 @@ namespace aui {
       }
       INT64 x_pos = (INT64) mRowHeaderWidth - colRange->offset;
       for (INT64 c = colRange->cell; c <= colRange->cell2; ++c) {
-        INT64 currentW = GetColumnWidth(c);
+        INT64 currentW = ColumnWidth(c);
         if(currentW <= 0) {
           x_pos += currentW;
           continue;
@@ -753,7 +753,7 @@ namespace aui {
         SizeXUI32() - mRowHeaderWidth), SafeUINT16(mColumnHeaderHeight) };
     XSetClipRectangles(d, gc, 0, 0, &clip, 1, Unsorted);
     for (INT64 i = colStartData.cell; i <= colEndData.cell; i++) {
-      INT64 currentW = GetColumnWidth(i);
+      INT64 currentW = ColumnWidth(i);
       if(currentW > 0 && x_pos < (INT64) SizeX()) {
         XSetForeground(d, gc, 0xCCCCCC);
         XFillRectangle(d, dest, gc, (INT32) x_pos, 0, (UINT32) currentW,

@@ -49,6 +49,7 @@ int main() {
   ib2->SetTitle((char *) "Edit Me2");
   ib2->Move(290, 180);
   ib2->SetStyle(AUIWidgetStyle::Simple3D);
+  ib2->SetPressDepth(3);
 
   au->ProcessMessages();
   delete au;

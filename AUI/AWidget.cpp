@@ -13,31 +13,50 @@ namespace aui {
 //    };
   }
 
+  bool AWidget::TryLoadFont() {
+    Display *d = mAUI->Disp();
+    if(!mFont) {
+      mFont = XLoadQueryFont(d, AUI_DEFAULT_FONT);
+      if(!mFont) {
+        D("Cannot open font {}, using 'fixed' instead", AUI_DEFAULT_FONT)
+        mFont = XLoadQueryFont(d, "fixed");
+        if(!mFont) {
+          E("Cannot open 'fixed' font either, exit.")
+          return false;
+        }
+      }
+      D4("opened font with description:{}, Pointer: {}, Real X11 FID: {}",
+         AUI_DEFAULT_FONT, (UINT64)mFont, (UINT64)mFont->fid);
+
+    }
+    else {
+      D3("Font is already set")
+    }
+    return true;  }
+
   void AWidget::InitWidgetProps(Window w) {
-    D3("set window {}", (UINT64) w)
+    D3("window {}", (UINT64) w)
     Display *d = mAUI->Disp();
     if(mWindow == 0)
       mWindow = w;
     else
       E("attempt to reset window")
+
     if(mGC == 0) {
       mGC = XCreateGC(d, mWindow, 0, NULL);
-    } else
-      E("GC is already set")
-    if(mFont == 0) {
-      mFont = XLoadQueryFont(d, AUI_DEFAULT_FONT);
-      if(!mFont) {
-        D("Cannot open font {}, using 'fixed' instead", AUI_DEFAULT_FONT)
-        mFont = XLoadQueryFont(d, "fixed");
-
-        if(!mFont)
-          {E("Cannot open 'fixed' font either, exit.")}
-      } else
-        D3("opened font with description:{}, id {}", AUI_DEFAULT_FONT,
-            (UINT64)mFont)
+      if(!mGC) {
+        E("Error creating GC")
+      }
+    }
+    else {
+      D3("GC is already set")
+    }
+    if(!TryLoadFont()) {
+      E("font load failure")
+    }
+    if(mGC && mFont) {
       XSetFont(d, mGC, mFont->fid);
-    } else
-      E("Font is already set")
+    }
     XSetWindowAttributes swa;
     swa.bit_gravity = ForgetGravity;
     XChangeWindowAttributes(d, mWindow, CWBitGravity, &swa);
@@ -180,11 +199,13 @@ namespace aui {
         AWidget *child = (AWidget*) it->second;
         // 1. Remove from the local parent map first to prevent re-entry/infinite loops
         mWidg.erase(it);
+
         if(child) {
           // 2. We do NOT set child->mWindow = 0 here.
           // The child needs its ID to successfully call UnregisterWindow() in its own destructor.
           // 3. Instead, we use a flag or check in the base destructor to see
           // if the X server already killed the window.
+          //child->mWindow = 0;
           delete child;
         }
       }
@@ -384,31 +405,24 @@ namespace aui {
     AUI *aui = AUIPtr();
     if(!aui || Wnd() == 0) return;
     Display *d = aui->Disp();
-
     // Get ACTUAL window attributes
     XWindowAttributes watt;
     XGetWindowAttributes(d, Wnd(), &watt);
-
-    D("UpdateBuffer for '{}': WindowDepth={}, VisualID=0x{:x}",
+    D2("UpdateBuffer for '{}': WindowDepth={}, VisualID=0x{:x}",
        mTitle, (int)watt.depth, (UINT64)watt.visual->visualid);
-
     if(mBackBuffer) {
       XFreePixmap(d, mBackBuffer);
     }
-
     // Create Pixmap using the window's EXACT depth
     mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
                                  SafeUINT32(SizeY()), (unsigned int)watt.depth);
-
-    D("Created Pixmap ID: {}", (UINT64)mBackBuffer);
-
+    D2("Created Pixmap ID: {}", (UINT64)mBackBuffer);
     if(mStyle == AUIWidgetStyle::Simple3D) {
       if(mRenderPicture != None) XRenderFreePicture(d, mRenderPicture);
-
       XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
       if(fmt) {
         mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0, nullptr);
-        D("XRender Picture created: ID={}", (UINT64)mRenderPicture);
+        D2("XRender Picture created: ID={}", (UINT64)mRenderPicture);
       } else {
         E("XRender failed to find format for VisualID 0x{:x}", (UINT64)watt.visual->visualid);
       }
@@ -561,6 +575,12 @@ namespace aui {
     }
   }
 
+  void AWidget::TriggerFeedback() {
+    E("called from base class")
+  }
+
+
+
   /**
    * Maps the window to the X server, making it visible.
    * Triggers a redraw to ensure content is displayed correctly.
@@ -576,6 +596,42 @@ namespace aui {
 
   INT32 AWidget::PressDepth() {
     return mDepth;
+  }
+
+  bool AWidget::IsParentOf(Window target) const {
+      if (!mAUI) return false;
+
+      // 1. Check if the target is actually a registered widget
+      // Use mWidg.contains directly to avoid the E() exit in GetWidget
+      if (!mAUI->HasWidget(target)) {
+          return false;
+      }
+
+      AWidget* targetWidget = mAUI->GetWidget(target);
+      if (!targetWidget) return false;
+
+      // 2. Walk up the tree
+      AWidget* current = targetWidget->ParentWidget();
+      while (current != nullptr) {
+          if (current->Wnd() == mWindow) return true;
+          current = current->ParentWidget();
+      }
+      return false;
+  }
+
+  bool AWidget::ContainsGlobalCoordinates(int rootX, int rootY) {
+      // We need to translate our local widget (0,0) position to absolute screen space
+      Display* d = mAUI->Disp();
+      Window rootWinReturn;
+      int absoluteX = 0;
+      int absoluteY = 0;
+
+      // Fast hardware translation from our local coordinates to the root screen space
+      XTranslateCoordinates(d, mWindow, XRootWindow(d, 0), 0, 0, &absoluteX, &absoluteY, &rootWinReturn);
+
+      // Verify if the screen click hits inside our physical bounding box dimensions
+      return (rootX >= absoluteX && rootX < (absoluteX + static_cast<int>(mSzX)) &&
+              rootY >= absoluteY && rootY < (absoluteY + static_cast<int>(mSzY)));
   }
 
   AWidget::~AWidget() {

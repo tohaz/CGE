@@ -8,6 +8,14 @@ rm -rf ./*.lst
 
 make
 
+valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t0_aui
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}+++Test 0 Success+++${NC}"
+else
+    echo -e "${RED}Failed Test0==========================================================================================${NC}"
+		exit 1
+fi
+
 valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t1_button
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}+++Test 1 Success+++${NC}"
@@ -77,6 +85,14 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}+++Test 9 Success+++${NC}"
 else
     echo -e "${RED}Failed Test9==========================================================================================${NC}"
+		exit 1
+fi
+
+valgrind --error-exitcode=1 --leak-check=full --errors-for-leak-kinds=all ./bin/t10_messagebox
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}+++Test 10 Success+++${NC}"
+else
+    echo -e "${RED}Failed Test10==========================================================================================${NC}"
 		exit 1
 fi
 

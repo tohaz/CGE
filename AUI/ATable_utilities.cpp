@@ -144,12 +144,12 @@ namespace aui {
     return &mRows[row][col];
   }
 
-  INT64 ATable::GetColumnWidth(INT64 id) const {
+  INT64 ATable::ColumnWidth(INT64 id) const {
     auto it = mColumnW.find(id);
     return (it != mColumnW.end()) ? it->second.first : 0;
   }
 
-  INT64 ATable::GetRowHeight(INT64 id) const {
+  INT64 ATable::RowHeight(INT64 id) const {
     auto it = mRowH.find(id);
     return (it != mRowH.end()) ? it->second.first : 0;
   }

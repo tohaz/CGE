@@ -44,8 +44,8 @@ namespace aui {
       void* mUserDataMouseMove = nullptr;
       void* mUserDataSubmit = nullptr;
       Pixmap mBackBuffer = None;
-
     protected:
+      bool TryLoadFont();
       void InitWidgetProps(Window w);
       void SetAUIPtr(AUI* p);
       void SetWndParent(AWidget* wParent);
@@ -127,6 +127,10 @@ namespace aui {
       Picture GetRenderPicture() const;
       void Hide();
       void Show();
+      virtual void TriggerFeedback();
+      bool IsParentOf(Window target) const;
+      bool ContainsGlobalCoordinates(INT32 rootX, INT32 rootY);
+
 
   };
 }

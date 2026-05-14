@@ -16,7 +16,7 @@ AButton* bSearch = nullptr;
 void StopTimer(time_point<high_resolution_clock> start) {
   time_point<high_resolution_clock> end = high_resolution_clock::now();
   duration<double, std::milli> duration_ms1 = end - start; // @suppress("Invalid arguments")
-  D1("init time: {} ms", duration_ms1.count()); // @suppress("Function cannot be instantiated")
+  D2("init time: {} ms", duration_ms1.count()); // @suppress("Function cannot be instantiated")
 }
 
 void ShowSearchUI(UNUSED AWidget *w) {
@@ -101,7 +101,7 @@ void InputBoxValueChangedHandler(UNUSED AWidget* w, void* d) {
 void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
   D3()
   AUI* au = w->AUIPtr();
-  AWindow* wProcess = AWindow::AttachTo(au, "Open process");
+  UNUSED AWindow* wProcess = AWindow::AttachTo(au, "Open process");
   wProcess->Move(1000, 500);
   wProcess->EnableResize();
   wProcess->Resize(640, 450);
@@ -126,7 +126,10 @@ void ButtonProcessesHandler(UNUSED XEvent* ev, AWidget* w, UNUSED void* d) {
 int main() {
   time_point<high_resolution_clock> start = high_resolution_clock::now();
   AUI* cg = AUI::Create("cg0 main");
-  AWindow* w = cg->MainWnd();
+  UNUSED AWindow* w = cg->MainWnd();
+//  UNUSED AButton* bOp = AButton::AttachTo(w, "Processes");
+//  bOp->Resize(100,30);
+  AModalWindow::Message(w, "test title", "test message");
   w->EnableResize();
   w->Resize(1024, 768);
   w->DisableResize();

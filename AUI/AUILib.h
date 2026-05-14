@@ -29,6 +29,7 @@
 #include "AWidget.h"
 #include "AWindow.h"
 #include "APopupMenu.h"
+#include "AModalWindow.h"
 #include "defaults.h"
 
 namespace aui {
@@ -179,6 +180,7 @@ namespace aui {
   class AWidget;
   class AWindow;
   class APopupMenu;
+  class AModalWindow;
   UINT32 HLColor(UINT32 ci);
   UINT32 HoverColor(UINT32 ci);
   XRenderColor ScaleAndBlend(uint8_t base, uint8_t target, double t);
@@ -201,6 +203,9 @@ namespace aui {
       std::map<Window, AWidget*> mWidg;
       UINT64 mAlphabetLen = BaseAlphabet.length();
       APopupMenu* mActiveRootMenu = nullptr;
+      AWidget* mModalWidget = nullptr;
+//      std::vector<AModalWindow*> mModalStack;
+      std::vector<AWidget*> mModalStack;
     protected:
 
     public:
@@ -219,6 +224,13 @@ namespace aui {
       bool IsWindowRegistered(Window w);
       const char* XEventToString(INT32 ev);
       std::string NumberToBaseString(UINT64 num);
+      void SetModal(AWidget* w) { mModalWidget = w; }
+      bool HasWidget(Window w) const { return mWidg.contains(w); }
+      void RegisterExternalWindow(Window w, AWidget* owner);
+      void UnregisterExternalWindow(Window w);
+      void PushModal(AWidget* win);
+      void PopModal(AWidget* win);
+      AWidget* GetModal() const { return mModalStack.empty() ? nullptr : mModalStack.back(); }
 
       ~AUI();
   };

@@ -22,9 +22,9 @@ namespace aui {
     D3("sizeof window {}", sizeof(AWindow))
     SetType(AUIWidgetType::defaultWindow);
     SetBGColor(AUI_DEFAULT_WINDOW_BG);
-    AUI* cg = AUIPtr();
-    Display* d = cg->Disp();
-    INT32 scr = cg->Scr();
+    AUI* au = AUIPtr();
+    Display* d = au->Disp();
+    INT32 scr = au->Scr();
     D3("wnd {}, disp {}, screen {}", (UINT64)Wnd(), (UINT64)d, (UINT64)scr)
     SetSizeXY(AUI_DEFAULT_WINDOW_SZX, AUI_DEFAULT_WINDOW_SZY);
     if(!ParentWidget()) {
@@ -45,15 +45,15 @@ namespace aui {
     }
     Window w = Wnd();
     XStoreName(d, w, Title().c_str());
-    //XSelectInput(d, w, ExposureMask | KeyPressMask | StructureNotifyMask| FocusChangeMask);
     XSelectInput(d, w, ExposureMask | KeyPressMask | StructureNotifyMask |
-                       FocusChangeMask | ButtonPressMask);
+                       FocusChangeMask | ButtonPressMask| ButtonReleaseMask);
     XSetWindowBackground(d, w, BGColor());
     XMapWindow(d, w);
-    cg->AddWidget(this);
+    au->AddWidget(this);
     mWMDeleteMessage = XInternAtom(d, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(d, Wnd(), &mWMDeleteMessage, 1);
     XFlush(d);
+    XSync(d, False);
   }
 
   AWindow* AWindow::AttachTo(AUI *cg, std::string newTitle) {

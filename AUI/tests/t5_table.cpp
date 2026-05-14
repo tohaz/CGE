@@ -46,8 +46,8 @@ INT32 AutowidenTest(ATable *ta) {
   ta->SetAutoWiden(true);
   di.data = "some decently long string";
   ta->Insert(0, 0, &di);
-  if(ta->GetColumnWidth(0) > 10) {
-    D("Column Autowiden test passed({})\n", ta->GetColumnWidth(0))
+  if(ta->ColumnWidth(0) > 10) {
+    D("Column Autowiden test passed({})\n", ta->ColumnWidth(0))
     return 0;
   }
 	D("Column autowiden test failed")

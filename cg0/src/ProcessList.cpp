@@ -4,8 +4,8 @@
 
 namespace cg {
   ProcessDescr::ProcessDescr(UNUSED std::string pidStr, UNUSED std::string path) {
-    D3("===New descriptor");
-    D3("{} {}", path.c_str(), pidStr.c_str());
+    D4("===New descriptor");
+    D4("{} {}", path.c_str(), pidStr.c_str());
     mPath = path;
     mPidStr = pidStr;
     try {
@@ -35,13 +35,13 @@ namespace cg {
   }
 
   ProcessDescr::~ProcessDescr() {
-    D3()
+    D4()
     mPath.clear();
     mPidStr.clear();
   }
 
   void ProcessList::Update() {
-    D1();
+    D4();
     struct dirent* de;
     DIR* dp = opendir("/proc");
     std::string dirName;
@@ -81,12 +81,12 @@ namespace cg {
         D4("U {}", de->d_name)
       }
     }
-    D1("{} processes scanned", mProcs.size())
+    D4("{} processes scanned", mProcs.size())
     closedir(dp);
   }
 
   void ProcessList::Clear() {
-    D1()
+    D2()
     for (auto& pair : mProcs) {
         delete pair.second;
     }
@@ -94,12 +94,12 @@ namespace cg {
   }
 
   ProcessList::ProcessList() {
-    D1()
+    D4()
     Update();
   }
 
   ProcessList::~ProcessList() {
-    D1()
+    D4()
     Clear();
   }
 
