@@ -73,7 +73,22 @@ namespace aui {
   }
 
   void AWindow::Draw() {
-    D3()
+        Display* d = AUIPtr()->Disp();
+        Pixmap buffer = BB(); // Get double buffer pixmap
+        GC gc = GCPtr();
+
+        // Safety guard: if double buffering is active for this window,
+        // we MUST fill it with the background color to prevent black artifacts
+        if (d && buffer && gc) {
+          UINT32 w = SizeXUI32();
+          UINT32 h = SizeYUI32();
+
+          XSetForeground(d, gc, BGColor());
+          XFillRectangle(d, buffer, gc, 0, 0, w, h);
+
+          // Copy the synchronized grey background buffer to the hardware screen
+          XCopyArea(d, buffer, Wnd(), gc, 0, 0, w, h, 0, 0);
+        }
   }
 
   AWindow::~AWindow() {

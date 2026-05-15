@@ -3,13 +3,15 @@
 
 #include "AWidget.h"
 
+struct AWidgetSettings;
+
 namespace aui {
   class AList : public AWidget{
     private:
       AList(AWidget *wParent);
+      AList(AWidget *wParent, const AWidgetSettings& settings);
       std::vector<std::string> mData;
       std::vector<bool> mTag;
-      UINT64 IndexFromY(UINT32 y);
       INT64 mVOffset = 0;
       INT64 mHOffset = 0;
       UINT64 mTextY = 0; // line height in px
@@ -35,7 +37,11 @@ namespace aui {
 
     protected:
     public:
+      UINT64 IndexFromY(UINT32 y);
+      void Clear();
       static AList* AttachTo(AWidget *wParent);
+      static AList* AttachTo(AWidget *wParent, const AWidgetSettings& settings);
+
       virtual ~AList();
       void Draw();
       void AddItem(std::string s);
@@ -56,6 +62,8 @@ namespace aui {
       UINT64 CursorPos();
       std::string DataAtCursor();
       std::string DataAt(UINT64 line);
+      UINT64 SelectedIndex();
+      void SetSelectedIndex(UINT64 ind);
   };
 }
 

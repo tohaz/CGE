@@ -27,7 +27,6 @@ namespace aui {
       }
       D4("opened font with description:{}, Pointer: {}, Real X11 FID: {}",
          AUI_DEFAULT_FONT, (UINT64)mFont, (UINT64)mFont->fid);
-
     }
     else {
       D3("Font is already set")
@@ -118,6 +117,20 @@ namespace aui {
     return mSzY;
   }
 
+  UINT32 AWidget::XUI32() {
+    if(mX > 0xFFFFFFFF) {
+      E("X overflow")
+    }
+    return (UINT32) mX;
+  }
+
+  UINT32 AWidget::YUI32() {
+    if(mY > 0xFFFFFFFF) {
+      E("Y overflow")
+    }
+    return (UINT32) mY;
+  }
+
   UINT32 AWidget::SizeXUI32() {
     if(mSzX > 0xFFFFFFFF) {
       E("SizeX overflow")
@@ -199,7 +212,6 @@ namespace aui {
         AWidget *child = (AWidget*) it->second;
         // 1. Remove from the local parent map first to prevent re-entry/infinite loops
         mWidg.erase(it);
-
         if(child) {
           // 2. We do NOT set child->mWindow = 0 here.
           // The child needs its ID to successfully call UnregisterWindow() in its own destructor.
@@ -456,8 +468,7 @@ namespace aui {
       UpdateBuffer();
     } else {
       DS()
-      D(
-          "==========resize is disabled for widget, call EnableResize() if needed")
+      D("==========resize is disabled for widget, call EnableResize() if needed")
     }
     Draw();
   }
@@ -563,6 +574,19 @@ namespace aui {
   }
 
   /**
+   * Maps the window to the X server, making it visible.
+   * Triggers a redraw to ensure content is displayed correctly.
+   */
+  void AWidget::Show() {
+    if (mAUI && mWindow) {
+      // Make window visible on the screen
+      XMapWindow(mAUI->Disp(), mWindow);
+      // Explicitly redraw to populate the window from the back buffer
+      Draw();
+    }
+  }
+
+  /**
    * Unmaps the window from the X server, making it invisible.
    * The window still exists in memory but stops receiving input events.
    */
@@ -580,58 +604,60 @@ namespace aui {
   }
 
 
-
-  /**
-   * Maps the window to the X server, making it visible.
-   * Triggers a redraw to ensure content is displayed correctly.
-   */
-  void AWidget::Show() {
-    if (mAUI && mWindow) {
-      // Make window visible on the screen
-      XMapWindow(mAUI->Disp(), mWindow);
-      // Explicitly redraw to populate the window from the back buffer
-      Draw();
-    }
-  }
-
   INT32 AWidget::PressDepth() {
     return mDepth;
   }
 
   bool AWidget::IsParentOf(Window target) const {
-      if (!mAUI) return false;
-
-      // 1. Check if the target is actually a registered widget
-      // Use mWidg.contains directly to avoid the E() exit in GetWidget
-      if (!mAUI->HasWidget(target)) {
-          return false;
-      }
-
-      AWidget* targetWidget = mAUI->GetWidget(target);
-      if (!targetWidget) return false;
-
-      // 2. Walk up the tree
-      AWidget* current = targetWidget->ParentWidget();
-      while (current != nullptr) {
-          if (current->Wnd() == mWindow) return true;
-          current = current->ParentWidget();
-      }
+    if(!mAUI)
       return false;
+    // 1. Check if the target is actually a registered widget
+    // Use mWidg.contains directly to avoid the E() exit in GetWidget
+    if(!mAUI->HasWidget(target)) {
+      return false;
+    }
+
+    AWidget *targetWidget = mAUI->GetWidget(target);
+    if(!targetWidget)
+      return false;
+
+    // 2. Walk up the tree
+    AWidget *current = targetWidget->ParentWidget();
+    while (current != nullptr) {
+      if(current->Wnd() == mWindow)
+        return true;
+      current = current->ParentWidget();
+    }
+    return false;
   }
 
   bool AWidget::ContainsGlobalCoordinates(int rootX, int rootY) {
-      // We need to translate our local widget (0,0) position to absolute screen space
-      Display* d = mAUI->Disp();
-      Window rootWinReturn;
-      int absoluteX = 0;
-      int absoluteY = 0;
+    // We need to translate our local widget (0,0) position to absolute screen space
+    Display *d = mAUI->Disp();
+    Window rootWinReturn;
+    int absoluteX = 0;
+    int absoluteY = 0;
+    // Fast hardware translation from our local coordinates to the root screen space
+    XTranslateCoordinates(d, mWindow, XRootWindow(d, 0), 0, 0, &absoluteX,
+        &absoluteY, &rootWinReturn);
+    // Verify if the screen click hits inside our physical bounding box dimensions
+    return (rootX >= absoluteX && rootX < (absoluteX + static_cast<int>(mSzX))
+        && rootY >= absoluteY && rootY < (absoluteY + static_cast<int>(mSzY)));
+  }
 
-      // Fast hardware translation from our local coordinates to the root screen space
-      XTranslateCoordinates(d, mWindow, XRootWindow(d, 0), 0, 0, &absoluteX, &absoluteY, &rootWinReturn);
+  void AWidget::ResizeNoRedraw(UINT32 szx, UINT32 szy) {
+    D3("Quiet resize requested without triggering Draw. Width: %u, Height: %u", szx, szy);
 
-      // Verify if the screen click hits inside our physical bounding box dimensions
-      return (rootX >= absoluteX && rootX < (absoluteX + static_cast<int>(mSzX)) &&
-              rootY >= absoluteY && rootY < (absoluteY + static_cast<int>(mSzY)));
+    // 1. Изменяем внутренние метрики геометрии
+    mSzX = SafeUINT64(szx);
+    mSzY = SafeUINT64(szy);
+
+    // 2. Отправляем изменения размеров на X-сервер напрямую
+    Display* d = mAUI->Disp();
+    if (d && mWindow != 0) {
+      XResizeWindow(d, mWindow, SafeUINT32(mSzX), SafeUINT32(mSzY));
+      XFlush(d);
+    }
   }
 
   AWidget::~AWidget() {

@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <string.h>
 
+#include "defaults.h"
 #include "AButton.h"
 #include "AInputBox.h"
 #include "ALabel.h"
@@ -30,9 +31,11 @@
 #include "AWindow.h"
 #include "APopupMenu.h"
 #include "AModalWindow.h"
-#include "defaults.h"
+#include "AComboBox.h"
 
 namespace aui {
+
+  std::string FormatBytesU64(UINT64 bytes);
 #pragma GCC push_options
 #pragma GCC optimize ("O2")
 
@@ -199,12 +202,10 @@ namespace aui {
       Atom mWMDeleteMessage = 0;
       void CloseDisplay();
       void RemoveMiscWindows();
-//      std::unordered_map<Window, CGWidget*> mWidg;
       std::map<Window, AWidget*> mWidg;
       UINT64 mAlphabetLen = BaseAlphabet.length();
       APopupMenu* mActiveRootMenu = nullptr;
       AWidget* mModalWidget = nullptr;
-//      std::vector<AModalWindow*> mModalStack;
       std::vector<AWidget*> mModalStack;
     protected:
 

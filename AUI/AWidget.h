@@ -12,7 +12,6 @@ namespace aui {
   class AUI;
   typedef UINT64 Picture;
 
-
   class AWidget {
     private:
       Window mWindow = 0;
@@ -55,6 +54,7 @@ namespace aui {
       AUIWidgetStyle mStyle = AUIWidgetStyle::Flat;
       INT32 mDepth = 0;
       bool mIsHovered = false;
+      void ResizeNoRedraw(UINT32 szx, UINT32 szy);
 
     public:
       AWidget();
@@ -79,6 +79,8 @@ namespace aui {
       INT64 Y();
       UINT32 SizeXUI32();
       UINT32 SizeYUI32();
+      UINT32 XUI32();
+      UINT32 YUI32();
       UINT64 SizeX();
       UINT64 SizeY();
       UINT32 BGColor();
@@ -103,10 +105,10 @@ namespace aui {
       void DestroyChildWidgets();
       void EnableResize();
       void DisableResize();
-      void Resize(UINT32 szx, UINT32 szy);
+      virtual void Resize(UINT32 szx, UINT32 szy);
       void ResizeY(UINT32 szy);
       void ResizeX(UINT32 szx);
-      void Move(UINT32 x, UINT32 y);
+      virtual void Move(UINT32 x, UINT32 y);
       void UnregisterChild(AWidget *w);
       UINT32 BorderSz();
       void SetBorderSz(UINT32 borderSz);
@@ -130,8 +132,6 @@ namespace aui {
       virtual void TriggerFeedback();
       bool IsParentOf(Window target) const;
       bool ContainsGlobalCoordinates(INT32 rootX, INT32 rootY);
-
-
   };
 }
 

@@ -91,9 +91,11 @@ int main() {
   AUI* au = AUI::Create("AWindow click shielding test suite");
 
   AWindow* mainFrame = au->MainWnd();
+
+//this is a complex test below involving highend hackery and changing code of ProcessMessages to trigger the
+// false result. So all other tests shoud be above this comment
   AButton* exitBtn = AButton::AttachTo(mainFrame, "Close");
   exitBtn->SetOnButtonReleaseCB(SystemCloseHandler, nullptr);
-	
   TestChildWindowClickShielding(mainFrame);
   // Real framework dispatch execution loop
   au->ProcessMessages();

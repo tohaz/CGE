@@ -9,6 +9,9 @@
 
 #define DEBUG_LEVEL 1
 
+// try {deference 0}
+// catch(SegmentationFault:) {}
+
 #define UNUSED [[maybe_unused]]
 
 inline void print_stack() {
@@ -150,7 +153,19 @@ enum class AUIWidgetType {
   defaultInputBox = 1005,
   defaultTable = 1006,
   defaultPopupMenu = 1007,
-  defaultModalWindow = 1008
+  defaultModalWindow = 1008,
+  defaultComboBox = 1009
+};
+
+struct AWidgetSettings {
+  std::string text = "";
+  INT64 x = 10;
+  INT64 y = 10;
+  UINT64 width = 100;
+  UINT64 height = 28;
+  UINT32 backgroundColor = 0xE0E0E0;
+  AUIWidgetType type = AUIWidgetType::unset;
+  bool startVisible = true;
 };
 
 enum class AUIHAlign {
@@ -198,7 +213,7 @@ enum class AUIWidgetStyle {
         exit(1); \
     } while (0);
     // DD() - Executes any code only in debug builds
-    #define DD(...) do { __VA_ARGS__; } while (0);
+    #define DD(...) do { __VA_ARGS__;  } while (0);
     // W() - Lightweight marker
     #define W() do { try { std::println("W {}|{}({})", __FILE__, __func__, __LINE__); } catch(...) {} } while (0);
     // DS() - Global Stack Trace
@@ -248,6 +263,7 @@ enum class AUIWidgetStyle {
 #else
     #define D4(...)  do {} while (0);
 #endif
+
 const static std::unordered_map<std::string,UINT64> string_to_case{
    {"BackSpace", 1},
    {"space", 2},
