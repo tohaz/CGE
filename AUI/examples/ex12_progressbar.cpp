@@ -12,7 +12,7 @@ std::thread StartProgressBarTenSecondLoop(AProgressBar* bar, AUI* au) {
   D1("StartProgressBarTenSecondLoop() -> Launching 10-second background thread pipeline");
   return std::thread([bar, au]() {
     const int totalSteps = 100;
-    const int stepDelayMs = 100;
+    const int stepDelayMs = 93;
     for (int step = 0; step <= totalSteps; ++step) {
       double calculatedProgress = static_cast<double>(step) / static_cast<double>(totalSteps);
       bar->SetProgress(calculatedProgress);

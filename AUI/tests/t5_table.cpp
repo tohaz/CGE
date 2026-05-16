@@ -10,7 +10,7 @@ bool need_delay_exit = 1;
 
 using namespace aui;
 
-void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_t stringLength = 16) {
+/*void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_t stringLength = 16) {
   if (!table) return;
   D1("PopulateTableWithTrash() -> Populating table via public API: {} rows x {} cols", numRows, numCols);
   
@@ -43,7 +43,7 @@ void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_
   table->Draw();
   D1("PopulateTableWithTrash() -> Dataset injected successfully via public interface.");
 }
-
+*/
 
 INT32 TestGeneral(ATable *ta) {
   AUICellData di;
@@ -102,7 +102,7 @@ INT32 TestTableMemoryStressFlush(AWidget* parent) {
   if (!table) return 1;
   D1("--------------------------------------------------");
   D1("ATable Benchmark -> Generating dataset from the outside (Public API)...");
-  // Populate 20,000 rows x 10 columns = 200,000 cells via the external helper function
+  // Populate 2,000 rows x 10 columns = 20,000 cells via the external helper function
   PopulateTableWithTrash(table, 2000, 10, 24);
   if (table->Rows() != 2000) {
     E("REGRESSION: Public API data injection check failed!");
@@ -121,7 +121,7 @@ INT32 TestTableMemoryStressFlush(AWidget* parent) {
 
 int main() {
 	//char *qqq = new char[1]; // generate error
-  UINT32 delay_ms = 50; // delay before thead calls window to close
+  UINT32 delay_ms = 100; // delay before thead calls window to close
   AUI* au = AUI::Create("table");
   AWindow* w = au->MainWnd();
   ATable* ta = ATable::AttachTo(w);

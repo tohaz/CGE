@@ -573,6 +573,7 @@ namespace aui {
     if(!cursorSet)
       XUndefineCursor(d, w);
   }
+
   void ATable::RemoveRow(INT64 rowIdx) {
 // 1. Cleanup data and pointers
 // We must iterate through the columns in this row to remove pointers in mColumns

@@ -414,31 +414,47 @@ namespace aui {
   }
 
   void AWidget::UpdateBuffer() {
-    AUI *aui = AUIPtr();
-    if(!aui || Wnd() == 0) return;
-    Display *d = aui->Disp();
-    // Get ACTUAL window attributes
-    XWindowAttributes watt;
-    XGetWindowAttributes(d, Wnd(), &watt);
-    D2("UpdateBuffer for '{}': WindowDepth={}, VisualID=0x{:x}",
-       mTitle, (int)watt.depth, (UINT64)watt.visual->visualid);
-    if(mBackBuffer) {
-      XFreePixmap(d, mBackBuffer);
-    }
-    // Create Pixmap using the window's EXACT depth
-    mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
-                                 SafeUINT32(SizeY()), (unsigned int)watt.depth);
-    D2("Created Pixmap ID: {}", (UINT64)mBackBuffer);
-    if(mStyle == AUIWidgetStyle::Simple3D) {
-      if(mRenderPicture != None) XRenderFreePicture(d, mRenderPicture);
-      XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
-      if(fmt) {
-        mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0, nullptr);
-        D2("XRender Picture created: ID={}", (UINT64)mRenderPicture);
-      } else {
-        E("XRender failed to find format for VisualID 0x{:x}", (UINT64)watt.visual->visualid);
+      AUI *aui = AUIPtr();
+      if(!aui || Wnd() == 0) return;
+      // Safety guard to prevent BadValue crashes inside XCreatePixmap during zero-size allocations
+      if(SizeX() <= 0 || SizeY() <= 0) {
+        D1("UpdateBuffer skipped due to zero/negative dimensions: {}x{}", SizeX(), SizeY());
+        return;
       }
-    }
+      Display *d = aui->Disp();
+      // Query actual physical attributes of the current window context
+      XWindowAttributes watt;
+      XGetWindowAttributes(d, Wnd(), &watt);
+      D2("UpdateBuffer for '{}': WindowDepth={}, VisualID=0x{:x}",
+         mTitle, (int)watt.depth, (UINT64)watt.visual->visualid);
+      // Thread safety guard: lock the X display before pipeline resource transformations
+      XLockDisplay(d);
+      // Free the XRender Picture upfront to eliminate memory leaks during dynamic style mutations
+      if(mRenderPicture != None) {
+        XRenderFreePicture(d, mRenderPicture);
+        mRenderPicture = None;
+      }
+      // Release the old back-buffer allocation from server space safely
+      if(mBackBuffer) {
+        XFreePixmap(d, mBackBuffer);
+        mBackBuffer = None;
+      }
+      // Allocate new server-side Pixmap matching the exact pixel bit depth of the target window
+      mBackBuffer = XCreatePixmap(d, Wnd(), SafeUINT32(SizeX()),
+          SafeUINT32(SizeY()), (unsigned int)watt.depth);
+      D3("Created Pixmap ID: {}", (UINT64)mBackBuffer);
+      // Re-initialize XRender context mapping if the current layout requires Simple3D visual states
+      if(mStyle == AUIWidgetStyle::Simple3D) {
+        XRenderPictFormat *fmt = XRenderFindVisualFormat(d, watt.visual);
+        if(fmt) {
+          mRenderPicture = XRenderCreatePicture(d, mBackBuffer, fmt, 0, nullptr);
+          D3("XRender Picture created: ID={}", (UINT64)mRenderPicture);
+        } else {
+          XUnlockDisplay(d);
+          E("XRender failed to find format for VisualID 0x{:x}", (UINT64)watt.visual->visualid);
+        }
+      }
+      XUnlockDisplay(d);
   }
 
   void AWidget::Resize(UINT32 szx, UINT32 szy) {

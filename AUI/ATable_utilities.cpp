@@ -1,3 +1,4 @@
+#include<random>
 #include "AUILib.h"
 #include "ATable.h"
 
@@ -84,32 +85,28 @@ namespace aui {
     Draw();
   }
 
+// this function is 20% slower even on medium-sized tables
   void ATable::ClearMT() {
     D1("ATable::Clear() -> Running clean deferred multi-threaded vector purge");
-
     // 1. ISOLATE WORKLOAD: Move the entire heavy matrix out of the widget context instantly.
     // This is an atomic pointer/node swap operation on the main thread - fast and 100% thread-safe.
     std::map<INT64, std::map<INT64, AUICellData>> rowsToDestroy;
     rowsToDestroy.swap(mRows); // mRows is now perfectly empty and ready for reuse
-
     // 2. CLEAR ALL DESCRIPTORS IMMEDIATELY (Operations on linear descriptor maps)
     mColumns.clear(); // Wipe observer pointers mapping matrix
     mRowH.clear();    // Flush row headers map descriptors completely
     mColumnW.clear(); // Flush column width map descriptors completely
-
     // Reset layout spatial dimension tracking values back to default
     mHOffset = 0;
     mVOffset = 0;
     mTotalContentWidth = 0;
     mTotalContentHeight = 0;
     mSelectedRow = -1;
-
     size_t totalRows = rowsToDestroy.size();
     if (totalRows == 0) {
       D1("ATable::Clear() -> Matrix was empty, skipping thread pools injection");
       return;
     }
-
     // 3. MULTI-THREADED SWEEP: Flatten the moved map into chunks for safe parallel destruction
     std::vector<std::map<INT64, AUICellData>> flatChunks;
     flatChunks.reserve(totalRows);
@@ -117,41 +114,32 @@ namespace aui {
       flatChunks.push_back(std::move(innerMap));
     }
     rowsToDestroy.clear(); // Wipes top-level keys safely
-
     size_t threadsCount = 4;
     if (totalRows < threadsCount) threadsCount = totalRows;
-
     std::vector<std::thread> workers;
     size_t chunkSize = totalRows / threadsCount;
-
     for (size_t t = 0; t < threadsCount; ++t) {
       size_t startIdx = t * chunkSize;
       size_t endIdx = (t == threadsCount - 1) ? totalRows : startIdx + chunkSize;
-
       workers.emplace_back([startIdx, endIdx, &flatChunks]() {
         // Local isolated worker array vector allocation chunk
         std::vector<std::map<INT64, AUICellData>> localSubVector;
         localSubVector.reserve(endIdx - startIdx);
-
         for (size_t i = startIdx; i < endIdx; ++i) {
           localSubVector.push_back(std::move(flatChunks[i]));
         }
-
         // PURE LOCK-FREE MEMORY FLUSH: Millions of std::string deep memory frees
         // execute concurrently across hardware thread execution channels!
         localSubVector.clear();
       });
     }
-
     // Await completion of all background memory flushes before returning control
     for (auto& worker : workers) {
       if (worker.joinable()) {
         worker.join();
       }
     }
-
     D1("ATable::Clear() -> Complete. High-volume datasets memory flushed successfully.");
-
     if (AUIPtr() && Wnd() != 0) {
       Draw();
     }
@@ -259,5 +247,73 @@ namespace aui {
     mRowHeightResizeEnabled = false;
     SetRowHeaderWidth(0);
   }
+
+//  void PopulateTableWithTrash(UNUSED ATable* table, UNUSED UINT32 numRows, UNUSED UINT32 numCols, UNUSED size_t stringLength = 16) {
+//    if (!table) return;
+//    D1("PopulateTableWithTrash() -> Populating table via public API: {} rows x {} cols", numRows, numCols);
+//    // 1. Initialize random number generator using the BaseAlphabet declared in defaults.h
+//    std::random_device rd;
+//    std::mt19937 gen(rd());
+//    std::uniform_int_distribution<size_t> dist(0, BaseAlphabet.length() - 1);
+//    // 2. Expand table bounds using official public methods
+//    UNUSED INT64 startRowIdx = static_cast<INT64>(table->Rows());
+//    table->AddColumns(numCols);
+//    table->AddRows(numRows);
+//    std::string trashBuffer;
+//    trashBuffer.resize(stringLength);
+//    for (UINT32 r = 0; r < numRows; ++r) {
+//      INT64 row = startRowIdx + static_cast<INT64>(r);
+//      for (UINT32 c = 0; c < numCols; ++c) {
+//        INT64 col = static_cast<INT64>(c);
+//        // Generate randomized characters into buffer string
+//        for (size_t i = 0; i < stringLength; ++i) {
+//          trashBuffer[i] = BaseAlphabet[dist(gen)];
+//        }
+//        // 3. Allocate clean cell data on the heap to satisfy the AUICellData* signature
+//        auto* cell = new AUICellData();
+//        cell->data = trashBuffer;
+//        cell->hAlign = AUIHAlign::center;
+//        cell->vAlign = AUIVAlign::center;
+//        // 4. Pass the pointer downstream into the widget context via public interface
+//        table->Insert(row, col, cell);
+//      }
+//    }
+//    table->Draw();
+//    D1("PopulateTableWithTrash() -> Dataset injected successfully via public interface.");
+//  }
+  void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_t stringLength = 16) {
+    if (!table) return;
+    D1("PopulateTableWithTrash() -> Populating table via public API: {} rows x {} cols", numRows, numCols);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<size_t> dist(0, BaseAlphabet.length() - 1);
+    INT64 startRowIdx = static_cast<INT64>(table->Rows());
+    table->AddColumns(numCols);
+    table->AddRows(numRows);
+    std::string trashBuffer;
+    trashBuffer.resize(stringLength);
+    AUICellData cell;
+    cell.hAlign = AUIHAlign::center;
+    cell.vAlign = AUIVAlign::center;
+    for (UINT32 r = 0; r < numRows; ++r) {
+      INT64 row = startRowIdx + static_cast<INT64>(r);
+      for (UINT32 c = 0; c < numCols; ++c) {
+        INT64 col = static_cast<INT64>(c);
+        for (size_t i = 0; i < stringLength; ++i) {
+          trashBuffer[i] = BaseAlphabet[dist(gen)];
+        }
+        // Assign the new string data to the reusable loop cell
+        cell.data = trashBuffer;
+        // Pass the address of the stack object safely.
+        // Inside Insert(), it will move the string out, but cell.data.
+        // will be cleanly re-assigned on the next loop iteration.
+        table->Insert(row, col, &cell);
+      }
+    }
+    table->Draw();
+    D1("PopulateTableWithTrash() -> Dataset injected successfully via public interface.");
+  }
+
+
 
 }

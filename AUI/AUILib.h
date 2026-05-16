@@ -36,6 +36,9 @@
 namespace aui {
 
   std::string FormatBytesU64(UINT64 bytes);
+  void AUIStartTimer();
+  void AUIStopTimer();
+
 #pragma GCC push_options
 #pragma GCC optimize ("O2")
 
@@ -176,8 +179,6 @@ namespace aui {
     }
     return static_cast<INT64>(val);
   }
-
-
 #pragma GCC pop_options
 
   class AWidget;
@@ -232,7 +233,6 @@ namespace aui {
       void PushModal(AWidget* win);
       void PopModal(AWidget* win);
       AWidget* GetModal() const { return mModalStack.empty() ? nullptr : mModalStack.back(); }
-
       ~AUI();
   };
 }

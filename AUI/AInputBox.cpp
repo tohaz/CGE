@@ -260,7 +260,11 @@ namespace aui {
 
   AInputBox::~AInputBox() {
     OnValueChanged = nullptr;
-    mStopBlink = true;
+    {
+        std::lock_guard<std::mutex> lock(mBlinkMutex);
+        mStopBlink = true;
+    }
+    mBlinkCv.notify_all();
     if(mBlinkThread.joinable())
       mBlinkThread.join();
     D3("v")

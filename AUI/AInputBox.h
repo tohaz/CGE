@@ -5,7 +5,7 @@
 #include <chrono>
 #include <atomic>
 #include <regex>
-
+#include <condition_variable>
 #include "AWidget.h"
 
 namespace aui {
@@ -26,6 +26,8 @@ namespace aui {
       std::function<void(AWidget* w, void* data)> OnValueChanged = nullptr;
       void* mUserDataValueChanged = nullptr;
       INT32 mInnerInset = 3;
+      std::mutex mBlinkMutex;
+      std::condition_variable mBlinkCv;
 
     protected:
     public:

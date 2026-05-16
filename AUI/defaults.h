@@ -6,6 +6,7 @@
 #include <print>
 #include <string>
 #include <unordered_map>
+#include <chrono>
 
 #define DEBUG_LEVEL 1
 
@@ -13,6 +14,17 @@
 // catch(SegmentationFault:) {}
 
 #define UNUSED [[maybe_unused]]
+
+static auto gAUI_timer_start = std::chrono::high_resolution_clock::now();
+
+#ifdef __CDT_PARSER__
+// Заглушки для парсера Eclipse, отключающие Semantic Error во всем проекте
+namespace std {
+    template<typename... Args> inline void print(Args&&...) {}
+    template<typename... Args> inline void println(Args&&...) {}
+    template<typename... Args> inline string format(Args&&...) { return ""; }
+}
+#endif
 
 inline void print_stack() {
   void* buffer[64];
@@ -278,4 +290,3 @@ const static std::unordered_map<std::string,UINT64> string_to_case{
 static std::string BaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 #endif // DEFAULTS_H_
-

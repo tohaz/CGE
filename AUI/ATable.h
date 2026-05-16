@@ -1,12 +1,12 @@
 #ifndef ATABLE_H_
 #define ATABLE_H_
 
-#include "AWidget.h"
 #include <map>
 #include <string>
 #include <X11/cursorfont.h>
 #include <xcb/xcb_cursor.h>
 #include <X11/Xlib-xcb.h>
+#include "AWidget.h"
 
 namespace aui {
   typedef struct {
@@ -26,13 +26,15 @@ namespace aui {
     AUIHAlign hAlign = AUIHAlign::center;
     AUIVAlign vAlign = AUIVAlign::center;
   } AUICellData;
-
+//
 //  typedef1 struct {
 //    std::string name;
 //  } AUIColumnData;
 
   enum class AUIScrollMode{AUINone, AUIVertical, AUIHorizontal};
   enum class AUIResizeMode {AUINone, AUIColumn, AUIRow, AUIHeader};
+  class ATable;
+  void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_t stringLength);
 
   class ATable : public AWidget {
     private:
@@ -83,6 +85,7 @@ namespace aui {
       bool mRowHeaderResizeEnabled = true;
       bool mRowHeightResizeEnabled = true;
       INT64 mDebugDrawCounter = 0;
+      mutable std::mutex mTableMutex;
     public:
       virtual ~ATable();
       static  ATable* AttachTo(AWidget* wParent);
