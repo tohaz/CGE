@@ -157,14 +157,6 @@ namespace aui {
     }
   }
 
-
-
-
-
-
-
-
-
   void ATable::SetRowName(INT64 rowIdx, const std::string name) {
     auto it = mRowH.find(rowIdx);
     if(it != mRowH.end()) {

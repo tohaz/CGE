@@ -86,6 +86,8 @@ namespace aui {
     XSync(d, False);
   }
 
-  AProgressBar::~AProgressBar() {}
+  AProgressBar::~AProgressBar() {
+    D3()
+  }
 
 } // namespace aui

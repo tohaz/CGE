@@ -93,21 +93,16 @@ int main() {
 
   operationalErrorsAccumulator += TestProgressBarBoundaries(w);
   operationalErrorsAccumulator += TestProgressBarX11RepaintEvents(w);
-  // Instantiate live component for the final rapid integration loop check
   AProgressBar* liveBar = AProgressBar::AttachTo(w);
   liveBar->Move(100, 130);
   liveBar->Resize(400, 40);
-  liveBar->SetBarColor(0xAACCAA); // Soft mint-green theme signature
-  // Fire up the high frame rate background execution thread track
+  liveBar->SetBarColor(0xAACCAA); 
   std::thread trackingThread = SpawnRapidProgressTrackerStream(liveBar, au);
-  // Capture processing channel paths mapping X11 signals smoothly
   au->ProcessMessages();
-  // Synchronize threads cleanly to guarantee zero TLS stack leak allocation artifacts
   if (trackingThread.joinable()) {
     D1("main() -> Synced asynchronous worker thread execution branches via join().");
     trackingThread.join();
   }
-  // Clear environment allocations down to pure zero values safely
   delete au;
   au = nullptr;
   liveBar = nullptr;

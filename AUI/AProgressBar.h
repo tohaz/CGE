@@ -9,16 +9,11 @@ namespace aui {
     private:
       double mProgress = 0.0;       // Progress value bounding between 0.0 and 1.0
       UINT32 mBarColor = 0xAACCAA;  // Color code token for the active filling bar
-
       AProgressBar(AWidget* wParent);
-
     public:
       virtual ~AProgressBar();
       static AProgressBar* AttachTo(AWidget* wParent);
-
       void Draw() override;
-
-      // Basic operational state management helper primitives
       void SetProgress(double progress);
       double GetProgress() const;
       void SetBarColor(UINT32 color);
