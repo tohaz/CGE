@@ -1,5 +1,4 @@
 #include "AUILib.h"
-#include "APopupMenu.h"
 
 using namespace aui;
 
@@ -45,7 +44,7 @@ void WindowRightClickHandler(XEvent* ev, [[maybe_unused]] AWidget* w, void* data
 }
 
 int main() {
-  AUI* au = AUI::Create("Menu Example");
+  AUI* au = AUI::Create("Popup menu Example");
   AWindow* w = au->MainWnd();
 
   std::vector<AMenuItem> items = createExampleItems(au);

@@ -99,6 +99,7 @@ namespace aui {
       void AddColumns(UINT32 number);
       void AddRows(UINT32 number);
       void Clear();
+      void ClearMT();
       void DisableRowHeader();
       void Draw();
       void Insert(INT64 row, INT64 col, AUICellData* cell);

@@ -111,7 +111,6 @@ INT32 TestSubmenuCleanup(AWidget* parent) {
   return 0;
 }
 
-
 void ButtonCloseHandler(XEvent* ev, AWidget* w, void* d) {
   D("user quit callback fired, bye world {} {}", (UINT64)ev, (UINT64)d)
   w->AUIPtr()->ExitAUI();

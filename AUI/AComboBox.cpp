@@ -31,15 +31,12 @@ namespace aui {
 
 // Factory generation access boundary entry-point
   AComboBox* AComboBox::AttachTo(AWidget *wParent, std::string inText) {
-    if(!wParent)
-[[unlikely]] {
+    if(!wParent)[[unlikely]] {
             E("Cannot instantiate AComboBox container under a null parent widget profile context!");
       return nullptr;
     }
     return new AComboBox(wParent, inText);
   }
-
-// --- COMPOSITION LAYOUT RULES SECTION ---
 
   void AComboBox::Resize(UINT32 w, UINT32 h) {
     AWidget::Resize(w, h);
@@ -63,11 +60,6 @@ namespace aui {
     }
   }
 
-/**
-   * Recursive Drawing Pipeline:
-   * Renders the native background, delegates text box draws, and places the hardware triangle arrow
-   * directly inside the native back-buffer to guarantee perfect color context sync without X11 conflicts.
-   */
   void AComboBox::Draw() {
     Display *d = AUIPtr()->Disp();
     Pixmap buffer = BB();
@@ -125,7 +117,6 @@ namespace aui {
     int absX = 0;
     int absY = 0;
     Window dummyChild;
-
 // Translate coordinates from ComboBox local space directly to the screen RootWindow workspace
     XTranslateCoordinates(d, Wnd(), XRootWindow(d, AUIPtr()->Scr()), 0, static_cast<int>(SizeYUI32()), &absX, &absY,
         &dummyChild);
@@ -145,7 +136,6 @@ namespace aui {
     if(mListView && !AUIPtr()->IsWindowRegistered(mListView->Wnd())) {
       mListView = nullptr;
     }
-
     if(!mListView) {
       D2("AComboBox::OpenDropDown() -> Creating flat AList dropdown window");
       AWidgetSettings listSettings;
@@ -158,14 +148,11 @@ namespace aui {
 // the click-outside events into the clean CloseDropDown() collapse path path instead of crashing.
       listSettings.type = AUIWidgetType::defaultComboBox;
       listSettings.startVisible = false;// Hold invisible during setup layout transforms
-
       mListView = AList::AttachTo(this, listSettings);
       mListView->SetOnButtonPressCB(AComboBox::OnItemSelect, this);
-
       XSetWindowAttributes attr;
       attr.override_redirect = True;
       XChangeWindowAttributes(d, mListView->Wnd(), CWOverrideRedirect, &attr);
-
       Atom netWmWindowType = XInternAtom(d, "_NET_WM_WINDOW_TYPE", False);
       Atom netWmWindowTypeCombo = XInternAtom(d, "_NET_WM_WINDOW_TYPE_COMBO", False);
       XChangeProperty(d, mListView->Wnd(), netWmWindowType, XA_ATOM, 32,
@@ -189,7 +176,6 @@ namespace aui {
     D2("AComboBox::CloseDropDown() -> Collapsing menu layer");
     if(!mIsPopupOpen)
       return;
-
     Display *d = AUIPtr()->Disp();
     if(!d)
       return;
@@ -240,7 +226,6 @@ namespace aui {
     D1("AComboBox::Clear() -> Flushing item vectors and collapsing states");
     mItems.clear();
     mSelectedIndex = -1;
-
     if(mListView) {
       mListView->Clear();
     }
@@ -310,11 +295,9 @@ namespace aui {
 
   void AComboBox::OnItemSelect(XEvent *ev, UNUSED AWidget *w, void *data) {
     auto *self = static_cast<AComboBox*>(data);
-
 // FACT TRACING: Log immediately upon entering the function
     D2("AComboBox::OnItemSelect ENTRY -> Event type: %d, Window in event: 0x%lx", ev->type,
         (unsigned long)ev->xbutton.window);
-
     if(!self) {
       E("AComboBox::OnItemSelect -> Critical: self pointer context is null!");
       return;
@@ -347,7 +330,6 @@ namespace aui {
 // FACT TRACING: Log what index AList computed from this coordinate
     D2("AComboBox::OnItemSelect -> AList::IndexFromY returned index value: {} (mData size is {})",
         (UINT64)calculatedIndex, self->mItems.size());
-
     if(calculatedIndex > 0) {
       INT32 finalTargetIndex = static_cast<INT32>(calculatedIndex - 1);
       D2("AComboBox::OnItemSelect -> SUCCESS ROUTINE -> Executing SetSelectedIndex({})", finalTargetIndex);
@@ -364,9 +346,10 @@ namespace aui {
     self->CloseDropDown();
     self->Draw();
   }
+
   void AComboBox::SetOnSelectionChangeCB(std::function<void(AWidget *w, INT32 selectedIndex, void *arbData)> func,
       void *data) {
-    D()
+    D3()
     mOnSelectionChangeCB = func;
     mUserCallbackData = data;
   }
@@ -377,5 +360,4 @@ namespace aui {
     }
     D3("AComboBox destructor layout unlinked cleanly.");
   }
-
 }// namespace aui

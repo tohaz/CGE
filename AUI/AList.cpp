@@ -35,7 +35,6 @@ namespace aui {
      AUI *cg = wParent->AUIPtr();
      Display *d = cg->Disp();
      INT32 scr = cg->Scr();
-
      SetType(settings.type != AUIWidgetType::unset ? settings.type : AUIWidgetType::defaultList);
      SetBGColor(settings.backgroundColor);
      SetXY(settings.x, settings.y);
@@ -44,25 +43,19 @@ namespace aui {
      mVOffset = 0;
      mHOffset = 0;
      SetWndParent(wParent);
-
      // HARDWARE FIX 2: If startVisible is false, it's an unmanaged dropdown layer.
      // We parent it to XRootWindow so it can move anywhere and receive hardware click events.
      Window nativeParent = settings.startVisible ? wParent->Wnd() : XRootWindow(d, scr);
-
      InitWidgetProps(
          XCreateSimpleWindow(d, nativeParent, SafeINT32(X()), SafeINT32(Y()),
              SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr),
              BGColor()));
-
      XSelectInput(d, Wnd(),
          ExposureMask | ButtonPressMask | KeyPressMask | ButtonReleaseMask
-
              | FocusChangeMask | PointerMotionMask);
-
      if (settings.startVisible) {
        XMapWindow(d, Wnd());
      }
-
      EnableResize();
      cg->AddWidget(this);
   }
@@ -332,7 +325,6 @@ namespace aui {
               }
             }
           }
-
           // --- Horizontal Scrollbar Interactions ---
           if(mShowHThumb || mShowHArrows) {
             // 1. Check for Thumb Dragging (only if thumb is enabled)
@@ -343,7 +335,6 @@ namespace aui {
                 return;
               }
             }
-
             // 2. Check for Horizontal Arrow Clicks (only if arrows are enabled)
             if(mShowHArrows) {
               // Left Arrow

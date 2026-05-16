@@ -189,21 +189,21 @@ namespace aui {
   }
 
   void ATable::Insert(INT64 row, INT64 col, AUICellData *cell) {
-    if(!cell)
-      return;
-    mRows[row][col] = std::move(*cell);
-    mColumns[col][row] = &mRows[row][col];
-    if(mAutoWiden) {
-      XFontStruct *font_info = Font();
-      INT32 textW =
-          font_info ?
-              XTextWidth(font_info, mRows[row][col].data.c_str(), (INT32) mRows[row][col].data.length()) :
-              (INT32) mRows[row][col].data.length() * 7;
+    if (!cell) return;
+    AUICellData& insertedCell = (mRows[row][col] = std::move(*cell));
+    mColumns[col][row] = &insertedCell;
+    if (mAutoWiden) {
+      XFontStruct* font_info = Font();
+      INT32 textW = font_info ?
+        XTextWidth(font_info, insertedCell.data.c_str(), static_cast<int>(insertedCell.data.length())) :
+        static_cast<int>(insertedCell.data.length()) * 7;
       INT32 padding = 15;
-      if((INT64) textW + padding > ColumnWidth(col)) {
-        INT64 newW = (INT64) textW + padding;
-        mTotalContentWidth += (newW - mColumnW[col].first);
-        mColumnW[col].first = newW;
+      INT64 requiredWidth = static_cast<INT64>(textW + padding);
+      auto& colData = mColumnW[col];
+      INT64 currentWidth = colData.first;
+      if (requiredWidth > currentWidth) {
+        mTotalContentWidth += (requiredWidth - currentWidth);
+        colData.first = requiredWidth;
       }
     }
   }

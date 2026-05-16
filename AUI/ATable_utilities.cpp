@@ -84,6 +84,87 @@ namespace aui {
     Draw();
   }
 
+  void ATable::ClearMT() {
+    D1("ATable::Clear() -> Running clean deferred multi-threaded vector purge");
+
+    // 1. ISOLATE WORKLOAD: Move the entire heavy matrix out of the widget context instantly.
+    // This is an atomic pointer/node swap operation on the main thread - fast and 100% thread-safe.
+    std::map<INT64, std::map<INT64, AUICellData>> rowsToDestroy;
+    rowsToDestroy.swap(mRows); // mRows is now perfectly empty and ready for reuse
+
+    // 2. CLEAR ALL DESCRIPTORS IMMEDIATELY (Operations on linear descriptor maps)
+    mColumns.clear(); // Wipe observer pointers mapping matrix
+    mRowH.clear();    // Flush row headers map descriptors completely
+    mColumnW.clear(); // Flush column width map descriptors completely
+
+    // Reset layout spatial dimension tracking values back to default
+    mHOffset = 0;
+    mVOffset = 0;
+    mTotalContentWidth = 0;
+    mTotalContentHeight = 0;
+    mSelectedRow = -1;
+
+    size_t totalRows = rowsToDestroy.size();
+    if (totalRows == 0) {
+      D1("ATable::Clear() -> Matrix was empty, skipping thread pools injection");
+      return;
+    }
+
+    // 3. MULTI-THREADED SWEEP: Flatten the moved map into chunks for safe parallel destruction
+    std::vector<std::map<INT64, AUICellData>> flatChunks;
+    flatChunks.reserve(totalRows);
+    for (auto& [_, innerMap] : rowsToDestroy) {
+      flatChunks.push_back(std::move(innerMap));
+    }
+    rowsToDestroy.clear(); // Wipes top-level keys safely
+
+    size_t threadsCount = 4;
+    if (totalRows < threadsCount) threadsCount = totalRows;
+
+    std::vector<std::thread> workers;
+    size_t chunkSize = totalRows / threadsCount;
+
+    for (size_t t = 0; t < threadsCount; ++t) {
+      size_t startIdx = t * chunkSize;
+      size_t endIdx = (t == threadsCount - 1) ? totalRows : startIdx + chunkSize;
+
+      workers.emplace_back([startIdx, endIdx, &flatChunks]() {
+        // Local isolated worker array vector allocation chunk
+        std::vector<std::map<INT64, AUICellData>> localSubVector;
+        localSubVector.reserve(endIdx - startIdx);
+
+        for (size_t i = startIdx; i < endIdx; ++i) {
+          localSubVector.push_back(std::move(flatChunks[i]));
+        }
+
+        // PURE LOCK-FREE MEMORY FLUSH: Millions of std::string deep memory frees
+        // execute concurrently across hardware thread execution channels!
+        localSubVector.clear();
+      });
+    }
+
+    // Await completion of all background memory flushes before returning control
+    for (auto& worker : workers) {
+      if (worker.joinable()) {
+        worker.join();
+      }
+    }
+
+    D1("ATable::Clear() -> Complete. High-volume datasets memory flushed successfully.");
+
+    if (AUIPtr() && Wnd() != 0) {
+      Draw();
+    }
+  }
+
+
+
+
+
+
+
+
+
   void ATable::SetRowName(INT64 rowIdx, const std::string name) {
     auto it = mRowH.find(rowIdx);
     if(it != mRowH.end()) {

@@ -154,7 +154,8 @@ enum class AUIWidgetType {
   defaultTable = 1006,
   defaultPopupMenu = 1007,
   defaultModalWindow = 1008,
-  defaultComboBox = 1009
+  defaultComboBox = 1009,
+  defaultProgressBar = 1010
 };
 
 struct AWidgetSettings {
