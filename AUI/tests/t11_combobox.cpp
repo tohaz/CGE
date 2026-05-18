@@ -72,6 +72,32 @@ INT32 TestComboBoxDataSyncAndClear(AWidget* parent) {
   return 0;
 }
 
+INT32 TestComboBoxAddItemAndGetText(AWidget* parent) {
+  // Scenario 1: Test AttachTo(parent) -> Must initialize with 0 elements and selection index -1
+  AComboBox* comboEmpty = AComboBox::AttachTo(parent);
+  comboEmpty->AddItem("First");
+  comboEmpty->AddItem("Second");
+  if (comboEmpty->ItemCount() != 2 || comboEmpty->GetItemText(0) != "First" || comboEmpty->GetItemText(1) != "Second") {
+    E("REGRESSION: Single-argument AttachTo raw allocation failed data integrity validation steps!");
+    return 1;
+  }
+  // Scenario 2: Test AttachTo(parent, "Initial") -> Must seed the single text value into index 0 and select it
+  AComboBox* comboSingle = AComboBox::AttachTo(parent, "Initial");
+  comboSingle->AddItem("Append1");
+  if (comboSingle->ItemCount() != 2 || comboSingle->GetItemText(0) != "Initial" || comboSingle->GetItemText(1) != "Append1" || comboSingle->GetSelectedIndex() != 0) {
+    E("REGRESSION: Two-argument AttachTo factory failed layout seeding or tracking validation checks!");
+    return 2;
+  }
+  // Scenario 3: Test AttachTo(parent, {list}) -> Must seed multiple items sequentially and select index 0
+  AComboBox* comboList = AComboBox::AttachTo(parent, {"Alpha", "Beta", "Gamma"});
+  if (comboList->ItemCount() != 3 || comboList->GetItemText(0) != "Alpha" || comboList->GetItemText(2) != "Gamma" || comboList->GetSelectedIndex() != 0) {
+    E("REGRESSION: Variadic initializer_list AttachTo factory mapping generated corrupted data offsets!");
+    return 3;
+  }
+  D1("SUCCESS: All 3 factory initialization paths (AttachTo variants) verified safely and cleanly");
+  return 0;
+}
+
 INT32 TestComboBoxWindowLifecycleReuse(AWidget* parent) {
   AComboBox* combo = AComboBox::AttachTo(parent, "Lifecycle Test");
   combo->AddItem("Entry 1");
@@ -90,64 +116,44 @@ INT32 TestComboBoxWindowLifecycleReuse(AWidget* parent) {
   return 0;
 }
 
-void ButtonCloseHandler(XEvent* ev, AWidget* w, void* d) {
-  D("user quit callback fired, bye world {} {}", (UINT64)ev, (UINT64)d)
-  w->AUIPtr()->ExitAUI();
-}
-
-INT32 TestComboBoxAddItemAndGetText(AWidget* parent) {
-  AComboBox* combo = AComboBox::AttachTo(parent, "Helper Test 1");
-  
-  combo->AddItem("First");
-  combo->AddItem("Second");
-
-  // Validate operation 5: GetItemText extraction indices
-  if (combo->GetItemText(0) != "First" || combo->GetItemText(1) != "Second") {
-    E("REGRESSION: Helper GetItemText or AddItem failed data integrity constraints!");
-    return 1;
-  }
-
-  D1("SUCCESS: Helper operations 1 & 5 (AddItem/GetItemText) verified cleanly");
-  return 0;
-}
-
 INT32 TestComboBoxSelectionStateLifecycle(AWidget* parent) {
-  AComboBox* combo = AComboBox::AttachTo(parent, "Helper Test 2");
-  combo->AddItem("Alpha");
-  combo->AddItem("Beta");
-
-  // Default state validation (Operation 3)
+  // Use raw single-argument factory to ensure the widget starts in a completely unselected state
+  AComboBox* combo = AComboBox::AttachTo(parent);
   if (combo->GetSelectedIndex() != -1) {
     E("REGRESSION: Unselected ComboBox index tracking initialization state is not -1");
     return 1;
   }
-
-  // State mutation validation (Operation 4)
+  combo->AddItem("Alpha");
+  combo->AddItem("Beta");
+  // Explicitly trigger mutation to evaluate state synchronization overrides
   combo->SetSelectedIndex(1);
   if (combo->GetSelectedIndex() != 1) {
     E("REGRESSION: SetSelectedIndex failed to commit index modification state values");
     return 2;
   }
-
   D1("SUCCESS: Helper operations 3 & 4 (Selection State read/write) match specifications");
   return 0;
 }
-
 INT32 TestComboBoxClearRoutine(AWidget* parent) {
-  AComboBox* combo = AComboBox::AttachTo(parent, "Helper Test 3");
-  combo->AddItem("Data 1");
-  combo->SetSelectedIndex(0);
-
-  // Trigger full reset (Operation 2)
-  combo->Clear();
-
-  if (combo->GetSelectedIndex() != -1) {
-    E("REGRESSION: Clear() failed to restore unselected default index flag state (-1)");
+  // Use the list initialization factory to seed data structures safely
+  AComboBox* combo = AComboBox::AttachTo(parent, {"Data 1", "Data 2"});
+  if (combo->GetSelectedIndex() != 0) {
+    E("REGRESSION: Factory failed to default selection to index 0 on multi-item instantiation");
     return 1;
   }
-
+  // Trigger full data vector and selection tracking purge
+  combo->Clear();
+  if (combo->GetSelectedIndex() != -1) {
+    E("REGRESSION: Clear() failed to restore unselected default index flag state (-1)");
+    return 2;
+  }
   D1("SUCCESS: Helper operation 2 (Clear data vector flushing routine) executed smoothly");
   return 0;
+}
+
+void ButtonCloseHandler(XEvent* ev, AWidget* w, void* d) {
+  D("user quit callback fired, bye world {} {}", (UINT64)ev, (UINT64)d)
+  w->AUIPtr()->ExitAUI();
 }
 
 int main() {

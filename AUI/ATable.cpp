@@ -822,6 +822,17 @@ namespace aui {
     return itCol->second.data;
   }
 
+  AUICellData& ATable::GetOrCreate(INT64 row, INT64 col) {
+    std::lock_guard<std::mutex> lock(mTableMutex);
+    auto [rowIt, rowInserted] = mRows.try_emplace(row);
+    auto [cellIt, cellInserted] = rowIt->second.try_emplace(col);
+    if (cellInserted) {
+      auto [colIt, colInserted] = mColumns.try_emplace(col);
+      colIt->second[row] = &(cellIt->second);
+    }
+    return cellIt->second;
+  }
+
   ATable::~ATable() {
     AUI *au = AUIPtr();
     UNUSED Display *d = au->Disp();

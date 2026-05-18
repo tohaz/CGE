@@ -284,7 +284,8 @@ const static std::unordered_map<std::string,UINT64> string_to_case{
    {"KP_Enter", 4},
    {"Left", 5},
    {"Right", 6},
-   {"Delete", 7}
+   {"Delete", 7},
+   {"Insert", 8}
 };
 
 static std::string BaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

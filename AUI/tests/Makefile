@@ -84,14 +84,22 @@ build_aui_lib:
 	@echo "--- Checking AUI Library [Mode: $(BUILD_MODE)] ---"
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all
 
-# Rule for building each application separately.
-# Each app depends on its .cpp source AND the checked library.
+#$(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
+#	@echo "Building application [$(BUILD_MODE)]: $<"
+#	@rm -f $@
+#	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS)
+#ifneq ($(BUILD_MODE), debug)
+#	@$(STRIP) --strip-all $@
+#endif
 $(BUILD_DIR)/%: $(SRC_DIR)/%.cpp $(AUI_LIB) | $(BUILD_DIR) $(DEP_DIR)
 	@echo "Building application [$(BUILD_MODE)]: $<"
+	@rm -f $@
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -MF $(DEP_DIR)/$*.d $< -o $@ $(LDFLAGS) $(LIBS)
 ifneq ($(BUILD_MODE), debug)
 	@$(STRIP) --strip-all $@
+	@size $@
 endif
+
 
 $(AUI_LIB): force_look
 	@$(MAKE) -C $(AUI_ROOT) BUILD_MODE=$(BUILD_MODE) all

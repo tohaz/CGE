@@ -39,6 +39,7 @@ namespace aui {
       }
     });
   }
+
   AProgressBar* AProgressBar::AttachTo(AWidget* wParent) {
     return new AProgressBar(wParent);
   }
@@ -47,6 +48,7 @@ namespace aui {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     mProgressProvider = provider;
   }
+
   void AProgressBar::SetProgress(double progress) {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     if (progress < 0.0) progress = 0.0;
@@ -54,21 +56,26 @@ namespace aui {
     mProgress = progress;
     // Thread-safe data mutation only. Draw() invocation is intentionally omitted to let the update thread handle rendering.
   }
+
   double AProgressBar::GetProgress() const {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     return mProgress;
   }
+
   void AProgressBar::SetBarColor(UINT32 color) {
     mBarColor = color;
   }
+
   void AProgressBar::Clear() {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     mProgress = 0.0;
   }
+
   void AProgressBar::SetUpdateInterval(UINT32 intervalMs) {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     mUpdateIntervalMs = intervalMs;
   }
+
   void AProgressBar::Draw() {
     if (Wnd() == 0) return;
     AUI* au = AUIPtr();
@@ -114,6 +121,7 @@ namespace aui {
     XSync(d, False);
     XUnlockDisplay(d);
   }
+
   AProgressBar::~AProgressBar() {
     {
       std::lock_guard<std::mutex> lock(mThreadMutex);

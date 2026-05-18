@@ -7,7 +7,9 @@
 #include <sys/types.h>
 #include <cerrno>
 #include <chrono>
+#include <charconv>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
@@ -20,6 +22,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <string.h>
+
 
 #include "defaults.h"
 #include "AButton.h"

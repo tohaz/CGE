@@ -248,39 +248,6 @@ namespace aui {
     SetRowHeaderWidth(0);
   }
 
-//  void PopulateTableWithTrash(UNUSED ATable* table, UNUSED UINT32 numRows, UNUSED UINT32 numCols, UNUSED size_t stringLength = 16) {
-//    if (!table) return;
-//    D1("PopulateTableWithTrash() -> Populating table via public API: {} rows x {} cols", numRows, numCols);
-//    // 1. Initialize random number generator using the BaseAlphabet declared in defaults.h
-//    std::random_device rd;
-//    std::mt19937 gen(rd());
-//    std::uniform_int_distribution<size_t> dist(0, BaseAlphabet.length() - 1);
-//    // 2. Expand table bounds using official public methods
-//    UNUSED INT64 startRowIdx = static_cast<INT64>(table->Rows());
-//    table->AddColumns(numCols);
-//    table->AddRows(numRows);
-//    std::string trashBuffer;
-//    trashBuffer.resize(stringLength);
-//    for (UINT32 r = 0; r < numRows; ++r) {
-//      INT64 row = startRowIdx + static_cast<INT64>(r);
-//      for (UINT32 c = 0; c < numCols; ++c) {
-//        INT64 col = static_cast<INT64>(c);
-//        // Generate randomized characters into buffer string
-//        for (size_t i = 0; i < stringLength; ++i) {
-//          trashBuffer[i] = BaseAlphabet[dist(gen)];
-//        }
-//        // 3. Allocate clean cell data on the heap to satisfy the AUICellData* signature
-//        auto* cell = new AUICellData();
-//        cell->data = trashBuffer;
-//        cell->hAlign = AUIHAlign::center;
-//        cell->vAlign = AUIVAlign::center;
-//        // 4. Pass the pointer downstream into the widget context via public interface
-//        table->Insert(row, col, cell);
-//      }
-//    }
-//    table->Draw();
-//    D1("PopulateTableWithTrash() -> Dataset injected successfully via public interface.");
-//  }
   void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_t stringLength = 16) {
     if (!table) return;
     D1("PopulateTableWithTrash() -> Populating table via public API: {} rows x {} cols", numRows, numCols);
@@ -302,11 +269,7 @@ namespace aui {
         for (size_t i = 0; i < stringLength; ++i) {
           trashBuffer[i] = BaseAlphabet[dist(gen)];
         }
-        // Assign the new string data to the reusable loop cell
         cell.data = trashBuffer;
-        // Pass the address of the stack object safely.
-        // Inside Insert(), it will move the string out, but cell.data.
-        // will be cleanly re-assigned on the next loop iteration.
         table->Insert(row, col, &cell);
       }
     }
@@ -314,6 +277,34 @@ namespace aui {
     D1("PopulateTableWithTrash() -> Dataset injected successfully via public interface.");
   }
 
+//  void PopulateTableWithTrash(ATable* table, UINT32 numRows, UINT32 numCols, size_t stringLength = 16) {
+//    if (!table) return;
+//    D1("PopulateTableWithTrash() -> Populating table via public API: {} rows x {} cols", numRows, numCols);
+//    std::random_device rd;
+//    std::mt19937 gen(rd());
+//    std::uniform_int_distribution<size_t> dist(0, BaseAlphabet.length() - 1);
+//    INT64 startRowIdx = static_cast<INT64>(table->Rows());
+//    table->AddColumns(numCols);
+//    table->AddRows(numRows);
+//    std::string trashBuffer;
+//    trashBuffer.resize(stringLength); // Allocated exactly ONCE in heap memory
+//    for (UINT32 r = 0; r < numRows; ++r) {
+//      INT64 row = startRowIdx + static_cast<INT64>(r);
+//      for (UINT32 c = 0; c < numCols; ++c) {
+//        INT64 col = static_cast<INT64>(c);
+//        for (size_t i = 0; i < stringLength; ++i) {
+//          trashBuffer[i] = BaseAlphabet[dist(gen)]; // Overwriting existing buffer characters in place
+//        }
+//        // Get a direct memory reference to the target cell inside the tree structure
+//        AUICellData& cellRef = table->GetOrCreate(row, col);
+//        cellRef.hAlign = AUIHAlign::center;
+//        cellRef.vAlign = AUIVAlign::center;
+//        cellRef.data = trashBuffer; // Direct data copy into pre-allocated node storage
+//      }
+//    }
+//    table->Draw();
+//    D1("PopulateTableWithTrash() -> Dataset injected successfully via public interface.");
+//  }
 
 
 }

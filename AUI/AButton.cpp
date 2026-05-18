@@ -51,11 +51,11 @@ namespace aui {
     INT32 totalW = XTextWidth(f, Text().c_str(), (int) Text().size());
     INT32 drawX = 0, drawY = 0;
     UINT32 drawColor = BGColor();
-    if (IsHL()) {
-        // High priority: Button is physically pressed
+    if (!IsEnabled()) {
+        drawColor = 0x888888; // Block mutations and force uniform disabled layout grey
+    } else if (IsHL()) {
         drawColor = HLColor(BGColor());
     } else if (mIsHovered) {
-        // Medium priority: Mouse is just hovering over it
         drawColor = GetBlendedColor(BGColor(), 255, 0.50);
     }
     if (!Font()) {
@@ -89,7 +89,12 @@ namespace aui {
        drawX,
        calculatedCenter);
     if (VAlign() == AUIVAlign::center) {
-        drawY = (SafeINT32(szy) + overall.ascent - overall.descent) / 2;
+        // Query the precise layout bounding box metrics for a standard lowercase character 'x'
+        int xDir, xAsc, xDesc;
+        XCharStruct xOverall;
+        XTextExtents(f, "x", 1, &xDir, &xAsc, &xDesc, &xOverall);
+        // Balance vertical offset based on lowercase x-height ascent to correct visual downward shift artifacts
+        drawY = (SafeINT32(szy) + xOverall.ascent - overall.descent) / 2 + 1;
     }
     else if (VAlign() == AUIVAlign::top) {
         drawY = overall.ascent + 5;
@@ -117,32 +122,32 @@ namespace aui {
       XLinearGradient gradient;
       RGBAColor cl;
       cl.value = drawColor;
-      XRenderColor c_top, c_bot;
+      XRenderColor cTop, cBot;
       double intensity = 0.5;
       gradient.p1 = { 0, 0 };
       gradient.p2 = { 0, XDoubleToFixed(static_cast<double>(szy)) };
       if (pressed) {
-          // Pressed state: move top towards black, bottom towards white
-          c_top.red   = ScaleAndBlend(cl.rgba.r, 0, 0.2).red;
-          c_top.green = ScaleAndBlend(cl.rgba.g, 0, 0.2).green;
-          c_top.blue  = ScaleAndBlend(cl.rgba.b, 0, 0.2).blue;
-          c_top.alpha = 0xFFFF;
-          c_bot.red   = ScaleAndBlend(cl.rgba.r, 255, 0.1).red;
-          c_bot.green = ScaleAndBlend(cl.rgba.g, 255, 0.1).green;
-          c_bot.blue  = ScaleAndBlend(cl.rgba.b, 255, 0.1).blue;
-          c_bot.alpha = 0xFFFF;
+        // Pressed state: move top towards black, bottom towards white
+        cTop.red   = ScaleAndBlend(cl.rgba.r, 0, 0.2).red;
+        cTop.green = ScaleAndBlend(cl.rgba.g, 0, 0.2).green;
+        cTop.blue  = ScaleAndBlend(cl.rgba.b, 0, 0.2).blue;
+        cTop.alpha = 0xFFFF;
+        cBot.red   = ScaleAndBlend(cl.rgba.r, 255, 0.1).red;
+        cBot.green = ScaleAndBlend(cl.rgba.g, 255, 0.1).green;
+        cBot.blue  = ScaleAndBlend(cl.rgba.b, 255, 0.1).blue;
+        cBot.alpha = 0xFFFF;
       } else {
-          // Normal/Hover: Top towards white, Bottom towards black
-          c_top.red   = ScaleAndBlend(cl.rgba.r, 255, intensity).red;
-          c_top.green = ScaleAndBlend(cl.rgba.g, 255, intensity).green;
-          c_top.blue  = ScaleAndBlend(cl.rgba.b, 255, intensity).blue;
-          c_top.alpha = 0xFFFF;
-          c_bot.red   = ScaleAndBlend(cl.rgba.r, 0, intensity).red;
-          c_bot.green = ScaleAndBlend(cl.rgba.g, 0, intensity).green;
-          c_bot.blue  = ScaleAndBlend(cl.rgba.b, 0, intensity).blue;
-          c_bot.alpha = 0xFFFF;
+        // Normal/Hover: Top towards white, Bottom towards black
+        cTop.red   = ScaleAndBlend(cl.rgba.r, 255, intensity).red;
+        cTop.green = ScaleAndBlend(cl.rgba.g, 255, intensity).green;
+        cTop.blue  = ScaleAndBlend(cl.rgba.b, 255, intensity).blue;
+        cTop.alpha = 0xFFFF;
+        cBot.red   = ScaleAndBlend(cl.rgba.r, 0, intensity).red;
+        cBot.green = ScaleAndBlend(cl.rgba.g, 0, intensity).green;
+        cBot.blue  = ScaleAndBlend(cl.rgba.b, 0, intensity).blue;
+        cBot.alpha = 0xFFFF;
       }
-      XRenderColor colors[] = { c_top, c_bot };
+      XRenderColor colors[] = { cTop, cBot };
       XFixed stops[] = { XDoubleToFixed(0.0), XDoubleToFixed(1.0) };
       Picture grad = XRenderCreateLinearGradient(d, &gradient, stops, colors,
           2);
@@ -158,11 +163,11 @@ namespace aui {
     } else {
       // Flat ---
       XSetForeground(d, gc, drawColor);
-             XFillRectangle(d, bb, gc, 0, 0, szx, szy);
-             // Border and text
-             XSetForeground(d, gc, BlackPixel(d, cg->Scr()));
-             XDrawRectangle(d, bb, gc, 0, 0, szx - 1, szy - 1);
-             XDrawString(d, bb, gc, drawX, drawY, TextPtr(), (int) Text().length());
+      XFillRectangle(d, bb, gc, 0, 0, szx, szy);
+      // Border and text
+      XSetForeground(d, gc, BlackPixel(d, cg->Scr()));
+      XDrawRectangle(d, bb, gc, 0, 0, szx - 1, szy - 1);
+      XDrawString(d, bb, gc, drawX, drawY, TextPtr(), (int) Text().length());
     }
     XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
     XFlush(d);
@@ -170,6 +175,7 @@ namespace aui {
   }
 
   void AButton::OnButtonPress([[maybe_unused]]XEvent *ev) {
+    if (!IsEnabled()) return; // Discard click tracking routines if button is disabled
     if(!IsHL()) {
       HL(true);
       Draw();
@@ -179,6 +185,7 @@ namespace aui {
   }
 
   void AButton::OnButtonRelease(XEvent *ev) {
+    if (!IsEnabled()) return;
     AUI *au = AUIPtr();
     if(!au || !au->IsWindowRegistered(ev->xany.window))
       return;
@@ -207,13 +214,15 @@ namespace aui {
   }
 
   void AButton::OnMouseEnter(UNUSED XEvent* ev) {
-      mIsHovered = true;
-      Draw(); // Redraw immediately with the hover color
+    if (!IsEnabled()) return; // Block hover updates inside disabled layouts
+    mIsHovered = true;
+    Draw();
   }
 
   void AButton::OnMouseLeave(UNUSED XEvent* ev) {
-      mIsHovered = false;
-      Draw(); // Return to normal state
+    if (!IsEnabled()) return;
+    mIsHovered = false;
+    Draw();
   }
 
   AButton::~AButton() {

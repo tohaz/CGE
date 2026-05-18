@@ -676,6 +676,16 @@ namespace aui {
     }
   }
 
+  void AWidget::Enable() {
+    mEnabled = true;
+    Draw();
+  }
+
+  void AWidget::Disable() {
+    mEnabled = false;
+    Draw();
+  }
+
   AWidget::~AWidget() {
     D3("widget '{}' destructor active", mTitle.c_str());
     // 1. CRITICAL: Unregister from the global AUI map FIRST.
@@ -721,6 +731,18 @@ namespace aui {
       mWindow = 0;
     }
     D2("<widget '{}' destructor ends", mTitle.c_str());
+  }
+
+  void AWidget::MoveResize(UINT32 x, UINT32 y, UINT32 szx, UINT32 szy) {
+    Move(x, y);
+    Resize(szx, szy);
+  }
+
+  void AWidget::MoveResizeText(UINT32 x, UINT32 y, UINT32 szx, UINT32 szy,
+      std::string txt) {
+    Move(x, y);
+    Resize(szx, szy);
+    SetText(txt);
   }
 
 }
