@@ -4,16 +4,6 @@
 #include "AWindow.h"
 
 namespace aui {
-  void AUIStartTimer() {
-    gAUI_timer_start = std::chrono::high_resolution_clock::now();
-  }
-
-  void AUIStopTimer() {
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> duration_ms1 = end - gAUI_timer_start;
-    D1("measured time: {} ms", duration_ms1.count());
-  }
-
   std::string FormatBytesU64(UINT64 bytes) {
     constexpr std::array<const char*, 7> suffixes = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
     if(bytes == 0) {
@@ -85,7 +75,6 @@ namespace aui {
 
   AUI::AUI() {
     D4("AUI sizeof {}", sizeof(AUI))
-
     mDisplay = XOpenDisplay(NULL);
     XInitThreads();
     if(mDisplay == NULL) {
@@ -394,9 +383,6 @@ namespace aui {
   }
 
   AUI* AUI::Create(std::string windowTitle) {
-//#if defined(__linux__)
-//    XSetLocaleModifiers("");
-//#endif
     return new AUI(windowTitle);
   }
 
@@ -499,6 +485,17 @@ namespace aui {
     std::reverse(result.begin(), result.end());
     D3("'{}'", result.c_str())
     return result;
+  }
+
+  void AUI::RegisterExternalWindow(Window w, AWidget *owner) {
+    if(w != 0 && owner != nullptr) {
+      mWidg[w] = owner;
+      D2("External window {} linked to widget '{}'", (UINT64)w, owner->Title());
+    }
+  }
+
+  void AUI::UnregisterExternalWindow(Window w) {
+    mWidg.erase(w);
   }
 
   void AUI::PushModal(AWidget *win) {

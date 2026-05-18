@@ -6,35 +6,35 @@
 namespace aui {
 
   ATable::ATable(AWidget *wParent) {
-//    D2();
-//    AUI *cg = wParent->AUIPtr();
-//    Display *d = cg->Disp();
-//    INT32 scr = cg->Scr();
-//    SetType(AUIWidgetType::defaultTable);
-//    SetBGColor(AUI_TABLE_BG);
-//    SetXY(AUI_TABLE_X, AUI_TABLE_Y);
-//    SetSizeXY(AUI_TABLE_SZX, AUI_TABLE_SZY);
-//    SetAUIPtr(cg);
-//    SetWndParent(wParent);
-//    SetBB(None);
-//    InitWidgetProps(
-//        XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()), SafeUINT32(SizeX()), SafeUINT32(SizeY()),
-//            1, BlackPixel(d, scr), BGColor()));
-//    Window w = Wnd();
-//    XSelectInput(d, w,
-//    ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
-//    XMapWindow(d, w);
-//    xcb_connection_t *conn = XGetXCBConnection(d);
-//    xcb_cursor_context_t *ctx;
-//    if(xcb_cursor_context_new(conn, xcb_setup_roots_iterator(xcb_get_setup(conn)).data, &ctx) >= 0) {
-//// 3. Load cursors by string name.
-//// These names are standardized in cursor themes.
-//      mHorizCursor = xcb_cursor_load_cursor(ctx, "sb_h_double_arrow");
-//      mVertCursor = xcb_cursor_load_cursor(ctx, "sb_v_double_arrow");
-//// 4. Free the context (does not destroy the loaded cursors)
-//      xcb_cursor_context_free(ctx);
-//    }
-//    cg->AddWidget(this);
+    D2();
+    AUI *cg = wParent->AUIPtr();
+    Display *d = cg->Disp();
+    INT32 scr = cg->Scr();
+    SetType(AUIWidgetType::defaultTable);
+    SetBGColor(AUI_TABLE_BG);
+    SetXY(AUI_TABLE_X, AUI_TABLE_Y);
+    SetSizeXY(AUI_TABLE_SZX, AUI_TABLE_SZY);
+    SetAUIPtr(cg);
+    SetWndParent(wParent);
+    SetBB(None);
+    InitWidgetProps(
+        XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()), SafeUINT32(SizeX()), SafeUINT32(SizeY()),
+            1, BlackPixel(d, scr), BGColor()));
+    Window w = Wnd();
+    XSelectInput(d, w,
+    ExposureMask | ButtonPressMask | ButtonReleaseMask | PointerMotionMask);
+    XMapWindow(d, w);
+    xcb_connection_t *conn = XGetXCBConnection(d);
+    xcb_cursor_context_t *ctx;
+    if(xcb_cursor_context_new(conn, xcb_setup_roots_iterator(xcb_get_setup(conn)).data, &ctx) >= 0) {
+// 3. Load cursors by string name.
+// These names are standardized in cursor themes.
+      mHorizCursor = xcb_cursor_load_cursor(ctx, "sb_h_double_arrow");
+      mVertCursor = xcb_cursor_load_cursor(ctx, "sb_v_double_arrow");
+// 4. Free the context (does not destroy the loaded cursors)
+      xcb_cursor_context_free(ctx);
+    }
+    cg->AddWidget(this);
   }
 
   void ATable::Draw() {
@@ -820,17 +820,6 @@ namespace aui {
       return "";
     }
     return itCol->second.data;
-  }
-
-  AUICellData& ATable::GetOrCreate(INT64 row, INT64 col) {
-    std::lock_guard<std::mutex> lock(mTableMutex);
-    auto [rowIt, rowInserted] = mRows.try_emplace(row);
-    auto [cellIt, cellInserted] = rowIt->second.try_emplace(col);
-    if (cellInserted) {
-      auto [colIt, colInserted] = mColumns.try_emplace(col);
-      colIt->second[row] = &(cellIt->second);
-    }
-    return cellIt->second;
   }
 
   ATable::~ATable() {

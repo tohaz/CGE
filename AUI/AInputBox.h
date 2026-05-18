@@ -9,6 +9,8 @@
 #include "AWidget.h"
 
 namespace aui {
+  void draw_3d_baguette(Display *dpy, Window win, GC gc, int x, int y, int w, int h);
+
   class AInputBox : public AWidget{
     private:
       AInputBox(AWidget* wParent);
@@ -26,7 +28,6 @@ namespace aui {
       INT32 mInnerInset = 3;
       std::mutex mBlinkMutex;
       std::condition_variable mBlinkCv;
-      bool mIsEditable = true;
 
     protected:
     public:
@@ -41,14 +42,8 @@ namespace aui {
       void OnFocusIn([[maybe_unused]] XEvent* ev);
       void OnFocusOut([[maybe_unused]] XEvent* ev);
       void SetInputFilter(std::string f);
-//      virtual void SetText(std::string value);
+      virtual void SetText(std::string value);
       void SetOnValueChangedCB(std::function<void(AWidget* w, void* arbdata)> func, void* data);
-      void Enable();
-      void Disable();
-      void SetEditable(bool state) { mIsEditable = state; }
-      bool IsEditable() const { return mIsEditable; }
-      UINT64 CursorPos() const {return mCursorPos;}
-      void SetCursorPos(UINT64 cursorPos = 0) {mCursorPos = cursorPos;}
   };
 }
 

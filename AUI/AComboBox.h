@@ -53,9 +53,8 @@ namespace aui {
       void OpenDropDown();
       void CloseDropDown();
       // Factory generation access boundary entry-point
+      static AComboBox* AttachTo(AWidget* wParent, std::string inText = "");
       static AComboBox* AttachTo(AWidget* wParent);
-      static AComboBox* AttachTo(AWidget* wParent, std::string inText);
-      static AComboBox* AttachTo(AWidget* wParent, std::initializer_list<std::string> items);
       virtual ~AComboBox();
       void Draw() override;
       void Resize(UINT32 w, UINT32 h) override;

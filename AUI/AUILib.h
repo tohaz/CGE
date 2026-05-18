@@ -7,9 +7,7 @@
 #include <sys/types.h>
 #include <cerrno>
 #include <chrono>
-#include <charconv>
 #include <cmath>
-#include <cstdint>
 #include <cstdlib>
 #include <dirent.h>
 #include <fstream>
@@ -22,7 +20,6 @@
 #include <type_traits>
 #include <unordered_map>
 #include <string.h>
-
 
 #include "defaults.h"
 #include "AButton.h"
@@ -211,7 +208,6 @@ namespace aui {
       APopupMenu* mActiveRootMenu = nullptr;
       AWidget* mModalWidget = nullptr;
       std::vector<AWidget*> mModalStack;
-      std::unique_ptr<IWindowContext> mWindowContext; // Encapsulated platform window strategy slot
     protected:
 
     public:
@@ -222,14 +218,18 @@ namespace aui {
       AWindow* MainWnd();
       Display* Disp();
       void UnregisterWindow(Window w);
-      void* Scr();
+      INT32 Scr();
       void RemoveWidget(Window w);
+      void RemoveParentWidget(Window w);
+      void RemoveParentWidget(AWidget* w);
       AWidget* GetWidget(Window w);
       bool IsWindowRegistered(Window w);
       const char* XEventToString(INT32 ev);
       std::string NumberToBaseString(UINT64 num);
       void SetModal(AWidget* w) { mModalWidget = w; }
       bool HasWidget(Window w) const { return mWidg.contains(w); }
+      void RegisterExternalWindow(Window w, AWidget* owner);
+      void UnregisterExternalWindow(Window w);
       void PushModal(AWidget* win);
       void PopModal(AWidget* win);
       AWidget* GetModal() const { return mModalStack.empty() ? nullptr : mModalStack.back(); }

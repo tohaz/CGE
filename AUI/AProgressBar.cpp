@@ -4,42 +4,41 @@
 #include <string>
 namespace aui {
   AProgressBar::AProgressBar(AWidget* wParent) : AWidget() {
-//    if (!wParent) [[unlikely]] return;
-//    AUI* cg = wParent->AUIPtr();
-//    Display* d = cg->Disp();
-//    INT32 scr = cg->Scr();
-//    SetType(AUIWidgetType::defaultProgressBar);
-//    SetBGColor(AUI_DEFAULT_BUTTON_BG);
-//    SetXY(AUI_TABLE_X, AUI_TABLE_Y);
-//    SetSizeXY(200, 30);
-//    SetAUIPtr(cg);
-//    SetWndParent(wParent);
-//    SetBB(None);
-//    mProgressProvider = nullptr;
-//    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()), SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr), BGColor()));
-//    Window w = Wnd();
-//    XSelectInput(d, w, ExposureMask | StructureNotifyMask);
-//    XMapWindow(d, w);
-//    cg->AddWidget(this);
-//    // The background thread is now the SOLE authority responsible for executing Draw cycles at a controlled frame rate
-//    mUpdateThread = std::thread([this]() {
-//      while (!mStopThread) {
-//        std::unique_lock<std::mutex> lock(mThreadMutex);
-//        if (mThreadCv.wait_for(lock, std::chrono::milliseconds(mUpdateIntervalMs), [this] { return mStopThread; })) {
-//          break;
-//        }
-//        if (mProgressProvider != nullptr) {
-//          double fetchedProgress = mProgressProvider();
-//          if (fetchedProgress < 0.0) fetchedProgress = 0.0;
-//          if (fetchedProgress > 1.0) fetchedProgress = 1.0;
-//          mProgress = fetchedProgress;
-//        }
-//        lock.unlock(); // Release state lock before the thread takes exclusive control of the X11 draw pipeline
-//        Draw();
-//      }
-//    });
+    if (!wParent) [[unlikely]] return;
+    AUI* cg = wParent->AUIPtr();
+    Display* d = cg->Disp();
+    INT32 scr = cg->Scr();
+    SetType(AUIWidgetType::defaultProgressBar);
+    SetBGColor(AUI_DEFAULT_BUTTON_BG);
+    SetXY(AUI_TABLE_X, AUI_TABLE_Y);
+    SetSizeXY(200, 30);
+    SetAUIPtr(cg);
+    SetWndParent(wParent);
+    SetBB(None);
+    mProgressProvider = nullptr;
+    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()), SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr), BGColor()));
+    Window w = Wnd();
+    XSelectInput(d, w, ExposureMask | StructureNotifyMask);
+    XMapWindow(d, w);
+    cg->AddWidget(this);
+    // The background thread is now the SOLE authority responsible for executing Draw cycles at a controlled frame rate
+    mUpdateThread = std::thread([this]() {
+      while (!mStopThread) {
+        std::unique_lock<std::mutex> lock(mThreadMutex);
+        if (mThreadCv.wait_for(lock, std::chrono::milliseconds(mUpdateIntervalMs), [this] { return mStopThread; })) {
+          break;
+        }
+        if (mProgressProvider != nullptr) {
+          double fetchedProgress = mProgressProvider();
+          if (fetchedProgress < 0.0) fetchedProgress = 0.0;
+          if (fetchedProgress > 1.0) fetchedProgress = 1.0;
+          mProgress = fetchedProgress;
+        }
+        lock.unlock(); // Release state lock before the thread takes exclusive control of the X11 draw pipeline
+        Draw();
+      }
+    });
   }
-
   AProgressBar* AProgressBar::AttachTo(AWidget* wParent) {
     return new AProgressBar(wParent);
   }
@@ -48,7 +47,6 @@ namespace aui {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     mProgressProvider = provider;
   }
-
   void AProgressBar::SetProgress(double progress) {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     if (progress < 0.0) progress = 0.0;
@@ -56,26 +54,21 @@ namespace aui {
     mProgress = progress;
     // Thread-safe data mutation only. Draw() invocation is intentionally omitted to let the update thread handle rendering.
   }
-
   double AProgressBar::GetProgress() const {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     return mProgress;
   }
-
   void AProgressBar::SetBarColor(UINT32 color) {
     mBarColor = color;
   }
-
   void AProgressBar::Clear() {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     mProgress = 0.0;
   }
-
   void AProgressBar::SetUpdateInterval(UINT32 intervalMs) {
     std::lock_guard<std::mutex> lock(mThreadMutex);
     mUpdateIntervalMs = intervalMs;
   }
-
   void AProgressBar::Draw() {
     if (Wnd() == 0) return;
     AUI* au = AUIPtr();
@@ -121,7 +114,6 @@ namespace aui {
     XSync(d, False);
     XUnlockDisplay(d);
   }
-
   AProgressBar::~AProgressBar() {
     {
       std::lock_guard<std::mutex> lock(mThreadMutex);

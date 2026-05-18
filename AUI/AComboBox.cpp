@@ -5,7 +5,7 @@
 
 namespace aui {
 
-  AComboBox::AComboBox(AWidget *wParent) : AComboBox(wParent, "") {}
+// Private constructor implementing internal sub-widget layout composition (Read-Only always)
   AComboBox::AComboBox(AWidget *wParent, std::string inText) :
       AWidget(), mSelectedIndex(-1), mIsPopupOpen(false), mIsEditable(false) {
     SetAUIPtr(wParent->AUIPtr());
@@ -25,46 +25,17 @@ namespace aui {
 // Composite single text box child component. Arrow button is discarded to optimize GC context matching
     mInputBox = AInputBox::AttachTo(this, inText);
     mInputBox->SetOnButtonPressCB(AComboBox::OnInputClick, this);
-    mInputBox->Disable();
-    mInputBox->SetEditable(mIsEditable);
     Resize(initialW, initialH);
     XMapWindow(d, w);
   }
 
-  AComboBox* AComboBox::AttachTo(AWidget *wParent) {
-    if(!wParent)[[unlikely]] {
-      E("Cannot instantiate AComboBox container under a null parent widget profile context!");
-      return nullptr;
-    }
-    return new AComboBox(wParent);
-  }
-
+// Factory generation access boundary entry-point
   AComboBox* AComboBox::AttachTo(AWidget *wParent, std::string inText) {
     if(!wParent)[[unlikely]] {
             E("Cannot instantiate AComboBox container under a null parent widget profile context!");
       return nullptr;
     }
-    AComboBox* cb = new AComboBox(wParent, inText);
-    cb->AddItem(inText);
-    cb->SetSelectedIndex(0);
-    return cb;
-  }
-
-  AComboBox* AComboBox::AttachTo(AWidget* wParent, std::initializer_list<std::string> items) {
-    if(!wParent)[[unlikely]] {
-      E("Cannot instantiate AComboBox container under a null parent widget profile context!");
-      return nullptr;
-    }
-    if (items.size() == 0) {
-      return AttachTo(wParent); // Fallback to completely empty initialization if list is empty
-    }
-    std::string firstItem = *items.begin();
-    AComboBox* cb = new AComboBox(wParent, firstItem);
-    for (const auto& item : items) {
-      cb->AddItem(item);
-    }
-    cb->SetSelectedIndex(0); // Lock default focus onto the first valid element inside the dataset
-    return cb;
+    return new AComboBox(wParent, inText);
   }
 
   void AComboBox::Resize(UINT32 w, UINT32 h) {
@@ -140,43 +111,43 @@ namespace aui {
   }
 
   void AComboBox::PositionPopup() {
-//    if(!mListView || !Wnd() || !AUIPtr()) return;
-//    Display *d = AUIPtr()->Disp();
-//    int absX = 0;
-//    int absY = 0;
-//    Window dummyChild;
-//    XTranslateCoordinates(d, Wnd(), XRootWindow(d, AUIPtr()->Scr()), 0, static_cast<int>(SizeYUI32()), &absX, &absY, &dummyChild);
-//    UINT32 popupW = SizeXUI32();
-//    // Calculate precise content height based on item count and design cell height constants
-//    INT32 itemHeight = AUI_TABLE_CELL_H > 0 ? AUI_TABLE_CELL_H : 18; // Fallback to 18px if undefined
-//    INT32 calculatedH = (static_cast<INT32>(mItems.size()) * itemHeight) + 4;
-//    // Apply constraints: absolute minimum of 40px and maximum bounding roof of 300px
-//    if (calculatedH < 40) calculatedH = 40;
-//    if (calculatedH > 300) calculatedH = 300;
-//    UINT32 popupH = static_cast<UINT32>(calculatedH);
-//    mListView->Move(static_cast<UINT32>(absX), static_cast<UINT32>(absY));
-//    mListView->Resize(popupW, popupH);
+    if(!mListView || !Wnd() || !AUIPtr())
+      return;
+    Display *d = AUIPtr()->Disp();
+    int absX = 0;
+    int absY = 0;
+    Window dummyChild;
+// Translate coordinates from ComboBox local space directly to the screen RootWindow workspace
+    XTranslateCoordinates(d, Wnd(), XRootWindow(d, AUIPtr()->Scr()), 0, static_cast<int>(SizeYUI32()), &absX, &absY,
+        &dummyChild);
+    UINT32 popupW = SizeXUI32();
+    UINT32 popupH = 150;
+    mListView->Move(static_cast<UINT32>(absX), static_cast<UINT32>(absY));
+    mListView->Resize(popupW, popupH);
   }
 
   void AComboBox::OpenDropDown() {
     D2("AComboBox::OpenDropDown() -> Entering unified flat window execution path");
-    if(mIsPopupOpen) return;
+    if(mIsPopupOpen)
+      return;
     Display *d = AUIPtr()->Disp();
-    if(!d) return;
-    if(mListView && !AUIPtr()->IsWindowRegistered(mListView->Wnd())) mListView = nullptr;
+    if(!d)
+      return;
+    if(mListView && !AUIPtr()->IsWindowRegistered(mListView->Wnd())) {
+      mListView = nullptr;
+    }
     if(!mListView) {
       D2("AComboBox::OpenDropDown() -> Creating flat AList dropdown window");
-      // Pre-calculate target context layout height constraints for smooth allocation mapping
-      INT32 itemHeight = AUI_TABLE_CELL_H > 0 ? AUI_TABLE_CELL_H : 18;
-      INT32 calculatedH = static_cast<INT32>(mItems.size()) * itemHeight;
-      if (calculatedH < 40) calculatedH = 40;
-      if (calculatedH > 300) calculatedH = 300;
       AWidgetSettings listSettings;
       listSettings.width = SizeXUI32();
-      listSettings.height = static_cast<UINT64>(calculatedH); // Apply automated responsive size height bound
+      listSettings.height = 150;
       listSettings.backgroundColor = AUI_LIST_BG;
+// CRITICAL FIX: Set the type identifier explicitly to defaultComboBox!
+// This tells the AUI::ProcessMessages() event loop loop modal barrier that
+// this specific list behaves exactly like a combo popup layer, routing routing
+// the click-outside events into the clean CloseDropDown() collapse path path instead of crashing.
       listSettings.type = AUIWidgetType::defaultComboBox;
-      listSettings.startVisible = false;
+      listSettings.startVisible = false;// Hold invisible during setup layout transforms
       mListView = AList::AttachTo(this, listSettings);
       mListView->SetOnButtonPressCB(AComboBox::OnItemSelect, this);
       XSetWindowAttributes attr;
@@ -184,7 +155,8 @@ namespace aui {
       XChangeWindowAttributes(d, mListView->Wnd(), CWOverrideRedirect, &attr);
       Atom netWmWindowType = XInternAtom(d, "_NET_WM_WINDOW_TYPE", False);
       Atom netWmWindowTypeCombo = XInternAtom(d, "_NET_WM_WINDOW_TYPE_COMBO", False);
-      XChangeProperty(d, mListView->Wnd(), netWmWindowType, XA_ATOM, 32, PropModeReplace, reinterpret_cast<unsigned char*>(&netWmWindowTypeCombo), 1);
+      XChangeProperty(d, mListView->Wnd(), netWmWindowType, XA_ATOM, 32,
+      PropModeReplace, reinterpret_cast<unsigned char*>(&netWmWindowTypeCombo), 1);
     }
     mListView->Clear();
     for (const auto &item : mItems) {
@@ -251,13 +223,17 @@ namespace aui {
 
 // 2. WIPE / RESET MEMORY AND WINDOW STATES
   void AComboBox::Clear() {
+    D1("AComboBox::Clear() -> Flushing item vectors and collapsing states");
     mItems.clear();
     mSelectedIndex = -1;
-    if (mInputBox) {
+    if(mListView) {
+      mListView->Clear();
+    }
+    if(mInputBox) {
       mInputBox->SetText("");
     }
-    if (mListView) {
-      mListView->Clear();
+    if(mIsPopupOpen) {
+      CloseDropDown();
     }
   }
 
@@ -286,10 +262,11 @@ namespace aui {
 
 // 5. EXTRACT TARGET STRING BY INDEX PRIVILEGES
   std::string AComboBox::GetItemText(INT32 index) const {
-    if (index >= 0 && index < static_cast<INT32>(mItems.size())) {
-      return mItems[static_cast<size_t>(index)];
+    if(index < 0 || index >= static_cast<INT32>(mItems.size())) {
+      E("AComboBox::GetItemText -> Request index %d is out of bounds", index);
+      return "";
     }
-    return "";
+    return mItems[static_cast<size_t>(index)];
   }
 
   void AComboBox::AddItem(std::string item) {
