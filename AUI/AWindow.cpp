@@ -19,41 +19,41 @@ namespace aui {
   }
 
   void AWindow::InitWindow() {
-    D3("sizeof window {}", sizeof(AWindow))
-    SetType(AUIWidgetType::defaultWindow);
-    SetBGColor(AUI_DEFAULT_WINDOW_BG);
-    AUI* au = AUIPtr();
-    Display* d = au->Disp();
-    INT32 scr = au->Scr();
-    D3("wnd {}, disp {}, screen {}", (UINT64)Wnd(), (UINT64)d, (UINT64)scr)
-    SetSizeXY(AUI_DEFAULT_WINDOW_SZX, AUI_DEFAULT_WINDOW_SZY);
-    if(!ParentWidget()) {
-      D3("creating rooted window")
-      InitWidgetProps(XCreateSimpleWindow(d, RootWindow(d, scr), 0, 0,
-        SafeUINT32(SizeX()),
-        SafeUINT32(SizeY()),
-        1, BlackPixel(d, scr), WhitePixel(d, scr)));
-      DisableResize();
-    }
-    else {
-      D3("creating child window")
-      InitWidgetProps(XCreateSimpleWindow(d, ParentWidget()->Wnd(), 0, 0,
-        SafeUINT32(SizeX()),
-        SafeUINT32(SizeY()),
-        1, BlackPixel(d, scr), WhitePixel(d, scr)));
-      DisableResize();
-    }
-    Window w = Wnd();
-    XStoreName(d, w, Title().c_str());
-    XSelectInput(d, w, ExposureMask | KeyPressMask | StructureNotifyMask |
-                       FocusChangeMask | ButtonPressMask| ButtonReleaseMask);
-    XSetWindowBackground(d, w, BGColor());
-    XMapWindow(d, w);
-    au->AddWidget(this);
-    mWMDeleteMessage = XInternAtom(d, "WM_DELETE_WINDOW", False);
-    XSetWMProtocols(d, Wnd(), &mWMDeleteMessage, 1);
-    XFlush(d);
-    XSync(d, False);
+//    D3("sizeof window {}", sizeof(AWindow))
+//    SetType(AUIWidgetType::defaultWindow);
+//    SetBGColor(AUI_DEFAULT_WINDOW_BG);
+//    AUI* au = AUIPtr();
+//    Display* d = au->Disp();
+//    INT32 scr = au->Scr();
+//    D3("wnd {}, disp {}, screen {}", (UINT64)Wnd(), (UINT64)d, (UINT64)scr)
+//    SetSizeXY(AUI_DEFAULT_WINDOW_SZX, AUI_DEFAULT_WINDOW_SZY);
+//    if(!ParentWidget()) {
+//      D3("creating rooted window")
+//      InitWidgetProps(XCreateSimpleWindow(d, RootWindow(d, scr), 0, 0,
+//        SafeUINT32(SizeX()),
+//        SafeUINT32(SizeY()),
+//        1, BlackPixel(d, scr), WhitePixel(d, scr)));
+//      DisableResize();
+//    }
+//    else {
+//      D3("creating child window")
+//      InitWidgetProps(XCreateSimpleWindow(d, ParentWidget()->Wnd(), 0, 0,
+//        SafeUINT32(SizeX()),
+//        SafeUINT32(SizeY()),
+//        1, BlackPixel(d, scr), WhitePixel(d, scr)));
+//      DisableResize();
+//    }
+//    Window w = Wnd();
+//    XStoreName(d, w, Title().c_str());
+//    XSelectInput(d, w, ExposureMask | KeyPressMask | StructureNotifyMask |
+//                       FocusChangeMask | ButtonPressMask| ButtonReleaseMask);
+//    XSetWindowBackground(d, w, BGColor());
+//    XMapWindow(d, w);
+//    au->AddWidget(this);
+//    mWMDeleteMessage = XInternAtom(d, "WM_DELETE_WINDOW", False);
+//    XSetWMProtocols(d, Wnd(), &mWMDeleteMessage, 1);
+//    XFlush(d);
+//    XSync(d, False);
   }
 
   AWindow* AWindow::AttachTo(AUI *cg, std::string newTitle) {

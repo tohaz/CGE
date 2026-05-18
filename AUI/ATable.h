@@ -129,6 +129,8 @@ namespace aui {
       std::string DataAtCursor();
       std::string DataAt(INT64 row, INT64 col);
       std::string ColumnName(INT64 colIdx);
+      AUICellData& GetOrCreate(INT64 row, INT64 col);
+
   };
 }
 

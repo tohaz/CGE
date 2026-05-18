@@ -55,6 +55,9 @@ namespace aui {
       INT32 mDepth = 0;
       bool mIsHovered = false;
       void ResizeNoRedraw(UINT32 szx, UINT32 szy);
+      bool mEnabled = true; // Global component state validation barrier
+      bool mOverwriteMode = false; // Toggle state: false = Insert mode, true = Overwrite mode
+      size_t mMaxLength = 255;
 
     public:
       AWidget();
@@ -98,6 +101,8 @@ namespace aui {
       virtual void OnMouseEnter(XEvent* ev);
       virtual void OnMouseLeave(XEvent* ev);
       virtual void OnSubmit();
+      virtual void Enable();
+      virtual void Disable();
       AWidget* ParentWidget();
       bool IsHL();
       void HL(bool newState);
@@ -109,6 +114,8 @@ namespace aui {
       void ResizeY(UINT32 szy);
       void ResizeX(UINT32 szx);
       virtual void Move(UINT32 x, UINT32 y);
+      virtual void MoveResize(UINT32 x, UINT32 y, UINT32 szx, UINT32 szy);
+      virtual void MoveResizeText(UINT32 x, UINT32 y, UINT32 szx, UINT32 szy, std::string);
       void UnregisterChild(AWidget *w);
       UINT32 BorderSz();
       void SetBorderSz(UINT32 borderSz);
@@ -132,6 +139,9 @@ namespace aui {
       virtual void TriggerFeedback();
       bool IsParentOf(Window target) const;
       bool ContainsGlobalCoordinates(INT32 rootX, INT32 rootY);
+      bool IsEnabled() const { return mEnabled; }
+      void SetMaxLength(size_t length) { mMaxLength = length; }
+      size_t MaxLength() const { return mMaxLength; }
   };
 }
 

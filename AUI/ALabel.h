@@ -12,7 +12,7 @@ namespace aui {
       static ALabel* AttachTo(AWidget* w, std::string inText);
       virtual ~ALabel();
       void Draw();
-      ALabel& operator=(const std::string& newName);
+      ALabel& operator=(const std::string& newText);
       ALabel& operator+=(const std::string& text);
       ALabel& operator+=(const char* text);
   };

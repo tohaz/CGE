@@ -5,59 +5,59 @@
 namespace aui {
 
   AList::AList(AWidget *wParent) {
-    AUI *cg = wParent->AUIPtr();
-    Display *d = cg->Disp();
-    INT32 scr = cg->Scr();
-    SetType(AUIWidgetType::defaultList);
-    SetBGColor(AUI_LIST_BG);
-    SetXY(AUI_LIST_X, AUI_LIST_Y);
-    SetSizeXY(AUI_LIST_SZX, AUI_LIST_SZY);
-    SetAUIPtr(cg);
-    mVOffset = 0;
-    mHOffset = 0;
-    SetWndParent(wParent);
-    InitWidgetProps(
-        XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
-            SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr),
-            BGColor()));
-    XSelectInput(d, Wnd(),
-        ExposureMask | ButtonPressMask | KeyPressMask | ButtonReleaseMask
-            | FocusChangeMask | PointerMotionMask);
-    XMapWindow(d, Wnd());
-    EnableResize();
-    cg->AddWidget(this);
-    if (wParent) {
-      wParent->AddWidgetChild(this);
-    }
+//    AUI *cg = wParent->AUIPtr();
+//    Display *d = cg->Disp();
+//    INT32 scr = cg->Scr();
+//    SetType(AUIWidgetType::defaultList);
+//    SetBGColor(AUI_LIST_BG);
+//    SetXY(AUI_LIST_X, AUI_LIST_Y);
+//    SetSizeXY(AUI_LIST_SZX, AUI_LIST_SZY);
+//    SetAUIPtr(cg);
+//    mVOffset = 0;
+//    mHOffset = 0;
+//    SetWndParent(wParent);
+//    InitWidgetProps(
+//        XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+//            SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr),
+//            BGColor()));
+//    XSelectInput(d, Wnd(),
+//        ExposureMask | ButtonPressMask | KeyPressMask | ButtonReleaseMask
+//            | FocusChangeMask | PointerMotionMask);
+//    XMapWindow(d, Wnd());
+//    EnableResize();
+//    cg->AddWidget(this);
+//    if (wParent) {
+//      wParent->AddWidgetChild(this);
+//    }
   }
 
-  AList::AList(AWidget *wParent, const AWidgetSettings& settings) {
-     AUI *cg = wParent->AUIPtr();
-     Display *d = cg->Disp();
-     INT32 scr = cg->Scr();
-     SetType(settings.type != AUIWidgetType::unset ? settings.type : AUIWidgetType::defaultList);
-     SetBGColor(settings.backgroundColor);
-     SetXY(settings.x, settings.y);
-     SetSizeXY(settings.width, settings.height);
-     SetAUIPtr(cg);
-     mVOffset = 0;
-     mHOffset = 0;
-     SetWndParent(wParent);
-     // HARDWARE FIX 2: If startVisible is false, it's an unmanaged dropdown layer.
-     // We parent it to XRootWindow so it can move anywhere and receive hardware click events.
-     Window nativeParent = settings.startVisible ? wParent->Wnd() : XRootWindow(d, scr);
-     InitWidgetProps(
-         XCreateSimpleWindow(d, nativeParent, SafeINT32(X()), SafeINT32(Y()),
-             SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr),
-             BGColor()));
-     XSelectInput(d, Wnd(),
-         ExposureMask | ButtonPressMask | KeyPressMask | ButtonReleaseMask
-             | FocusChangeMask | PointerMotionMask);
-     if (settings.startVisible) {
-       XMapWindow(d, Wnd());
-     }
-     EnableResize();
-     cg->AddWidget(this);
+  AList::AList(UNUSED AWidget *wParent, UNUSED const AWidgetSettings& settings) {
+//     AUI *cg = wParent->AUIPtr();
+//     Display *d = cg->Disp();
+//     INT32 scr = cg->Scr();
+//     SetType(settings.type != AUIWidgetType::unset ? settings.type : AUIWidgetType::defaultList);
+//     SetBGColor(settings.backgroundColor);
+//     SetXY(settings.x, settings.y);
+//     SetSizeXY(settings.width, settings.height);
+//     SetAUIPtr(cg);
+//     mVOffset = 0;
+//     mHOffset = 0;
+//     SetWndParent(wParent);
+//     // HARDWARE FIX 2: If startVisible is false, it's an unmanaged dropdown layer.
+//     // We parent it to XRootWindow so it can move anywhere and receive hardware click events.
+//     Window nativeParent = settings.startVisible ? wParent->Wnd() : XRootWindow(d, scr);
+//     InitWidgetProps(
+//         XCreateSimpleWindow(d, nativeParent, SafeINT32(X()), SafeINT32(Y()),
+//             SafeUINT32(SizeX()), SafeUINT32(SizeY()), 1, BlackPixel(d, scr),
+//             BGColor()));
+//     XSelectInput(d, Wnd(),
+//         ExposureMask | ButtonPressMask | KeyPressMask | ButtonReleaseMask
+//             | FocusChangeMask | PointerMotionMask);
+//     if (settings.startVisible) {
+//       XMapWindow(d, Wnd());
+//     }
+//     EnableResize();
+//     cg->AddWidget(this);
   }
 
   AList* AList::AttachTo(AWidget *wParent) {
@@ -69,64 +69,64 @@ namespace aui {
   }
 
   void AList::Draw() {
-     XCharStruct overall;
-     INT32 direction, ascent, descent;
-     UINT64 numStringsMax = 0, // max lines to fit vertically
-         numStringsData = mData.size();
-     Window wi = Wnd();
-     UINT64 sizeY = SizeY();
-     GC gc = GCPtr();
-     XFontStruct *fo = Font();
-     Display *d = AUIPtr()->Disp();
-     D2("list size in strings {}, offset {}", numStringsData, mVOffset)
-     XTextExtents(fo, "123456789WTL", 12, &direction, &ascent, &descent,
-         &overall);
-     D3("text extents direction {}, ascent {}, descent {}", direction, ascent,
-         descent)
-     mTextY = SafeUINT64(ascent + descent);
-     if(mData.size() > 0) {
-       if(mTextY == 0)
-         {E("font reported zero height");}
-       numStringsMax = sizeY / mTextY + 1;
-       D2("num strings to display max {}", numStringsMax)
-       if(numStringsMax > numStringsData) {
-         numStringsMax = numStringsData;
-         D2("reducing number of displayed strings to {}", numStringsMax)
-       } else
-         D2("not reducing number of displayed strings, data {}", numStringsData)
-       UINT64 sBegin = 0; // index of first string to draw
-       UINT64 sEnd = 0; // last to draw
-       if(mVOffset > 0) {
-         sBegin = SafeUINT64(mVOffset) / mTextY;
-         D2("applying offset {}, begin string {}", mVOffset, sBegin);
-       } else
-         D2("not applying offset");
-       if(sBegin > numStringsData - 1) {
-         D2("scroll down limit")
-         sBegin = numStringsData - 1;
-         mVOffset = SafeINT64(mTextY * sBegin);
-       }
-       sEnd = sBegin + numStringsMax;
-       if(sEnd > numStringsData - 1) {
-         sEnd = numStringsData - 1;
-       }
-       D3("drawing strings from {} to {}", sBegin, sEnd)
-       XSetForeground(d, gc, AUI_LIST_BG);
-       XFillRectangle(d, wi, gc, 0, 0, static_cast<unsigned int>(SizeX()), static_cast<unsigned int>(SizeY()));
-       XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
-       for (UINT64 i = sBegin; i <= sEnd; i++) {
-         if(mTag[i])
-           XSetBackground(d, gc, 0xAACCAA);
-         else
-           XSetBackground(d, gc, AUI_LIST_BG);
-         XDrawImageString(d, wi, gc, SafeINT32(-mHOffset),
-             SafeINT32(mTextY * (i + 1)) - SafeINT32(mVOffset), mData[i].c_str(),
-             SafeINT32(mData[i].size()));
-       }
-       if(mScrollbarsEnabled)
-         DrawScrollbars();
-     }
-   }
+//     XCharStruct overall;
+//     INT32 direction, ascent, descent;
+//     UINT64 numStringsMax = 0, // max lines to fit vertically
+//         numStringsData = mData.size();
+//     Window wi = Wnd();
+//     UINT64 sizeY = SizeY();
+//     GC gc = GCPtr();
+//     XFontStruct *fo = Font();
+//     Display *d = AUIPtr()->Disp();
+//     D2("list size in strings {}, offset {}", numStringsData, mVOffset)
+//     XTextExtents(fo, "123456789WTL", 12, &direction, &ascent, &descent,
+//         &overall);
+//     D3("text extents direction {}, ascent {}, descent {}", direction, ascent,
+//         descent)
+//     mTextY = SafeUINT64(ascent + descent);
+//     if(mData.size() > 0) {
+//       if(mTextY == 0)
+//         {E("font reported zero height");}
+//       numStringsMax = sizeY / mTextY + 1;
+//       D2("num strings to display max {}", numStringsMax)
+//       if(numStringsMax > numStringsData) {
+//         numStringsMax = numStringsData;
+//         D2("reducing number of displayed strings to {}", numStringsMax)
+//       } else
+//         D2("not reducing number of displayed strings, data {}", numStringsData)
+//       UINT64 sBegin = 0; // index of first string to draw
+//       UINT64 sEnd = 0; // last to draw
+//       if(mVOffset > 0) {
+//         sBegin = SafeUINT64(mVOffset) / mTextY;
+//         D2("applying offset {}, begin string {}", mVOffset, sBegin);
+//       } else
+//         D2("not applying offset");
+//       if(sBegin > numStringsData - 1) {
+//         D2("scroll down limit")
+//         sBegin = numStringsData - 1;
+//         mVOffset = SafeINT64(mTextY * sBegin);
+//       }
+//       sEnd = sBegin + numStringsMax;
+//       if(sEnd > numStringsData - 1) {
+//         sEnd = numStringsData - 1;
+//       }
+//       D3("drawing strings from {} to {}", sBegin, sEnd)
+//       XSetForeground(d, gc, AUI_LIST_BG);
+//       XFillRectangle(d, wi, gc, 0, 0, static_cast<unsigned int>(SizeX()), static_cast<unsigned int>(SizeY()));
+//       XSetForeground(d, gc, BlackPixel(d, AUIPtr()->Scr()));
+//       for (UINT64 i = sBegin; i <= sEnd; i++) {
+//         if(mTag[i])
+//           XSetBackground(d, gc, 0xAACCAA);
+//         else
+//           XSetBackground(d, gc, AUI_LIST_BG);
+//         XDrawImageString(d, wi, gc, SafeINT32(-mHOffset),
+//             SafeINT32(mTextY * (i + 1)) - SafeINT32(mVOffset), mData[i].c_str(),
+//             SafeINT32(mData[i].size()));
+//       }
+//       if(mScrollbarsEnabled)
+//         DrawScrollbars();
+//     }
+  }
 
 
   void AList::AddItem(std::string s) {

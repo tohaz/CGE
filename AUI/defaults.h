@@ -198,6 +198,19 @@ enum class AUIWidgetStyle {
     Simple3D = 2
 };
 
+enum class AUIWindowState { Windowed, Fullscreen };
+
+class IWindowContext {
+  public:
+    virtual ~IWindowContext() = default;
+    virtual bool CreateFrame(UINT32 width, UINT32 height, const std::string& title) = 0;
+    virtual void DestroyFrame() = 0;
+    virtual void SetState(AUIWindowState state) = 0;
+    virtual void ProcessEvents() = 0;
+    virtual UINT64 GetNativeWindowId() const = 0;
+    virtual void* GetNativeDisplayPtr() const = 0;
+};
+
 #ifndef AUI_GIT_VERSION
 #define AUI_GIT_VERSION "Not a controlled build"
 #endif
@@ -284,7 +297,8 @@ const static std::unordered_map<std::string,UINT64> string_to_case{
    {"KP_Enter", 4},
    {"Left", 5},
    {"Right", 6},
-   {"Delete", 7}
+   {"Delete", 7},
+   {"Insert", 8}
 };
 
 static std::string BaseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";

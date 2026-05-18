@@ -19,37 +19,37 @@ namespace aui {
 
   APopupMenu::APopupMenu(AWidget *wParent, const std::vector<AMenuItem> &inItems) :
       mItems(inItems) {
-    AUI *aui = wParent->AUIPtr();
-    SetAUIPtr(aui);
-    SetWndParent(wParent);
-    SetType(AUIWidgetType::defaultPopupMenu);
-    mStyle = AUIWidgetStyle::Simple3D;
-    SetBGColor(AUI_DEFAULT_BUTTON_BG);
-    Display *d = aui->Disp();
-    INT32 scr = aui->Scr();
-    XSetWindowAttributes swa;
-    swa.override_redirect = True;// Prevent WM from adding decorations/titlebar
-    swa.save_under = True;// Ask X server to preserve pixels beneath
-    swa.background_pixel = BGColor();
-    swa.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask |
-    PointerMotionMask | EnterWindowMask | LeaveWindowMask;
-// 3. Create window with a temporary 1x1 size to get a valid handle
-    Window win = XCreateWindow(d, RootWindow(d, scr), 0, 0, 1, 1, 0,
-    CopyFromParent, InputOutput, CopyFromParent,
-    CWOverrideRedirect | CWSaveUnder | CWBackPixel | CWEventMask, &swa);
-// 4. Initialize basic widget properties (This loads the font)
-    InitWidgetProps(win);
-// 5. Calculate the real layout now that the font is available
-    UINT32 w = 0, h = 0;
-    CalculateLayout(w, h);
-// 6. Synchronize both internal state and the X11 Window dimensions
-    SetSizeXY(w, h);
-    XResizeWindow(d, Wnd(), w, h);
-// Finalize window background and register in AUI map
-    XSetWindowBackground(d, Wnd(), BGColor());
-    aui->AddWidget(this);
-// Initialize BackBuffer and XRender Picture based on the final size
-    UpdateBuffer();
+//    AUI *aui = wParent->AUIPtr();
+//    SetAUIPtr(aui);
+//    SetWndParent(wParent);
+//    SetType(AUIWidgetType::defaultPopupMenu);
+//    mStyle = AUIWidgetStyle::Simple3D;
+//    SetBGColor(AUI_DEFAULT_BUTTON_BG);
+//    Display *d = aui->Disp();
+//    INT32 scr = aui->Scr();
+//    XSetWindowAttributes swa;
+//    swa.override_redirect = True;// Prevent WM from adding decorations/titlebar
+//    swa.save_under = True;// Ask X server to preserve pixels beneath
+//    swa.background_pixel = BGColor();
+//    swa.event_mask = ExposureMask | ButtonPressMask | ButtonReleaseMask |
+//    PointerMotionMask | EnterWindowMask | LeaveWindowMask;
+//// 3. Create window with a temporary 1x1 size to get a valid handle
+//    Window win = XCreateWindow(d, RootWindow(d, scr), 0, 0, 1, 1, 0,
+//    CopyFromParent, InputOutput, CopyFromParent,
+//    CWOverrideRedirect | CWSaveUnder | CWBackPixel | CWEventMask, &swa);
+//// 4. Initialize basic widget properties (This loads the font)
+//    InitWidgetProps(win);
+//// 5. Calculate the real layout now that the font is available
+//    UINT32 w = 0, h = 0;
+//    CalculateLayout(w, h);
+//// 6. Synchronize both internal state and the X11 Window dimensions
+//    SetSizeXY(w, h);
+//    XResizeWindow(d, Wnd(), w, h);
+//// Finalize window background and register in AUI map
+//    XSetWindowBackground(d, Wnd(), BGColor());
+//    aui->AddWidget(this);
+//// Initialize BackBuffer and XRender Picture based on the final size
+//    UpdateBuffer();
   }
 
   APopupMenu* APopupMenu::AttachTo(AWidget *wParent, const std::vector<AMenuItem> &inItems) {
@@ -119,68 +119,68 @@ namespace aui {
   }
 
   void APopupMenu::Draw() {
-    AUI *aui = AUIPtr();
-// Basic integrity checks
-    if(!aui || !BB()) {
-      E("Menu Draw aborted: AUI or BackBuffer is NULL");
-      return;
-    }
-    Display *d = aui->Disp();
-    Pixmap bb = BB();
-    GC gc = GCPtr();
-    XFontStruct *f = Font();
-    UINT32 szx = SafeUINT32(SizeX());
-    UINT32 szy = SafeUINT32(SizeY());
-// 1. Clear the entire backbuffer with the background color
-    XSetForeground(d, gc, BGColor());
-    XFillRectangle(d, bb, gc, 0, 0, szx, szy);
-// 2. Draw the 3D Baguette Frame (Outer Border)
-    if(mStyle == AUIWidgetStyle::Simple3D && GetRenderPicture() != None) {
-// Use member variables for lighting intensity
-      XRenderColor light = ScaleAndBlend(255, 255, mBaguetteLightFactor);
-      XRenderColor dark = ScaleAndBlend(0, 0, mBaguetteDarkFactor);
-// Top and Left light edges
-      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &light, 0, 0, szx, SafeUINT32(mDepth));
-      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &light, 0, 0, SafeUINT32(mDepth), szy);
-// Bottom and Right dark edges
-      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &dark, 0, SafeINT32(szy) - mDepth, szx,
-          SafeUINT32(mDepth));
-      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &dark, SafeINT32(szx) - mDepth, 0, SafeUINT32(mDepth),
-          szy);
-    }
-    INT32 currentY = mDepth;
-    for (size_t i = 0; i < mItems.size(); ++i) {
-      const AMenuItem &item = mItems[i];
-      INT32 thisItemHeight = item.isSeparator ? mSeparatorHeight : mItemHeight;
-// Highlight logic
-      if(static_cast<INT32>(i) == mHoveredIndex && item.isEnabled && !item.isSeparator) {
-        XSetForeground(d, gc, GetBlendedColor(BGColor(), 255, mHoverIntensity));
-        XFillRectangle(d, bb, gc, mDepth, currentY, szx - SafeUINT32(mDepth * 2), SafeUINT32(thisItemHeight));
-      }
-      if(item.isSeparator) {
-// Draw line in the middle of mSeparatorHeight
-        INT32 midY = currentY + (mSeparatorHeight / 2);
-        XSetForeground(d, gc, mSeparatorShadow);
-        XDrawLine(d, bb, gc, mDepth + mSeparatorPadding, midY, SafeINT32(szx) - mDepth - mSeparatorPadding, midY);
-// Draw highlight line only if there's enough height
-        if(mSeparatorHeight > 1) {
-          XSetForeground(d, gc, mSeparatorHighlight);
-          XDrawLine(d, bb, gc, mDepth + mSeparatorPadding, midY + 1, SafeINT32(szx) - mDepth - mSeparatorPadding,
-              midY + 1);
-        }
-      } else {
-// Draw Text
-        XSetForeground(d, gc, item.isEnabled ? BlackPixel(d, aui->Scr()) : mDisabledColor);
-        INT32 textY = currentY + (mItemHeight + f->ascent - f->descent) / 2;
-        XDrawString(d, bb, gc, mDepth + mLeftMargin, textY, item.text.c_str(), SafeINT32(item.text.length()));
-        if(!item.subItems.empty()) {
-          XDrawString(d, bb, gc, SafeINT32(szx) - mDepth - mRightMargin, textY, ">", 1);
-        }
-      }
-      currentY += thisItemHeight;// Increment Y by actual height of this element
-    }
-    XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
-    XFlush(d);
+//    AUI *aui = AUIPtr();
+//// Basic integrity checks
+//    if(!aui || !BB()) {
+//      E("Menu Draw aborted: AUI or BackBuffer is NULL");
+//      return;
+//    }
+//    Display *d = aui->Disp();
+//    Pixmap bb = BB();
+//    GC gc = GCPtr();
+//    XFontStruct *f = Font();
+//    UINT32 szx = SafeUINT32(SizeX());
+//    UINT32 szy = SafeUINT32(SizeY());
+//// 1. Clear the entire backbuffer with the background color
+//    XSetForeground(d, gc, BGColor());
+//    XFillRectangle(d, bb, gc, 0, 0, szx, szy);
+//// 2. Draw the 3D Baguette Frame (Outer Border)
+//    if(mStyle == AUIWidgetStyle::Simple3D && GetRenderPicture() != None) {
+//// Use member variables for lighting intensity
+//      XRenderColor light = ScaleAndBlend(255, 255, mBaguetteLightFactor);
+//      XRenderColor dark = ScaleAndBlend(0, 0, mBaguetteDarkFactor);
+//// Top and Left light edges
+//      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &light, 0, 0, szx, SafeUINT32(mDepth));
+//      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &light, 0, 0, SafeUINT32(mDepth), szy);
+//// Bottom and Right dark edges
+//      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &dark, 0, SafeINT32(szy) - mDepth, szx,
+//          SafeUINT32(mDepth));
+//      XRenderFillRectangle(d, PictOpOver, GetRenderPicture(), &dark, SafeINT32(szx) - mDepth, 0, SafeUINT32(mDepth),
+//          szy);
+//    }
+//    INT32 currentY = mDepth;
+//    for (size_t i = 0; i < mItems.size(); ++i) {
+//      const AMenuItem &item = mItems[i];
+//      INT32 thisItemHeight = item.isSeparator ? mSeparatorHeight : mItemHeight;
+//// Highlight logic
+//      if(static_cast<INT32>(i) == mHoveredIndex && item.isEnabled && !item.isSeparator) {
+//        XSetForeground(d, gc, GetBlendedColor(BGColor(), 255, mHoverIntensity));
+//        XFillRectangle(d, bb, gc, mDepth, currentY, szx - SafeUINT32(mDepth * 2), SafeUINT32(thisItemHeight));
+//      }
+//      if(item.isSeparator) {
+//// Draw line in the middle of mSeparatorHeight
+//        INT32 midY = currentY + (mSeparatorHeight / 2);
+//        XSetForeground(d, gc, mSeparatorShadow);
+//        XDrawLine(d, bb, gc, mDepth + mSeparatorPadding, midY, SafeINT32(szx) - mDepth - mSeparatorPadding, midY);
+//// Draw highlight line only if there's enough height
+//        if(mSeparatorHeight > 1) {
+//          XSetForeground(d, gc, mSeparatorHighlight);
+//          XDrawLine(d, bb, gc, mDepth + mSeparatorPadding, midY + 1, SafeINT32(szx) - mDepth - mSeparatorPadding,
+//              midY + 1);
+//        }
+//      } else {
+//// Draw Text
+//        XSetForeground(d, gc, item.isEnabled ? BlackPixel(d, aui->Scr()) : mDisabledColor);
+//        INT32 textY = currentY + (mItemHeight + f->ascent - f->descent) / 2;
+//        XDrawString(d, bb, gc, mDepth + mLeftMargin, textY, item.text.c_str(), SafeINT32(item.text.length()));
+//        if(!item.subItems.empty()) {
+//          XDrawString(d, bb, gc, SafeINT32(szx) - mDepth - mRightMargin, textY, ">", 1);
+//        }
+//      }
+//      currentY += thisItemHeight;// Increment Y by actual height of this element
+//    }
+//    XCopyArea(d, bb, Wnd(), gc, 0, 0, szx, szy, 0, 0);
+//    XFlush(d);
   }
 
   void APopupMenu::OnMouseMove(XEvent *ev) {

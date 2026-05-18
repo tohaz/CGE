@@ -4,27 +4,27 @@
 
 namespace aui {
 
-  ALabel::ALabel(std::string inText, AWidget *wParent) : AWidget() {
-    D3();
-    AUI *cg = wParent->AUIPtr();
-    Display* d = cg->Disp();
-    INT32 scr = cg->Scr();
-    SetType(AUIWidgetType::defaultLabel);
-    SetBGColor(AUI_DEFAULT_LABEL_BG);
-    SetXY(30, 30);
-    SetSizeXY(AUI_DEFAULT_LABEL_SZX, AUI_DEFAULT_LABEL_SZY);
-    SetAUIPtr(cg);
-    SetWndParent(wParent);
-    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
-        SafeUINT32(SizeX()), SafeUINT32(SizeY()), BorderSz(),
-        BlackPixel(d, scr), BGColor()));
-    Window w = Wnd();
-    XSelectInput(d, w, ExposureMask|ButtonPressMask|KeyPressMask|ButtonReleaseMask);
-    XMapWindow(d, w);
-    AUIPtr()->AddWidget(this);
-    SetText(inText);
-    SetBorderSz(AUI_DEFAULT_LABEL_BORDERW);
-    D3("label: disp={}, wnd={}, scr={}", (INT64) d, (INT64) w, scr)
+  ALabel::ALabel(UNUSED std::string inText, UNUSED AWidget *wParent) : AWidget() {
+//    D3();
+//    AUI *cg = wParent->AUIPtr();
+//    Display* d = cg->Disp();
+//    INT32 scr = cg->Scr();
+//    SetType(AUIWidgetType::defaultLabel);
+//    SetBGColor(AUI_DEFAULT_LABEL_BG);
+//    SetXY(30, 30);
+//    SetSizeXY(AUI_DEFAULT_LABEL_SZX, AUI_DEFAULT_LABEL_SZY);
+//    SetAUIPtr(cg);
+//    SetWndParent(wParent);
+//    InitWidgetProps(XCreateSimpleWindow(d, wParent->Wnd(), SafeINT32(X()), SafeINT32(Y()),
+//        SafeUINT32(SizeX()), SafeUINT32(SizeY()), BorderSz(),
+//        BlackPixel(d, scr), BGColor()));
+//    Window w = Wnd();
+//    XSelectInput(d, w, ExposureMask|ButtonPressMask|KeyPressMask|ButtonReleaseMask);
+//    XMapWindow(d, w);
+//    AUIPtr()->AddWidget(this);
+//    SetText(inText);
+//    SetBorderSz(AUI_DEFAULT_LABEL_BORDERW);
+//    D3("label: disp={}, wnd={}, scr={}", (INT64) d, (INT64) w, scr)
   }
 
   ALabel* ALabel::AttachTo(AWidget *w, std::string inText) {
